@@ -31,7 +31,7 @@ public final class ModeRulesRegistry {
                 true,
                 4,
                 6,
-                new RoundDurations(15, 20, 115, 40, 10, 3),
+                engineDefaults(),
                 defaultEconomy()
             );
             case CASUAL -> new ModeRules(
@@ -42,7 +42,7 @@ public final class ModeRulesRegistry {
                 false,
                 0,
                 0,
-                new RoundDurations(10, 25, 150, 40, 10, 3),
+                engineDefaults(),
                 defaultEconomy()
             );
             case DEATHMATCH, TEAM_DEATHMATCH -> new ModeRules(
@@ -75,7 +75,7 @@ public final class ModeRulesRegistry {
                 false,
                 0,
                 0,
-                new RoundDurations(10, 15, 130, 40, 10, 3),
+                engineDefaults(),
                 defaultEconomy()
             );
             case WINGMAN -> new ModeRules(
@@ -86,7 +86,7 @@ public final class ModeRulesRegistry {
                 true,
                 5,
                 8,
-                new RoundDurations(15, 20, 115, 40, 10, 3),
+                engineDefaults(),
                 defaultEconomy()
             );
             case DANGER_ZONE -> new ModeRules(
@@ -145,6 +145,17 @@ public final class ModeRulesRegistry {
             0,
             0,
             0
+        );
+    }
+
+    private RoundDurations engineDefaults() {
+        return new RoundDurations(
+            6,
+            90,
+            300,
+            40,
+            10,
+            3
         );
     }
 }
