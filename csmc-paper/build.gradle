@@ -1,0 +1,36 @@
+plugins {
+    id 'com.github.johnrengelman.shadow'
+    id 'xyz.jpenilla.run-paper'
+}
+
+dependencies {
+    compileOnly "io.papermc.paper:paper-api:${rootProject.ext.paperApiVersion}"
+
+    implementation project(':csmc-core')
+    implementation project(':csmc-storage')
+}
+
+processResources {
+    filesMatching('plugin.yml') {
+        expand(
+            version: project.version,
+            apiVersion: rootProject.ext.apiVersion
+        )
+    }
+}
+
+tasks.named('shadowJar') {
+    archiveClassifier.set('')
+}
+
+tasks.named('build') {
+    dependsOn tasks.named('shadowJar')
+}
+
+tasks.named('runServer') {
+    minecraftVersion(rootProject.ext.mcVersion)
+}
+
+tasks.register('runPaper') {
+    dependsOn tasks.named('runServer')
+}

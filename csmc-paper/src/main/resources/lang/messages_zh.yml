@@ -1,0 +1,7 @@
+prefix: "CSMC"
+ui:
+  round_start: "第 {round} 回合开始"
+  round_end: "回合结束"
+  bomb_planted: "炸弹已安装"
+  bomb_defused: "炸弹已拆除"
+  bomb_exploded: "炸弹已爆炸"

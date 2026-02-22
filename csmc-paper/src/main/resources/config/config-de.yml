@@ -1,0 +1,46 @@
+# CSMC-Konfiguration (Deutsch)
+# Sprache für UI-Nachrichten festlegen.
+general:
+  language: de-DE
+  debug: false
+
+# Speicher-Backend.
+storage:
+  # YAML, SQLITE, MYSQL, POSTGRESQL, MONGODB, REDIS
+  type: YAML
+  yaml:
+    path: data/players.yml
+  sqlite:
+    file: data/csmc.sqlite
+  mysql:
+    host: localhost
+    port: 3306
+    database: csmc
+    username: root
+    password: password
+    pool:
+      maxSize: 10
+  postgresql:
+    host: localhost
+    port: 5432
+    database: csmc
+    username: postgres
+    password: password
+    pool:
+      maxSize: 10
+  mongodb:
+    uri: mongodb://localhost:27017
+    database: csmc
+  redis:
+    uri: redis://localhost:6379
+    namespace: csmc
+
+# Server-/Match-Limits.
+server:
+  maxSessions: 2
+  maxPlayersPerSession: 40
+
+# Standard-Spielwerte.
+game:
+  # COMPETITIVE, CASUAL, DEATHMATCH, TEAM_DEATHMATCH, ARMS_RACE, DEMOLITION, WINGMAN, DANGER_ZONE
+  defaultMode: COMPETITIVE

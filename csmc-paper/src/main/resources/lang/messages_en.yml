@@ -1,0 +1,7 @@
+prefix: "CSMC"
+ui:
+  round_start: "Round {round} started"
+  round_end: "Round ended"
+  bomb_planted: "Bomb has been planted"
+  bomb_defused: "Bomb has been defused"
+  bomb_exploded: "Bomb has exploded"

@@ -1,0 +1,41 @@
+plugins {
+    id 'java' apply false
+    id 'java-library' apply false
+    id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
+    id 'xyz.jpenilla.run-paper' version '3.0.2' apply false
+}
+
+allprojects {
+    group = 'top.scfd.mcplugins.csmc'
+    version = '0.1.0-SNAPSHOT'
+
+    repositories {
+        mavenCentral()
+        maven { url = 'https://repo.papermc.io/repository/maven-public/' }
+    }
+}
+
+subprojects {
+    apply plugin: 'java-library'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        options.release.set(21)
+    }
+
+    tasks.withType(Test).configureEach {
+        useJUnitPlatform()
+    }
+}
+
+ext {
+    paperApiVersion = '1.21.11-R0.1-SNAPSHOT'
+    mcVersion = '1.21.11'
+    apiVersion = '1.21'
+}

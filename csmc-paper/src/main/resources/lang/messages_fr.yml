@@ -1,0 +1,7 @@
+prefix: "CSMC"
+ui:
+  round_start: "Manche {round} commencée"
+  round_end: "Manche terminée"
+  bomb_planted: "Bombe posée"
+  bomb_defused: "Bombe désamorcée"
+  bomb_exploded: "Bombe explosée"

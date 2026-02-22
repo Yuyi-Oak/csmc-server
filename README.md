@@ -1,0 +1,16 @@
+# CSMC Server
+
+Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
+
+## Modules
+- `csmc-api`: shared interfaces and data contracts
+- `csmc-core`: core game engine (rules, economy, ballistics)
+- `csmc-storage`: storage abstraction and providers
+- `csmc-paper`: Paper implementation and plugin entrypoint
+
+## Gradle tasks
+- `shadowJar`: builds the shaded plugin jar
+- `runPaper`: starts a local Paper test server (uses run-paper)
+
+## Notes
+- Configuration templates and language files are under `csmc-paper/src/main/resources/`.

@@ -1,0 +1,6 @@
+rootProject.name = 'csmc-server'
+
+include 'csmc-api'
+include 'csmc-core'
+include 'csmc-storage'
+include 'csmc-paper'

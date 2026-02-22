@@ -1,0 +1,7 @@
+name: CSMC
+main: top.scfd.mcplugins.csmc.CSMCPlugin
+version: ${version}
+api-version: ${apiVersion}
+author: scfd
+website: https://example.invalid
+load: POSTWORLD
