@@ -2,9 +2,7 @@ package top.scfd.mcplugins.csmc.core;
 
 import top.scfd.mcplugins.csmc.api.CSMCPlatform;
 import top.scfd.mcplugins.csmc.core.config.CSMCConfig;
-import top.scfd.mcplugins.csmc.core.economy.EconomyService;
 import top.scfd.mcplugins.csmc.core.i18n.MessageService;
-import top.scfd.mcplugins.csmc.core.rules.ModeRules;
 import top.scfd.mcplugins.csmc.core.rules.ModeRulesRegistry;
 import top.scfd.mcplugins.csmc.core.session.GameSessionManager;
 import top.scfd.mcplugins.csmc.storage.StorageManager;
@@ -16,17 +14,14 @@ public final class CSMCCore {
     private final StorageManager storageManager;
     private final GameSessionManager sessionManager;
     private final ModeRulesRegistry rulesRegistry;
-    private final EconomyService economyService;
 
     public CSMCCore(CSMCPlatform platform, CSMCConfig config, MessageService messages, StorageManager storageManager) {
         this.platform = platform;
         this.config = config;
         this.messages = messages;
         this.storageManager = storageManager;
-        this.sessionManager = new GameSessionManager();
         this.rulesRegistry = new ModeRulesRegistry();
-        ModeRules rules = rulesRegistry.rulesFor(config.game().defaultMode());
-        this.economyService = new EconomyService(rules.economy());
+        this.sessionManager = new GameSessionManager(rulesRegistry);
     }
 
     public void start() {
@@ -53,9 +48,5 @@ public final class CSMCCore {
 
     public ModeRulesRegistry rulesRegistry() {
         return rulesRegistry;
-    }
-
-    public EconomyService economy() {
-        return economyService;
     }
 }
