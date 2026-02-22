@@ -15,17 +15,19 @@ public final class RoundEngine {
     private final EconomyService economy;
     private final Supplier<Map<UUID, TeamSide>> players;
     private final MatchState matchState;
+    private final RoundEventListener listener;
 
     private RoundPhase phase = RoundPhase.END;
     private int phaseRemainingSeconds;
     private int bombRemainingSeconds;
 
-    public RoundEngine(ModeRules rules, EconomyService economy, Supplier<Map<UUID, TeamSide>> players) {
+    public RoundEngine(ModeRules rules, EconomyService economy, Supplier<Map<UUID, TeamSide>> players, RoundEventListener listener) {
         this.rules = rules;
         this.durations = rules.durations();
         this.economy = economy;
         this.players = players;
         this.matchState = new MatchState();
+        this.listener = listener == null ? RoundEventListener.NO_OP : listener;
     }
 
     public MatchState matchState() {
@@ -46,9 +48,12 @@ public final class RoundEngine {
 
     public void startRound() {
         matchState.nextRound();
+        RoundPhase previous = phase;
         phase = RoundPhase.FREEZE;
         phaseRemainingSeconds = durations.freezeTimeSeconds();
         bombRemainingSeconds = 0;
+        listener.onRoundStart(matchState.roundNumber());
+        listener.onPhaseChanged(previous, phase, matchState.roundNumber(), phaseRemainingSeconds);
     }
 
     public void tick() {
@@ -68,6 +73,7 @@ public final class RoundEngine {
             case BOMB_PLANTED -> {
                 bombRemainingSeconds = Math.max(0, bombRemainingSeconds - 1);
                 if (bombRemainingSeconds == 0) {
+                    listener.onBombExploded(matchState.roundNumber());
                     endRound(TeamSide.TERRORIST, RoundEndReason.BOMB_EXPLODED);
                 }
             }
@@ -81,14 +87,18 @@ public final class RoundEngine {
         if (phase != RoundPhase.LIVE) {
             return;
         }
+        RoundPhase previous = phase;
         phase = RoundPhase.BOMB_PLANTED;
         bombRemainingSeconds = durations.bombTimerSeconds();
+        listener.onBombPlanted(matchState.roundNumber());
+        listener.onPhaseChanged(previous, phase, matchState.roundNumber(), bombRemainingSeconds);
     }
 
     public void onBombDefused() {
         if (phase != RoundPhase.BOMB_PLANTED) {
             return;
         }
+        listener.onBombDefused(matchState.roundNumber());
         endRound(TeamSide.COUNTER_TERRORIST, RoundEndReason.BOMB_DEFUSED);
     }
 
@@ -99,16 +109,24 @@ public final class RoundEngine {
         TeamSide winner = eliminatedSide == TeamSide.TERRORIST
             ? TeamSide.COUNTER_TERRORIST
             : TeamSide.TERRORIST;
+        listener.onTeamEliminated(matchState.roundNumber(), eliminatedSide, winner);
         endRound(winner, RoundEndReason.ELIMINATION);
     }
 
     private void advancePhase(RoundPhase next, int durationSeconds) {
         if (phaseRemainingSeconds > 0) {
             phaseRemainingSeconds -= 1;
+            if (phaseRemainingSeconds > 0) {
+                return;
+            }
+        }
+        if (phase == next) {
             return;
         }
+        RoundPhase previous = phase;
         phase = next;
         phaseRemainingSeconds = Math.max(0, durationSeconds);
+        listener.onPhaseChanged(previous, phase, matchState.roundNumber(), phaseRemainingSeconds);
     }
 
     private void endRound(TeamSide winner, RoundEndReason reason) {
@@ -116,6 +134,13 @@ public final class RoundEngine {
         matchState.score().award(winner);
         applyEconomy(winner);
         matchState.evaluateWinner(rules);
+        listener.onRoundEnd(
+            matchState.roundNumber(),
+            winner,
+            reason,
+            matchState.score().terrorist(),
+            matchState.score().counterTerrorist()
+        );
     }
 
     private void applyEconomy(TeamSide winner) {

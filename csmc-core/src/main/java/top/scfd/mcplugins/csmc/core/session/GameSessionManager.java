@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import top.scfd.mcplugins.csmc.api.GameMode;
-import top.scfd.mcplugins.csmc.core.economy.EconomyService;
 import top.scfd.mcplugins.csmc.core.rules.ModeRules;
 import top.scfd.mcplugins.csmc.core.rules.ModeRulesRegistry;
 
@@ -21,8 +20,7 @@ public final class GameSessionManager {
         UUID id = UUID.randomUUID();
         ModeRules rules = rulesRegistry.rulesFor(mode);
         int resolvedMaxPlayers = maxPlayers > 0 ? maxPlayers : rules.maxPlayers();
-        EconomyService economy = new EconomyService(rules.economy());
-        GameSession session = new GameSession(id, mode, resolvedMaxPlayers, rules, economy);
+        GameSession session = new GameSession(id, mode, resolvedMaxPlayers, rules);
         sessions.put(id, session);
         return session;
     }

@@ -26,18 +26,19 @@ public final class EconomyAccount {
         this.lossStreak = 0;
     }
 
-    public void award(EconomyReason reason) {
+    public int award(EconomyReason reason) {
         int reward = rules.rewardFor(reason, lossStreak);
-        applyReward(reason, reward);
+        return applyReward(reason, reward);
     }
 
-    public void applyReward(EconomyReason reason, int amount) {
+    public int applyReward(EconomyReason reason, int amount) {
         if (reason == EconomyReason.ROUND_WIN) {
             lossStreak = 0;
         } else if (reason == EconomyReason.ROUND_LOSS) {
             lossStreak += 1;
         }
         addMoney(amount);
+        return amount;
     }
 
     public void addMoney(int amount) {

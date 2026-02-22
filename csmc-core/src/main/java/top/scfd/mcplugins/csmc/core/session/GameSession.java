@@ -1,14 +1,21 @@
 package top.scfd.mcplugins.csmc.core.session;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 import top.scfd.mcplugins.csmc.api.GameMode;
 import top.scfd.mcplugins.csmc.api.SessionState;
 import top.scfd.mcplugins.csmc.api.TeamSide;
+import top.scfd.mcplugins.csmc.core.economy.EconomyEventListener;
+import top.scfd.mcplugins.csmc.core.economy.EconomyReason;
 import top.scfd.mcplugins.csmc.core.economy.EconomyService;
+import top.scfd.mcplugins.csmc.core.match.RoundEndReason;
 import top.scfd.mcplugins.csmc.core.match.RoundEngine;
+import top.scfd.mcplugins.csmc.core.match.RoundEventListener;
 import top.scfd.mcplugins.csmc.core.match.RoundPhase;
 import top.scfd.mcplugins.csmc.core.rules.ModeRules;
 
@@ -21,14 +28,16 @@ public final class GameSession {
     private final RoundEngine roundEngine;
     private volatile SessionState state;
     private final Map<UUID, TeamSide> players = new ConcurrentHashMap<>();
+    private final List<RoundEventListener> roundListeners = new CopyOnWriteArrayList<>();
+    private final List<EconomyEventListener> economyListeners = new CopyOnWriteArrayList<>();
 
-    public GameSession(UUID id, GameMode mode, int maxPlayers, ModeRules rules, EconomyService economy) {
+    public GameSession(UUID id, GameMode mode, int maxPlayers, ModeRules rules) {
         this.id = id;
         this.mode = mode;
         this.maxPlayers = maxPlayers;
         this.rules = rules;
-        this.economy = economy;
-        this.roundEngine = new RoundEngine(rules, economy, this::playersSnapshot);
+        this.economy = new EconomyService(rules.economy(), economyListener());
+        this.roundEngine = new RoundEngine(rules, this.economy, this::playersSnapshot, roundListener());
         this.state = SessionState.WAITING;
     }
 
@@ -54,6 +63,26 @@ public final class GameSession {
 
     public RoundEngine roundEngine() {
         return roundEngine;
+    }
+
+    public void addRoundListener(RoundEventListener listener) {
+        if (listener != null) {
+            roundListeners.add(listener);
+        }
+    }
+
+    public void removeRoundListener(RoundEventListener listener) {
+        roundListeners.remove(listener);
+    }
+
+    public void addEconomyListener(EconomyEventListener listener) {
+        if (listener != null) {
+            economyListeners.add(listener);
+        }
+    }
+
+    public void removeEconomyListener(EconomyEventListener listener) {
+        economyListeners.remove(listener);
     }
 
     public SessionState state() {
@@ -104,11 +133,102 @@ public final class GameSession {
         roundEngine.onBombDefused();
     }
 
+    public void onBombPlanted(UUID planterId) {
+        if (planterId != null) {
+            economy.award(planterId, EconomyReason.PLANT);
+        }
+        roundEngine.onBombPlanted();
+    }
+
+    public void onBombDefused(UUID defuserId) {
+        if (defuserId != null) {
+            economy.award(defuserId, EconomyReason.DEFUSE);
+        }
+        roundEngine.onBombDefused();
+    }
+
     public void onTeamEliminated(TeamSide eliminatedSide) {
         roundEngine.onTeamEliminated(eliminatedSide);
     }
 
+    public void onKill(UUID killerId) {
+        if (killerId != null) {
+            economy.award(killerId, EconomyReason.KILL);
+        }
+    }
+
+    public void onAssist(UUID assistantId) {
+        if (assistantId != null) {
+            economy.award(assistantId, EconomyReason.ASSIST);
+        }
+    }
+
     private Map<UUID, TeamSide> playersSnapshot() {
         return Map.copyOf(players);
+    }
+
+    private RoundEventListener roundListener() {
+        return new RoundEventListener() {
+            @Override
+            public void onRoundStart(int roundNumber) {
+                notifyRound(listener -> listener.onRoundStart(roundNumber));
+            }
+
+            @Override
+            public void onPhaseChanged(RoundPhase from, RoundPhase to, int roundNumber, int durationSeconds) {
+                notifyRound(listener -> listener.onPhaseChanged(from, to, roundNumber, durationSeconds));
+            }
+
+            @Override
+            public void onBombPlanted(int roundNumber) {
+                notifyRound(listener -> listener.onBombPlanted(roundNumber));
+            }
+
+            @Override
+            public void onBombDefused(int roundNumber) {
+                notifyRound(listener -> listener.onBombDefused(roundNumber));
+            }
+
+            @Override
+            public void onBombExploded(int roundNumber) {
+                notifyRound(listener -> listener.onBombExploded(roundNumber));
+            }
+
+            @Override
+            public void onTeamEliminated(int roundNumber, TeamSide eliminatedSide, TeamSide winner) {
+                notifyRound(listener -> listener.onTeamEliminated(roundNumber, eliminatedSide, winner));
+            }
+
+            @Override
+            public void onRoundEnd(int roundNumber, TeamSide winner, RoundEndReason reason, int terroristScore, int counterTerroristScore) {
+                notifyRound(listener -> listener.onRoundEnd(roundNumber, winner, reason, terroristScore, counterTerroristScore));
+            }
+        };
+    }
+
+    private EconomyEventListener economyListener() {
+        return new EconomyEventListener() {
+            @Override
+            public void onReward(UUID playerId, EconomyReason reason, int amount, int newBalance) {
+                notifyEconomy(listener -> listener.onReward(playerId, reason, amount, newBalance));
+            }
+
+            @Override
+            public void onSpend(UUID playerId, int amount, int newBalance) {
+                notifyEconomy(listener -> listener.onSpend(playerId, amount, newBalance));
+            }
+        };
+    }
+
+    private void notifyRound(Consumer<RoundEventListener> consumer) {
+        for (RoundEventListener listener : roundListeners) {
+            consumer.accept(listener);
+        }
+    }
+
+    private void notifyEconomy(Consumer<EconomyEventListener> consumer) {
+        for (EconomyEventListener listener : economyListeners) {
+            consumer.accept(listener);
+        }
     }
 }
