@@ -1,7 +1,5 @@
 plugins {
-    id 'java' apply false
-    id 'java-library' apply false
-    id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
+    id 'com.gradleup.shadow' version '9.3.1' apply false
     id 'xyz.jpenilla.run-paper' version '3.0.2' apply false
 }
 

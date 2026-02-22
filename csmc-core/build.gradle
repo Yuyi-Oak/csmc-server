@@ -1,3 +1,4 @@
 dependencies {
     api project(':csmc-api')
+    api project(':csmc-storage')
 }
