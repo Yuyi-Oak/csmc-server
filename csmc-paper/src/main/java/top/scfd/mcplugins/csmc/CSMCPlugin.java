@@ -11,6 +11,7 @@ import top.scfd.mcplugins.csmc.paper.PaperEconomyNotifier;
 import top.scfd.mcplugins.csmc.paper.PaperRoundNotifier;
 import top.scfd.mcplugins.csmc.paper.PaperSessionTicker;
 import top.scfd.mcplugins.csmc.paper.SessionRegistry;
+import top.scfd.mcplugins.csmc.paper.command.SessionCommand;
 import top.scfd.mcplugins.csmc.storage.PaperStorageProviderFactory;
 import top.scfd.mcplugins.csmc.storage.StorageManager;
 import top.scfd.mcplugins.csmc.storage.StorageProvider;
@@ -41,6 +42,8 @@ public final class CSMCPlugin extends JavaPlugin {
 
         ticker = new PaperSessionTicker(core.sessions());
         ticker.runTaskTimer(this, 20L, 20L);
+
+        getCommand("csmc").setExecutor(new SessionCommand(sessionRegistry));
     }
 
     @Override
