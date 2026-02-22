@@ -9,6 +9,7 @@ import top.scfd.mcplugins.csmc.i18n.PaperMessageService;
 import top.scfd.mcplugins.csmc.platform.PaperPlatform;
 import top.scfd.mcplugins.csmc.paper.PaperEconomyNotifier;
 import top.scfd.mcplugins.csmc.paper.PaperRoundNotifier;
+import top.scfd.mcplugins.csmc.paper.PaperShopService;
 import top.scfd.mcplugins.csmc.paper.PaperSessionTicker;
 import top.scfd.mcplugins.csmc.paper.PlayerSessionListener;
 import top.scfd.mcplugins.csmc.paper.SessionRegistry;
@@ -44,7 +45,8 @@ public final class CSMCPlugin extends JavaPlugin {
         ticker = new PaperSessionTicker(core.sessions());
         ticker.runTaskTimer(this, 20L, 20L);
 
-        getCommand("csmc").setExecutor(new SessionCommand(sessionRegistry));
+        PaperShopService shopService = new PaperShopService();
+        getCommand("csmc").setExecutor(new SessionCommand(sessionRegistry, shopService));
         getServer().getPluginManager().registerEvents(new PlayerSessionListener(sessionRegistry), this);
     }
 

@@ -8,14 +8,18 @@ import org.bukkit.entity.Player;
 import top.scfd.mcplugins.csmc.api.GameMode;
 import top.scfd.mcplugins.csmc.api.TeamSide;
 import top.scfd.mcplugins.csmc.core.shop.BuyResult;
+import top.scfd.mcplugins.csmc.core.shop.ShopItem;
 import top.scfd.mcplugins.csmc.core.session.GameSession;
+import top.scfd.mcplugins.csmc.paper.PaperShopService;
 import top.scfd.mcplugins.csmc.paper.SessionRegistry;
 
 public final class SessionCommand implements CommandExecutor {
     private final SessionRegistry sessions;
+    private final PaperShopService shopService;
 
-    public SessionCommand(SessionRegistry sessions) {
+    public SessionCommand(SessionRegistry sessions, PaperShopService shopService) {
         this.sessions = sessions;
+        this.shopService = shopService;
     }
 
     @Override
@@ -117,9 +121,17 @@ public final class SessionCommand implements CommandExecutor {
             player.sendMessage("You are not in a session.");
             return true;
         }
+        ShopItem item = session.findItem(args[1]);
+        if (item == null) {
+            player.sendMessage("Unknown item.");
+            return true;
+        }
         BuyResult result = session.buy(player.getUniqueId(), args[1]);
         switch (result) {
-            case SUCCESS -> player.sendMessage("Purchase successful.");
+            case SUCCESS -> {
+                shopService.grant(player, item);
+                player.sendMessage("Purchase successful.");
+            }
             case BUY_TIME_OVER -> player.sendMessage("Buy time is over.");
             case INSUFFICIENT_FUNDS -> player.sendMessage("Not enough money.");
             case UNKNOWN_ITEM -> player.sendMessage("Unknown item.");

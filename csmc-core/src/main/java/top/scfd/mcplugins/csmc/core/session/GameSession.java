@@ -141,6 +141,10 @@ public final class GameSession {
         return success ? BuyResult.SUCCESS : BuyResult.INSUFFICIENT_FUNDS;
     }
 
+    public ShopItem findItem(String itemKey) {
+        return catalog.find(itemKey).orElse(null);
+    }
+
     public void startRound() {
         roundEngine.startRound();
         state = SessionState.LIVE;
