@@ -20,6 +20,8 @@ public final class RoundEngine {
     private RoundPhase phase = RoundPhase.END;
     private int phaseRemainingSeconds;
     private int bombRemainingSeconds;
+    private int roundRemainingSeconds;
+    private int buyRemainingSeconds;
 
     public RoundEngine(ModeRules rules, EconomyService economy, Supplier<Map<UUID, TeamSide>> players, RoundEventListener listener) {
         this.rules = rules;
@@ -46,12 +48,22 @@ public final class RoundEngine {
         return bombRemainingSeconds;
     }
 
+    public int roundRemainingSeconds() {
+        return roundRemainingSeconds;
+    }
+
+    public int buyRemainingSeconds() {
+        return buyRemainingSeconds;
+    }
+
     public void startRound() {
         matchState.nextRound();
         RoundPhase previous = phase;
         phase = RoundPhase.FREEZE;
         phaseRemainingSeconds = durations.freezeTimeSeconds();
         bombRemainingSeconds = 0;
+        roundRemainingSeconds = durations.roundTimeSeconds();
+        buyRemainingSeconds = durations.buyTimeSeconds();
         listener.onRoundStart(matchState.roundNumber());
         listener.onPhaseChanged(previous, phase, matchState.roundNumber(), phaseRemainingSeconds);
     }
@@ -62,11 +74,12 @@ public final class RoundEngine {
         }
 
         switch (phase) {
-            case FREEZE -> advancePhase(RoundPhase.BUY, durations.buyTimeSeconds());
-            case BUY -> advancePhase(RoundPhase.LIVE, durations.roundTimeSeconds());
+            case FREEZE -> advanceFromFreeze();
+            case BUY -> tickBuyPhase();
             case LIVE -> {
-                phaseRemainingSeconds = Math.max(0, phaseRemainingSeconds - 1);
-                if (phaseRemainingSeconds == 0) {
+                roundRemainingSeconds = Math.max(0, roundRemainingSeconds - 1);
+                phaseRemainingSeconds = roundRemainingSeconds;
+                if (roundRemainingSeconds == 0) {
                     endRound(TeamSide.COUNTER_TERRORIST, RoundEndReason.TIME_EXPIRED);
                 }
             }
@@ -84,12 +97,13 @@ public final class RoundEngine {
     }
 
     public void onBombPlanted() {
-        if (phase != RoundPhase.LIVE) {
+        if (phase != RoundPhase.LIVE && phase != RoundPhase.BUY) {
             return;
         }
         RoundPhase previous = phase;
         phase = RoundPhase.BOMB_PLANTED;
         bombRemainingSeconds = durations.bombTimerSeconds();
+        phaseRemainingSeconds = bombRemainingSeconds;
         listener.onBombPlanted(matchState.roundNumber());
         listener.onPhaseChanged(previous, phase, matchState.roundNumber(), bombRemainingSeconds);
     }
@@ -103,7 +117,7 @@ public final class RoundEngine {
     }
 
     public void onTeamEliminated(TeamSide eliminatedSide) {
-        if (phase != RoundPhase.LIVE && phase != RoundPhase.BOMB_PLANTED) {
+        if (phase != RoundPhase.LIVE && phase != RoundPhase.BUY && phase != RoundPhase.BOMB_PLANTED) {
             return;
         }
         TeamSide winner = eliminatedSide == TeamSide.TERRORIST
@@ -113,20 +127,34 @@ public final class RoundEngine {
         endRound(winner, RoundEndReason.ELIMINATION);
     }
 
-    private void advancePhase(RoundPhase next, int durationSeconds) {
+    private void advanceFromFreeze() {
         if (phaseRemainingSeconds > 0) {
             phaseRemainingSeconds -= 1;
             if (phaseRemainingSeconds > 0) {
                 return;
             }
         }
-        if (phase == next) {
-            return;
-        }
+        RoundPhase next = buyRemainingSeconds > 0 ? RoundPhase.BUY : RoundPhase.LIVE;
         RoundPhase previous = phase;
         phase = next;
-        phaseRemainingSeconds = Math.max(0, durationSeconds);
+        phaseRemainingSeconds = next == RoundPhase.BUY ? buyRemainingSeconds : roundRemainingSeconds;
         listener.onPhaseChanged(previous, phase, matchState.roundNumber(), phaseRemainingSeconds);
+    }
+
+    private void tickBuyPhase() {
+        buyRemainingSeconds = Math.max(0, buyRemainingSeconds - 1);
+        roundRemainingSeconds = Math.max(0, roundRemainingSeconds - 1);
+        phaseRemainingSeconds = buyRemainingSeconds;
+        if (roundRemainingSeconds == 0) {
+            endRound(TeamSide.COUNTER_TERRORIST, RoundEndReason.TIME_EXPIRED);
+            return;
+        }
+        if (buyRemainingSeconds == 0) {
+            RoundPhase previous = phase;
+            phase = RoundPhase.LIVE;
+            phaseRemainingSeconds = roundRemainingSeconds;
+            listener.onPhaseChanged(previous, phase, matchState.roundNumber(), phaseRemainingSeconds);
+        }
     }
 
     private void endRound(TeamSide winner, RoundEndReason reason) {

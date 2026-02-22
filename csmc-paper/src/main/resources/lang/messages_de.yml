@@ -5,3 +5,7 @@ ui:
   bomb_planted: "Bombe gelegt"
   bomb_defused: "Bombe entschärft"
   bomb_exploded: "Bombe explodiert"
+  phase_freeze: "Einfrierzeit"
+  phase_buy: "Kaufzeit"
+  phase_live: "Runde läuft"
+  team_eliminated: "Team eliminiert"

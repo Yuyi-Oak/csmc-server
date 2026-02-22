@@ -5,3 +5,7 @@ ui:
   bomb_planted: "炸弹已安装"
   bomb_defused: "炸弹已拆除"
   bomb_exploded: "炸弹已爆炸"
+  phase_freeze: "冻结时间"
+  phase_buy: "购买时间"
+  phase_live: "回合开始"
+  team_eliminated: "队伍被淘汰"

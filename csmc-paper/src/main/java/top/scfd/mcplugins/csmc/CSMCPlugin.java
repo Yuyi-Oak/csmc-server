@@ -7,12 +7,18 @@ import top.scfd.mcplugins.csmc.core.config.CSMCConfig;
 import top.scfd.mcplugins.csmc.core.i18n.MessageService;
 import top.scfd.mcplugins.csmc.i18n.PaperMessageService;
 import top.scfd.mcplugins.csmc.platform.PaperPlatform;
+import top.scfd.mcplugins.csmc.paper.PaperEconomyNotifier;
+import top.scfd.mcplugins.csmc.paper.PaperRoundNotifier;
+import top.scfd.mcplugins.csmc.paper.PaperSessionTicker;
+import top.scfd.mcplugins.csmc.paper.SessionRegistry;
 import top.scfd.mcplugins.csmc.storage.PaperStorageProviderFactory;
 import top.scfd.mcplugins.csmc.storage.StorageManager;
 import top.scfd.mcplugins.csmc.storage.StorageProvider;
 
 public final class CSMCPlugin extends JavaPlugin {
     private CSMCCore core;
+    private PaperSessionTicker ticker;
+    private SessionRegistry sessionRegistry;
 
     @Override
     public void onEnable() {
@@ -24,12 +30,26 @@ public final class CSMCPlugin extends JavaPlugin {
         StorageManager storageManager = new StorageManager(provider);
         core = new CSMCCore(platform, config, messages, storageManager);
         core.start();
+
+        sessionRegistry = new SessionRegistry(core.sessions());
+
+        PaperRoundNotifier roundNotifier = new PaperRoundNotifier(messages, sessionRegistry);
+        PaperEconomyNotifier economyNotifier = new PaperEconomyNotifier(sessionRegistry);
+
+        sessionRegistry.addRoundListener(roundNotifier);
+        sessionRegistry.addEconomyListener(economyNotifier);
+
+        ticker = new PaperSessionTicker(core.sessions());
+        ticker.runTaskTimer(this, 20L, 20L);
     }
 
     @Override
     public void onDisable() {
         if (core != null) {
             core.stop();
+        }
+        if (ticker != null) {
+            ticker.cancel();
         }
     }
 }

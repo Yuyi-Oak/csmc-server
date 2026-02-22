@@ -5,3 +5,7 @@ ui:
   bomb_planted: "Бомба установлена"
   bomb_defused: "Бомба обезврежена"
   bomb_exploded: "Бомба взорвалась"
+  phase_freeze: "Время заморозки"
+  phase_buy: "Время покупки"
+  phase_live: "Раунд начался"
+  team_eliminated: "Команда уничтожена"
