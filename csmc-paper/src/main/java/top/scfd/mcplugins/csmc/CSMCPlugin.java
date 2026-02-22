@@ -12,6 +12,7 @@ import top.scfd.mcplugins.csmc.paper.PaperRoundNotifier;
 import top.scfd.mcplugins.csmc.paper.PaperShopService;
 import top.scfd.mcplugins.csmc.paper.PaperSessionTicker;
 import top.scfd.mcplugins.csmc.paper.CombatStatsListener;
+import top.scfd.mcplugins.csmc.paper.HudTicker;
 import top.scfd.mcplugins.csmc.paper.PlayerSessionListener;
 import top.scfd.mcplugins.csmc.paper.SessionRegistry;
 import top.scfd.mcplugins.csmc.paper.command.SessionCommand;
@@ -22,6 +23,7 @@ import top.scfd.mcplugins.csmc.storage.StorageProvider;
 public final class CSMCPlugin extends JavaPlugin {
     private CSMCCore core;
     private PaperSessionTicker ticker;
+    private HudTicker hudTicker;
     private SessionRegistry sessionRegistry;
 
     @Override
@@ -46,6 +48,9 @@ public final class CSMCPlugin extends JavaPlugin {
         ticker = new PaperSessionTicker(core.sessions());
         ticker.runTaskTimer(this, 20L, 20L);
 
+        hudTicker = new HudTicker(sessionRegistry);
+        hudTicker.runTaskTimer(this, 20L, 20L);
+
         PaperShopService shopService = new PaperShopService();
         getCommand("csmc").setExecutor(new SessionCommand(sessionRegistry, shopService));
         getServer().getPluginManager().registerEvents(new PlayerSessionListener(sessionRegistry), this);
@@ -59,6 +64,9 @@ public final class CSMCPlugin extends JavaPlugin {
         }
         if (ticker != null) {
             ticker.cancel();
+        }
+        if (hudTicker != null) {
+            hudTicker.cancel();
         }
     }
 }
