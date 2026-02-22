@@ -8,4 +8,4 @@ load: POSTWORLD
 commands:
   csmc:
     description: CSMC session command
-    usage: /csmc create <mode> | /csmc start
+    usage: /csmc create <mode> | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item>

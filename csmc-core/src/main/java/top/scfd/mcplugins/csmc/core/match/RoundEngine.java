@@ -56,6 +56,11 @@ public final class RoundEngine {
         return buyRemainingSeconds;
     }
 
+    public boolean isBuyTime() {
+        return (phase == RoundPhase.FREEZE || phase == RoundPhase.BUY || phase == RoundPhase.LIVE)
+            && buyRemainingSeconds > 0;
+    }
+
     public void startRound() {
         matchState.nextRound();
         RoundPhase previous = phase;
@@ -130,6 +135,7 @@ public final class RoundEngine {
     private void advanceFromFreeze() {
         if (phaseRemainingSeconds > 0) {
             phaseRemainingSeconds -= 1;
+            buyRemainingSeconds = Math.max(0, buyRemainingSeconds - 1);
             if (phaseRemainingSeconds > 0) {
                 return;
             }

@@ -18,6 +18,9 @@ import top.scfd.mcplugins.csmc.core.match.RoundEngine;
 import top.scfd.mcplugins.csmc.core.match.RoundEventListener;
 import top.scfd.mcplugins.csmc.core.match.RoundPhase;
 import top.scfd.mcplugins.csmc.core.rules.ModeRules;
+import top.scfd.mcplugins.csmc.core.shop.BuyResult;
+import top.scfd.mcplugins.csmc.core.shop.ShopCatalog;
+import top.scfd.mcplugins.csmc.core.shop.ShopItem;
 
 public final class GameSession {
     private final UUID id;
@@ -28,6 +31,7 @@ public final class GameSession {
     private final RoundEngine roundEngine;
     private volatile SessionState state;
     private final Map<UUID, TeamSide> players = new ConcurrentHashMap<>();
+    private final ShopCatalog catalog = new ShopCatalog();
     private final List<RoundEventListener> roundListeners = new CopyOnWriteArrayList<>();
     private final List<EconomyEventListener> economyListeners = new CopyOnWriteArrayList<>();
 
@@ -105,12 +109,36 @@ public final class GameSession {
         players.remove(playerId);
     }
 
+    public TeamSide joinPlayer(UUID playerId) {
+        TeamSide assigned = assignTeam();
+        if (!addPlayer(playerId, assigned)) {
+            return TeamSide.SPECTATOR;
+        }
+        economy.reset(playerId);
+        return assigned;
+    }
+
     public TeamSide getSide(UUID playerId) {
         return players.getOrDefault(playerId, TeamSide.SPECTATOR);
     }
 
     public Set<UUID> players() {
         return Set.copyOf(players.keySet());
+    }
+
+    public BuyResult buy(UUID playerId, String itemKey) {
+        if (!players.containsKey(playerId)) {
+            return BuyResult.NOT_IN_SESSION;
+        }
+        if (!roundEngine.isBuyTime()) {
+            return BuyResult.BUY_TIME_OVER;
+        }
+        ShopItem item = catalog.find(itemKey).orElse(null);
+        if (item == null) {
+            return BuyResult.UNKNOWN_ITEM;
+        }
+        boolean success = economy.spend(playerId, item.price());
+        return success ? BuyResult.SUCCESS : BuyResult.INSUFFICIENT_FUNDS;
     }
 
     public void startRound() {
@@ -161,6 +189,19 @@ public final class GameSession {
         if (assistantId != null) {
             economy.award(assistantId, EconomyReason.ASSIST);
         }
+    }
+
+    private TeamSide assignTeam() {
+        int tCount = 0;
+        int ctCount = 0;
+        for (TeamSide side : players.values()) {
+            if (side == TeamSide.TERRORIST) {
+                tCount++;
+            } else if (side == TeamSide.COUNTER_TERRORIST) {
+                ctCount++;
+            }
+        }
+        return tCount <= ctCount ? TeamSide.TERRORIST : TeamSide.COUNTER_TERRORIST;
     }
 
     private Map<UUID, TeamSide> playersSnapshot() {

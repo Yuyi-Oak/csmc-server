@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.bukkit.entity.Player;
 import top.scfd.mcplugins.csmc.api.GameMode;
+import top.scfd.mcplugins.csmc.api.TeamSide;
 import top.scfd.mcplugins.csmc.core.economy.EconomyEventListener;
 import top.scfd.mcplugins.csmc.core.match.RoundEventListener;
 import top.scfd.mcplugins.csmc.core.session.GameSession;
@@ -36,6 +37,29 @@ public final class SessionRegistry {
     public GameSession findSession(Player player) {
         UUID sessionId = playerSessions.get(player.getUniqueId());
         return sessionId == null ? null : sessionManager.getSession(sessionId);
+    }
+
+    public GameSession getSession(UUID sessionId) {
+        return sessionManager.getSession(sessionId);
+    }
+
+    public TeamSide joinSession(Player player, GameSession session) {
+        TeamSide side = session.joinPlayer(player.getUniqueId());
+        if (side != TeamSide.SPECTATOR) {
+            assignPlayer(player, session);
+        }
+        return side;
+    }
+
+    public void leaveSession(Player player) {
+        UUID sessionId = playerSessions.remove(player.getUniqueId());
+        if (sessionId == null) {
+            return;
+        }
+        GameSession session = sessionManager.getSession(sessionId);
+        if (session != null) {
+            session.removePlayer(player.getUniqueId());
+        }
     }
 
     public void addRoundListener(RoundEventListener listener) {
