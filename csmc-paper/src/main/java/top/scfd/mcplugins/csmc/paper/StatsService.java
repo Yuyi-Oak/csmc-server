@@ -52,6 +52,28 @@ public final class StatsService {
         ));
     }
 
+    public void recordRoundPlayed(UUID playerId) {
+        update(playerId, stats -> new PlayerStats(
+            stats.kills(),
+            stats.deaths(),
+            stats.assists(),
+            stats.headshots(),
+            stats.roundsPlayed() + 1,
+            stats.roundsWon()
+        ));
+    }
+
+    public void recordRoundWon(UUID playerId) {
+        update(playerId, stats -> new PlayerStats(
+            stats.kills(),
+            stats.deaths(),
+            stats.assists(),
+            stats.headshots(),
+            stats.roundsPlayed(),
+            stats.roundsWon() + 1
+        ));
+    }
+
     private void update(UUID playerId, UnaryOperator<PlayerStats> updater) {
         PlayerStats updated = updater.apply(get(playerId));
         cache.put(playerId, updated);

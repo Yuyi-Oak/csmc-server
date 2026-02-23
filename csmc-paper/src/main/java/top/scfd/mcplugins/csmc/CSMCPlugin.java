@@ -40,7 +40,8 @@ public final class CSMCPlugin extends JavaPlugin {
         core.start();
 
         PaperShopCatalogLoader shopLoader = new PaperShopCatalogLoader(this);
-        sessionRegistry = new SessionRegistry(core.sessions(), shopLoader.load());
+        StatsService statsService = new StatsService(storageManager);
+        sessionRegistry = new SessionRegistry(core.sessions(), shopLoader.load(), statsService);
 
         PaperRoundNotifier roundNotifier = new PaperRoundNotifier(messages, sessionRegistry);
         PaperEconomyNotifier economyNotifier = new PaperEconomyNotifier(sessionRegistry);
@@ -55,7 +56,6 @@ public final class CSMCPlugin extends JavaPlugin {
         hudTicker.runTaskTimer(this, 20L, 20L);
 
         PaperShopService shopService = new PaperShopService();
-        StatsService statsService = new StatsService(storageManager);
         getCommand("csmc").setExecutor(new SessionCommand(sessionRegistry, shopService));
         getServer().getPluginManager().registerEvents(new PlayerSessionListener(sessionRegistry), this);
         getServer().getPluginManager().registerEvents(new CombatStatsListener(sessionRegistry, statsService), this);

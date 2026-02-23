@@ -17,19 +17,24 @@ import top.scfd.mcplugins.csmc.core.shop.ShopCatalog;
 public final class SessionRegistry {
     private final GameSessionManager sessionManager;
     private final ShopCatalog catalog;
+    private final StatsService statsService;
     private final Map<UUID, UUID> playerSessions = new ConcurrentHashMap<>();
     private final List<RoundEventListener> roundListeners = new CopyOnWriteArrayList<>();
     private final List<EconomyEventListener> economyListeners = new CopyOnWriteArrayList<>();
 
-    public SessionRegistry(GameSessionManager sessionManager, ShopCatalog catalog) {
+    public SessionRegistry(GameSessionManager sessionManager, ShopCatalog catalog, StatsService statsService) {
         this.sessionManager = sessionManager;
         this.catalog = catalog;
+        this.statsService = statsService;
     }
 
     public GameSession createSession(GameMode mode) {
         GameSession session = sessionManager.createSession(mode, 0, catalog);
         roundListeners.forEach(session::addRoundListener);
         economyListeners.forEach(session::addEconomyListener);
+        if (statsService != null) {
+            session.addRoundListener(new StatsRoundListener(session, statsService));
+        }
         return session;
     }
 
