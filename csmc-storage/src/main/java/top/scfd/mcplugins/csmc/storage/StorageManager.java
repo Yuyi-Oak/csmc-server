@@ -1,5 +1,6 @@
 package top.scfd.mcplugins.csmc.storage;
 
+import java.util.List;
 import java.util.UUID;
 
 public final class StorageManager {
@@ -19,6 +20,10 @@ public final class StorageManager {
 
     public PlayerStats loadPlayerStats(UUID playerId) {
         return provider.loadPlayerStats(playerId);
+    }
+
+    public List<LeaderboardEntry> topPlayersByKills(int limit) {
+        return provider.topPlayersByKills(limit);
     }
 
     public void shutdown() {

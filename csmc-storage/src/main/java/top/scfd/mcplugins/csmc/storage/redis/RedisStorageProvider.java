@@ -1,10 +1,16 @@
 package top.scfd.mcplugins.csmc.storage.redis;
 
 import io.lettuce.core.RedisClient;
+import io.lettuce.core.ScanArgs;
+import io.lettuce.core.ScanCursor;
+import io.lettuce.core.KeyScanCursor;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import top.scfd.mcplugins.csmc.storage.LeaderboardEntry;
 import top.scfd.mcplugins.csmc.storage.PlayerStats;
 import top.scfd.mcplugins.csmc.storage.StorageException;
 import top.scfd.mcplugins.csmc.storage.StorageProvider;
@@ -53,17 +59,51 @@ public final class RedisStorageProvider implements StorageProvider {
             if (values == null || values.isEmpty()) {
                 return PlayerStats.empty();
             }
-            return new PlayerStats(
-                parseLong(values.get("kills")),
-                parseLong(values.get("deaths")),
-                parseLong(values.get("assists")),
-                parseLong(values.get("headshots")),
-                parseLong(values.get("roundsPlayed")),
-                parseLong(values.get("roundsWon"))
-            );
+            return toStats(values);
         } catch (RuntimeException error) {
             throw new StorageException("Failed to load Redis stats for player " + playerId, error);
         }
+    }
+
+    @Override
+    public List<LeaderboardEntry> topPlayersByKills(int limit) {
+        if (limit <= 0) {
+            return List.of();
+        }
+        List<LeaderboardEntry> entries = new ArrayList<>();
+        String prefix = namespace + ":player-stats:";
+        try {
+            ScanCursor cursor = ScanCursor.INITIAL;
+            do {
+                KeyScanCursor<String> page = commands.scan(cursor, ScanArgs.Builder.matches(prefix + "*").limit(500));
+                for (String key : page.getKeys()) {
+                    UUID playerId = parseUuid(key, prefix);
+                    if (playerId == null) {
+                        continue;
+                    }
+                    Map<String, String> values = commands.hgetall(key);
+                    if (values == null || values.isEmpty()) {
+                        continue;
+                    }
+                    entries.add(new LeaderboardEntry(playerId, toStats(values)));
+                }
+                cursor = page;
+            } while (!cursor.isFinished());
+        } catch (RuntimeException error) {
+            throw new StorageException("Failed to load Redis leaderboard", error);
+        }
+
+        entries.sort((left, right) -> {
+            int byKills = Long.compare(right.stats().kills(), left.stats().kills());
+            if (byKills != 0) {
+                return byKills;
+            }
+            return Long.compare(right.stats().roundsWon(), left.stats().roundsWon());
+        });
+        if (entries.size() <= limit) {
+            return entries;
+        }
+        return List.copyOf(entries.subList(0, limit));
     }
 
     @Override
@@ -87,6 +127,28 @@ public final class RedisStorageProvider implements StorageProvider {
             return Long.parseLong(value);
         } catch (NumberFormatException ignored) {
             return 0L;
+        }
+    }
+
+    private PlayerStats toStats(Map<String, String> values) {
+        return new PlayerStats(
+            parseLong(values.get("kills")),
+            parseLong(values.get("deaths")),
+            parseLong(values.get("assists")),
+            parseLong(values.get("headshots")),
+            parseLong(values.get("roundsPlayed")),
+            parseLong(values.get("roundsWon"))
+        );
+    }
+
+    private UUID parseUuid(String key, String prefix) {
+        if (key == null || key.length() <= prefix.length() || !key.startsWith(prefix)) {
+            return null;
+        }
+        try {
+            return UUID.fromString(key.substring(prefix.length()));
+        } catch (IllegalArgumentException ignored) {
+            return null;
         }
     }
 }

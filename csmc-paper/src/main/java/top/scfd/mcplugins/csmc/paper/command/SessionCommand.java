@@ -2,7 +2,6 @@ package top.scfd.mcplugins.csmc.paper.command;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -20,6 +19,7 @@ import top.scfd.mcplugins.csmc.paper.LoadoutInventoryService;
 import top.scfd.mcplugins.csmc.paper.PaperShopService;
 import top.scfd.mcplugins.csmc.paper.SessionRegistry;
 import top.scfd.mcplugins.csmc.paper.StatsService;
+import top.scfd.mcplugins.csmc.storage.LeaderboardEntry;
 import top.scfd.mcplugins.csmc.storage.PlayerStats;
 
 public final class SessionCommand implements CommandExecutor {
@@ -202,30 +202,19 @@ public final class SessionCommand implements CommandExecutor {
     }
 
     private boolean handleTop(Player sender) {
-        Map<UUID, PlayerStats> snapshot = stats.cachedSnapshot();
-        if (snapshot.isEmpty()) {
-            sender.sendMessage("No local stats cached yet.");
+        List<LeaderboardEntry> ranking = stats.topByKills(10);
+        if (ranking.isEmpty()) {
+            sender.sendMessage("No leaderboard data found.");
             return true;
         }
-        List<Map.Entry<UUID, PlayerStats>> ranking = snapshot.entrySet().stream()
-            .sorted((left, right) -> {
-                int byKills = Long.compare(right.getValue().kills(), left.getValue().kills());
-                if (byKills != 0) {
-                    return byKills;
-                }
-                return Long.compare(right.getValue().roundsWon(), left.getValue().roundsWon());
-            })
-            .limit(10)
-            .toList();
-
-        sender.sendMessage("Top 10 (cached, by kills):");
+        sender.sendMessage("Top 10 (storage, by kills):");
         int position = 1;
-        for (Map.Entry<UUID, PlayerStats> entry : ranking) {
-            String name = Bukkit.getOfflinePlayer(entry.getKey()).getName();
+        for (LeaderboardEntry entry : ranking) {
+            String name = Bukkit.getOfflinePlayer(entry.playerId()).getName();
             if (name == null || name.isBlank()) {
-                name = entry.getKey().toString();
+                name = entry.playerId().toString();
             }
-            PlayerStats playerStats = entry.getValue();
+            PlayerStats playerStats = entry.stats();
             sender.sendMessage(
                 position + ". " + name
                     + " K:" + playerStats.kills()

@@ -6,7 +6,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import top.scfd.mcplugins.csmc.storage.LeaderboardEntry;
 import top.scfd.mcplugins.csmc.storage.PlayerStats;
 import top.scfd.mcplugins.csmc.storage.StorageException;
 import top.scfd.mcplugins.csmc.storage.StorageProvider;
@@ -59,17 +62,34 @@ public final class JdbcStorageProvider implements StorageProvider {
                 if (!resultSet.next()) {
                     return PlayerStats.empty();
                 }
-                return new PlayerStats(
-                    resultSet.getLong("kills"),
-                    resultSet.getLong("deaths"),
-                    resultSet.getLong("assists"),
-                    resultSet.getLong("headshots"),
-                    resultSet.getLong("rounds_played"),
-                    resultSet.getLong("rounds_won")
-                );
+                return toStats(resultSet);
             }
         } catch (SQLException error) {
             throw new StorageException("Failed to load player stats", error);
+        }
+    }
+
+    @Override
+    public List<LeaderboardEntry> topPlayersByKills(int limit) {
+        if (limit <= 0) {
+            return List.of();
+        }
+        List<LeaderboardEntry> entries = new ArrayList<>();
+        try (Connection connection = open();
+             PreparedStatement statement = connection.prepareStatement(topByKillsSql())) {
+            statement.setInt(1, limit);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    UUID playerId = parseUuid(resultSet.getString("player_id"));
+                    if (playerId == null) {
+                        continue;
+                    }
+                    entries.add(new LeaderboardEntry(playerId, toStats(resultSet)));
+                }
+            }
+            return entries;
+        } catch (SQLException error) {
+            throw new StorageException("Failed to load leaderboard", error);
         }
     }
 
@@ -105,6 +125,11 @@ public final class JdbcStorageProvider implements StorageProvider {
             "FROM csmc_player_stats WHERE player_id=?";
     }
 
+    private String topByKillsSql() {
+        return "SELECT player_id, kills, deaths, assists, headshots, rounds_played, rounds_won " +
+            "FROM csmc_player_stats ORDER BY kills DESC, rounds_won DESC LIMIT ?";
+    }
+
     private String upsertSql() {
         return switch (dialect) {
             case MYSQL -> "INSERT INTO csmc_player_stats " +
@@ -120,5 +145,27 @@ public final class JdbcStorageProvider implements StorageProvider {
                 "kills=excluded.kills, deaths=excluded.deaths, assists=excluded.assists, " +
                 "headshots=excluded.headshots, rounds_played=excluded.rounds_played, rounds_won=excluded.rounds_won";
         };
+    }
+
+    private PlayerStats toStats(ResultSet resultSet) throws SQLException {
+        return new PlayerStats(
+            resultSet.getLong("kills"),
+            resultSet.getLong("deaths"),
+            resultSet.getLong("assists"),
+            resultSet.getLong("headshots"),
+            resultSet.getLong("rounds_played"),
+            resultSet.getLong("rounds_won")
+        );
+    }
+
+    private UUID parseUuid(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(value);
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
     }
 }

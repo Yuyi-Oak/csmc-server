@@ -5,8 +5,12 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
+import com.mongodb.client.model.Sorts;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import org.bson.Document;
+import top.scfd.mcplugins.csmc.storage.LeaderboardEntry;
 import top.scfd.mcplugins.csmc.storage.PlayerStats;
 import top.scfd.mcplugins.csmc.storage.StorageException;
 import top.scfd.mcplugins.csmc.storage.StorageProvider;
@@ -57,16 +61,31 @@ public final class MongoStorageProvider implements StorageProvider {
             if (document == null) {
                 return PlayerStats.empty();
             }
-            return new PlayerStats(
-                longValue(document, "kills"),
-                longValue(document, "deaths"),
-                longValue(document, "assists"),
-                longValue(document, "headshots"),
-                longValue(document, "roundsPlayed"),
-                longValue(document, "roundsWon")
-            );
+            return toStats(document);
         } catch (RuntimeException error) {
             throw new StorageException("Failed to load MongoDB stats for player " + playerId, error);
+        }
+    }
+
+    @Override
+    public List<LeaderboardEntry> topPlayersByKills(int limit) {
+        if (limit <= 0) {
+            return List.of();
+        }
+        List<LeaderboardEntry> entries = new ArrayList<>();
+        try {
+            for (Document document : collection.find()
+                .sort(Sorts.orderBy(Sorts.descending("kills"), Sorts.descending("roundsWon")))
+                .limit(limit)) {
+                UUID playerId = parseUuid(document.getString("_id"));
+                if (playerId == null) {
+                    continue;
+                }
+                entries.add(new LeaderboardEntry(playerId, toStats(document)));
+            }
+            return entries;
+        } catch (RuntimeException error) {
+            throw new StorageException("Failed to load MongoDB leaderboard", error);
         }
     }
 
@@ -88,5 +107,27 @@ public final class MongoStorageProvider implements StorageProvider {
             }
         }
         return 0L;
+    }
+
+    private PlayerStats toStats(Document document) {
+        return new PlayerStats(
+            longValue(document, "kills"),
+            longValue(document, "deaths"),
+            longValue(document, "assists"),
+            longValue(document, "headshots"),
+            longValue(document, "roundsPlayed"),
+            longValue(document, "roundsWon")
+        );
+    }
+
+    private UUID parseUuid(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(value);
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
     }
 }

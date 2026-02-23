@@ -2,8 +2,11 @@ package top.scfd.mcplugins.csmc.storage;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import org.bukkit.configuration.file.YamlConfiguration;
+import top.scfd.mcplugins.csmc.storage.LeaderboardEntry;
 import top.scfd.mcplugins.csmc.storage.PlayerStats;
 import top.scfd.mcplugins.csmc.storage.StorageException;
 import top.scfd.mcplugins.csmc.storage.StorageProvider;
@@ -54,5 +57,37 @@ public final class YamlStorageProvider implements StorageProvider {
             config.getLong(base + ".roundsPlayed"),
             config.getLong(base + ".roundsWon")
         );
+    }
+
+    @Override
+    public synchronized List<LeaderboardEntry> topPlayersByKills(int limit) {
+        if (limit <= 0) {
+            return List.of();
+        }
+        var playersSection = config.getConfigurationSection("players");
+        if (playersSection == null) {
+            return List.of();
+        }
+        List<LeaderboardEntry> entries = new ArrayList<>();
+        for (String key : playersSection.getKeys(false)) {
+            UUID playerId;
+            try {
+                playerId = UUID.fromString(key);
+            } catch (IllegalArgumentException ignored) {
+                continue;
+            }
+            entries.add(new LeaderboardEntry(playerId, loadPlayerStats(playerId)));
+        }
+        entries.sort((left, right) -> {
+            int byKills = Long.compare(right.stats().kills(), left.stats().kills());
+            if (byKills != 0) {
+                return byKills;
+            }
+            return Long.compare(right.stats().roundsWon(), left.stats().roundsWon());
+        });
+        if (entries.size() <= limit) {
+            return entries;
+        }
+        return List.copyOf(entries.subList(0, limit));
     }
 }

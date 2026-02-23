@@ -1,9 +1,11 @@
 package top.scfd.mcplugins.csmc.paper;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.UnaryOperator;
+import top.scfd.mcplugins.csmc.storage.LeaderboardEntry;
 import top.scfd.mcplugins.csmc.storage.PlayerStats;
 import top.scfd.mcplugins.csmc.storage.StorageManager;
 
@@ -19,8 +21,8 @@ public final class StatsService {
         return cache.computeIfAbsent(playerId, storageManager::loadPlayerStats);
     }
 
-    public Map<UUID, PlayerStats> cachedSnapshot() {
-        return Map.copyOf(cache);
+    public List<LeaderboardEntry> topByKills(int limit) {
+        return storageManager.topPlayersByKills(limit);
     }
 
     public void recordKill(UUID playerId) {
