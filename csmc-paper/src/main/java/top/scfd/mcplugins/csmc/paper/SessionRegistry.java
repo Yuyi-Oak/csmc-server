@@ -5,9 +5,11 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import top.scfd.mcplugins.csmc.api.GameMode;
 import top.scfd.mcplugins.csmc.api.TeamSide;
+import top.scfd.mcplugins.csmc.core.map.BuyZone;
 import top.scfd.mcplugins.csmc.core.map.MapDefinition;
 import top.scfd.mcplugins.csmc.core.map.MapRegistry;
 import top.scfd.mcplugins.csmc.core.economy.EconomyEventListener;
@@ -71,6 +73,35 @@ public final class SessionRegistry {
             return null;
         }
         return sessionMaps.get(session.id());
+    }
+
+    public boolean isInBuyZone(Player player, GameSession session) {
+        if (player == null || session == null) {
+            return false;
+        }
+        MapDefinition map = mapForSession(session);
+        if (map == null) {
+            return true;
+        }
+        Location location = player.getLocation();
+        if (location.getWorld() == null || !location.getWorld().getName().equals(map.world())) {
+            return false;
+        }
+        TeamSide side = session.getSide(player.getUniqueId());
+        var zones = map.buyZones(side);
+        if (zones == null || zones.isEmpty()) {
+            return true;
+        }
+        for (BuyZone zone : zones) {
+            double dx = location.getX() - zone.x();
+            double dy = location.getY() - zone.y();
+            double dz = location.getZ() - zone.z();
+            double radius = zone.radius();
+            if (dx * dx + dy * dy + dz * dz <= radius * radius) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public TeamSide joinSession(Player player, GameSession session) {

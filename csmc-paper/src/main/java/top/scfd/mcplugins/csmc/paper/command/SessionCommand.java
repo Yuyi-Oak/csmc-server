@@ -121,6 +121,10 @@ public final class SessionCommand implements CommandExecutor {
             player.sendMessage("You are not in a session.");
             return true;
         }
+        if (!sessions.isInBuyZone(player, session)) {
+            player.sendMessage("You are not in a buy zone.");
+            return true;
+        }
         ShopItem item = session.findItem(args[1]);
         if (item == null) {
             player.sendMessage("Unknown item.");
