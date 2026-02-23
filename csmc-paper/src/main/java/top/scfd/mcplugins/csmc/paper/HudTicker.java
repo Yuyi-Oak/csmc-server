@@ -33,6 +33,7 @@ public final class HudTicker extends BukkitRunnable {
             int defuseTime = round.defuseRemainingSeconds();
             int money = session.economy().balance(player.getUniqueId());
             TeamSide side = session.getSide(player.getUniqueId());
+            var score = round.matchState().score();
 
             StringBuilder text = new StringBuilder();
             text.append("R:").append(format(roundTime));
@@ -43,6 +44,8 @@ public final class HudTicker extends BukkitRunnable {
                 text.append(" D:").append(format(defuseTime));
             }
             text.append(" B:").append(format(buyTime));
+            text.append(" T:").append(score.terrorist());
+            text.append(" CT:").append(score.counterTerrorist());
             text.append(" $").append(money);
             text.append(" ").append(side.name());
             player.sendActionBar(Component.text(text.toString()).color(NamedTextColor.WHITE));
