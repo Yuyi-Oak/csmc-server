@@ -118,7 +118,20 @@ public final class WeaponFireListener implements Listener {
     }
 
     private double jumpFactor(Player player) {
-        return player.isOnGround() ? 0.0 : 0.15;
+        return isGrounded(player) ? 0.0 : 0.15;
+    }
+
+    private boolean isGrounded(Player player) {
+        Location location = player.getLocation();
+        World world = location.getWorld();
+        if (world == null) {
+            return true;
+        }
+        if (location.getY() <= world.getMinHeight() + 0.05) {
+            return true;
+        }
+        Location below = location.clone().subtract(0.0, 0.1, 0.0);
+        return below.getBlock().getType().isSolid();
     }
 
     private Vector applySpread(Vector direction, double spreadX, double spreadY) {
