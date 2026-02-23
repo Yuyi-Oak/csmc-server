@@ -17,6 +17,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
@@ -60,7 +61,7 @@ public final class GrenadeThrowListener implements Listener {
         if (loadout != null) {
             loadout.consumeGrenade(key);
         }
-        consumeItem(player, item);
+        consumeItem(player, item, event.getHand());
         Projectile projectile = launch(player, key);
         if (projectile == null) {
             return;
@@ -107,13 +108,17 @@ public final class GrenadeThrowListener implements Listener {
         };
     }
 
-    private void consumeItem(Player player, ItemStack stack) {
+    private void consumeItem(Player player, ItemStack stack, EquipmentSlot hand) {
         if (stack == null) {
             return;
         }
         int amount = stack.getAmount();
         if (amount <= 1) {
-            player.getInventory().setItemInMainHand(null);
+            if (hand == EquipmentSlot.OFF_HAND) {
+                player.getInventory().setItemInOffHand(null);
+            } else {
+                player.getInventory().setItemInMainHand(null);
+            }
         } else {
             stack.setAmount(amount - 1);
         }
