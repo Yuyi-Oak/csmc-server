@@ -1,0 +1,41 @@
+# CSMC map template
+# Define spawn points, bomb sites, and buy zones.
+map:
+  id: "example"
+  name: "Example"
+  world: "csmc_example"
+  spawns:
+    terrorist:
+      - x: 0.0
+        y: 64.0
+        z: 0.0
+        yaw: 0.0
+        pitch: 0.0
+    counter_terrorist:
+      - x: 10.0
+        y: 64.0
+        z: 10.0
+        yaw: 180.0
+        pitch: 0.0
+  bomb_sites:
+    A:
+      x: 5.0
+      y: 64.0
+      z: 5.0
+      radius: 4.0
+    B:
+      x: -5.0
+      y: 64.0
+      z: -5.0
+      radius: 4.0
+  buy_zones:
+    terrorist:
+      - x: 0.0
+        y: 64.0
+        z: 0.0
+        radius: 6.0
+    counter_terrorist:
+      - x: 10.0
+        y: 64.0
+        z: 10.0
+        radius: 6.0

@@ -3,6 +3,7 @@ package top.scfd.mcplugins.csmc.core;
 import top.scfd.mcplugins.csmc.api.CSMCPlatform;
 import top.scfd.mcplugins.csmc.core.config.CSMCConfig;
 import top.scfd.mcplugins.csmc.core.i18n.MessageService;
+import top.scfd.mcplugins.csmc.core.map.MapRegistry;
 import top.scfd.mcplugins.csmc.core.rules.ModeRulesRegistry;
 import top.scfd.mcplugins.csmc.core.session.GameSessionManager;
 import top.scfd.mcplugins.csmc.storage.StorageManager;
@@ -14,6 +15,7 @@ public final class CSMCCore {
     private final StorageManager storageManager;
     private final GameSessionManager sessionManager;
     private final ModeRulesRegistry rulesRegistry;
+    private final MapRegistry mapRegistry;
 
     public CSMCCore(CSMCPlatform platform, CSMCConfig config, MessageService messages, StorageManager storageManager) {
         this.platform = platform;
@@ -22,6 +24,7 @@ public final class CSMCCore {
         this.storageManager = storageManager;
         this.rulesRegistry = new ModeRulesRegistry();
         this.sessionManager = new GameSessionManager(rulesRegistry);
+        this.mapRegistry = new MapRegistry();
     }
 
     public void start() {
@@ -48,5 +51,9 @@ public final class CSMCCore {
 
     public ModeRulesRegistry rulesRegistry() {
         return rulesRegistry;
+    }
+
+    public MapRegistry mapRegistry() {
+        return mapRegistry;
     }
 }

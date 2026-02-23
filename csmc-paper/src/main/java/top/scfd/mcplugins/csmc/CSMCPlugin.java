@@ -2,6 +2,7 @@ package top.scfd.mcplugins.csmc;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import top.scfd.mcplugins.csmc.config.PaperConfigLoader;
+import top.scfd.mcplugins.csmc.config.PaperMapLoader;
 import top.scfd.mcplugins.csmc.config.PaperShopCatalogLoader;
 import top.scfd.mcplugins.csmc.core.CSMCCore;
 import top.scfd.mcplugins.csmc.core.config.CSMCConfig;
@@ -38,6 +39,9 @@ public final class CSMCPlugin extends JavaPlugin {
         StorageManager storageManager = new StorageManager(provider);
         core = new CSMCCore(platform, config, messages, storageManager);
         core.start();
+
+        PaperMapLoader mapLoader = new PaperMapLoader(this);
+        mapLoader.loadInto(core.mapRegistry());
 
         PaperShopCatalogLoader shopLoader = new PaperShopCatalogLoader(this);
         StatsService statsService = new StatsService(storageManager);
