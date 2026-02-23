@@ -14,3 +14,4 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 
 ## Notes
 - Configuration templates and language files are under `csmc-paper/src/main/resources/`.
+- Storage backends currently available: YAML, SQLite, MySQL, PostgreSQL, MongoDB, Redis.

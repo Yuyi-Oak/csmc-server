@@ -5,9 +5,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import top.scfd.mcplugins.csmc.core.config.CSMCConfig;
 import top.scfd.mcplugins.csmc.storage.StorageProvider;
 import top.scfd.mcplugins.csmc.storage.StorageType;
-import top.scfd.mcplugins.csmc.storage.impl.UnsupportedStorageProvider;
 import top.scfd.mcplugins.csmc.storage.jdbc.JdbcDialect;
 import top.scfd.mcplugins.csmc.storage.jdbc.JdbcStorageProvider;
+import top.scfd.mcplugins.csmc.storage.mongo.MongoStorageProvider;
+import top.scfd.mcplugins.csmc.storage.redis.RedisStorageProvider;
 
 public final class PaperStorageProviderFactory {
     private final JavaPlugin plugin;
@@ -40,13 +41,13 @@ public final class PaperStorageProviderFactory {
                 storage.postgresql().username(),
                 storage.postgresql().password()
             );
-            case MONGODB -> new UnsupportedStorageProvider(
-                StorageType.MONGODB,
-                "MongoDB provider not initialized yet"
+            case MONGODB -> new MongoStorageProvider(
+                storage.mongodb().uri(),
+                storage.mongodb().database()
             );
-            case REDIS -> new UnsupportedStorageProvider(
-                StorageType.REDIS,
-                "Redis provider not initialized yet"
+            case REDIS -> new RedisStorageProvider(
+                storage.redis().uri(),
+                storage.redis().namespace()
             );
         };
     }
