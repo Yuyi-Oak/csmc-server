@@ -197,6 +197,14 @@ public final class GameSession {
         roundEngine.onBombDefused();
     }
 
+    public void startDefuse(UUID defuserId, boolean hasKit) {
+        roundEngine.startDefuse(defuserId, hasKit);
+    }
+
+    public void cancelDefuse(UUID defuserId) {
+        roundEngine.cancelDefuse(defuserId);
+    }
+
     public void onBombPlanted(UUID planterId) {
         if (planterId != null) {
             economy.award(planterId, EconomyReason.PLANT);
@@ -325,6 +333,16 @@ public final class GameSession {
             @Override
             public void onBombDefused(int roundNumber) {
                 notifyRound(listener -> listener.onBombDefused(roundNumber));
+            }
+
+            @Override
+            public void onDefuseStarted(int roundNumber, UUID defuserId, int durationSeconds) {
+                notifyRound(listener -> listener.onDefuseStarted(roundNumber, defuserId, durationSeconds));
+            }
+
+            @Override
+            public void onDefuseStopped(int roundNumber, UUID defuserId, int remainingSeconds) {
+                notifyRound(listener -> listener.onDefuseStopped(roundNumber, defuserId, remainingSeconds));
             }
 
             @Override

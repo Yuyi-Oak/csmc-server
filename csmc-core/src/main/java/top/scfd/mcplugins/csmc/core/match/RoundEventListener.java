@@ -1,5 +1,6 @@
 package top.scfd.mcplugins.csmc.core.match;
 
+import java.util.UUID;
 import top.scfd.mcplugins.csmc.api.TeamSide;
 
 public interface RoundEventListener {
@@ -12,6 +13,10 @@ public interface RoundEventListener {
     default void onBombPlanted(int roundNumber) {}
 
     default void onBombDefused(int roundNumber) {}
+
+    default void onDefuseStarted(int roundNumber, UUID defuserId, int durationSeconds) {}
+
+    default void onDefuseStopped(int roundNumber, UUID defuserId, int remainingSeconds) {}
 
     default void onBombExploded(int roundNumber) {}
 

@@ -20,8 +20,11 @@ public final class RoundEngine {
     private RoundPhase phase = RoundPhase.END;
     private int phaseRemainingSeconds;
     private int bombRemainingSeconds;
+    private int defuseRemainingSeconds;
+    private int defuseTotalSeconds;
     private int roundRemainingSeconds;
     private int buyRemainingSeconds;
+    private UUID defuserId;
 
     public RoundEngine(ModeRules rules, EconomyService economy, Supplier<Map<UUID, TeamSide>> players, RoundEventListener listener) {
         this.rules = rules;
@@ -48,6 +51,14 @@ public final class RoundEngine {
         return bombRemainingSeconds;
     }
 
+    public int defuseRemainingSeconds() {
+        return defuseRemainingSeconds;
+    }
+
+    public int defuseTotalSeconds() {
+        return defuseTotalSeconds;
+    }
+
     public int roundRemainingSeconds() {
         return roundRemainingSeconds;
     }
@@ -67,6 +78,9 @@ public final class RoundEngine {
         phase = RoundPhase.FREEZE;
         phaseRemainingSeconds = durations.freezeTimeSeconds();
         bombRemainingSeconds = 0;
+        defuseRemainingSeconds = 0;
+        defuseTotalSeconds = 0;
+        defuserId = null;
         roundRemainingSeconds = durations.roundTimeSeconds();
         buyRemainingSeconds = durations.buyTimeSeconds();
         listener.onRoundStart(matchState.roundNumber());
@@ -89,7 +103,16 @@ public final class RoundEngine {
                 }
             }
             case BOMB_PLANTED -> {
+                if (defuseRemainingSeconds > 0) {
+                    defuseRemainingSeconds = Math.max(0, defuseRemainingSeconds - 1);
+                    if (defuseRemainingSeconds == 0) {
+                        listener.onBombDefused(matchState.roundNumber());
+                        endRound(TeamSide.COUNTER_TERRORIST, RoundEndReason.BOMB_DEFUSED);
+                        return;
+                    }
+                }
                 bombRemainingSeconds = Math.max(0, bombRemainingSeconds - 1);
+                phaseRemainingSeconds = bombRemainingSeconds;
                 if (bombRemainingSeconds == 0) {
                     listener.onBombExploded(matchState.roundNumber());
                     endRound(TeamSide.TERRORIST, RoundEndReason.BOMB_EXPLODED);
@@ -108,9 +131,37 @@ public final class RoundEngine {
         RoundPhase previous = phase;
         phase = RoundPhase.BOMB_PLANTED;
         bombRemainingSeconds = durations.bombTimerSeconds();
+        defuseRemainingSeconds = 0;
+        defuseTotalSeconds = 0;
+        defuserId = null;
         phaseRemainingSeconds = bombRemainingSeconds;
         listener.onBombPlanted(matchState.roundNumber());
         listener.onPhaseChanged(previous, phase, matchState.roundNumber(), bombRemainingSeconds);
+    }
+
+    public void startDefuse(UUID defuserId, boolean hasKit) {
+        if (phase != RoundPhase.BOMB_PLANTED || defuseRemainingSeconds > 0) {
+            return;
+        }
+        int base = durations.defuseTimeSeconds();
+        int duration = hasKit ? Math.max(1, base / 2) : base;
+        this.defuseRemainingSeconds = duration;
+        this.defuseTotalSeconds = duration;
+        this.defuserId = defuserId;
+        listener.onDefuseStarted(matchState.roundNumber(), defuserId, duration);
+    }
+
+    public void cancelDefuse(UUID defuserId) {
+        if (defuseRemainingSeconds <= 0) {
+            return;
+        }
+        if (this.defuserId != null && defuserId != null && !this.defuserId.equals(defuserId)) {
+            return;
+        }
+        listener.onDefuseStopped(matchState.roundNumber(), this.defuserId, defuseRemainingSeconds);
+        defuseRemainingSeconds = 0;
+        defuseTotalSeconds = 0;
+        this.defuserId = null;
     }
 
     public void onBombDefused() {
