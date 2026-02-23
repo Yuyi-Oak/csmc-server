@@ -24,6 +24,7 @@ import top.scfd.mcplugins.csmc.paper.MapProtectionListener;
 import top.scfd.mcplugins.csmc.paper.PlayerSessionListener;
 import top.scfd.mcplugins.csmc.paper.SessionRegistry;
 import top.scfd.mcplugins.csmc.paper.StatsService;
+import top.scfd.mcplugins.csmc.paper.TeamEliminationResolver;
 import top.scfd.mcplugins.csmc.paper.WeaponFireListener;
 import top.scfd.mcplugins.csmc.paper.WeaponItemService;
 import top.scfd.mcplugins.csmc.paper.WeaponReloadListener;
@@ -59,6 +60,7 @@ public final class CSMCPlugin extends JavaPlugin {
         WeaponItemService weaponItems = new WeaponItemService(this);
         LoadoutInventoryService loadoutInventory = new LoadoutInventoryService(weaponItems);
         GrenadeItemService grenadeItems = new GrenadeItemService(this);
+        TeamEliminationResolver eliminationResolver = new TeamEliminationResolver();
         sessionRegistry = new SessionRegistry(core.sessions(), core.mapRegistry(), shopLoader.load(), statsService, bombService, loadoutInventory);
 
         PaperRoundNotifier roundNotifier = new PaperRoundNotifier(messages, sessionRegistry);
@@ -75,8 +77,8 @@ public final class CSMCPlugin extends JavaPlugin {
 
         PaperShopService shopService = new PaperShopService(grenadeItems);
         getCommand("csmc").setExecutor(new SessionCommand(sessionRegistry, shopService, loadoutInventory));
-        getServer().getPluginManager().registerEvents(new PlayerSessionListener(sessionRegistry), this);
-        getServer().getPluginManager().registerEvents(new CombatStatsListener(sessionRegistry, statsService), this);
+        getServer().getPluginManager().registerEvents(new PlayerSessionListener(sessionRegistry, eliminationResolver), this);
+        getServer().getPluginManager().registerEvents(new CombatStatsListener(sessionRegistry, statsService, eliminationResolver), this);
         getServer().getPluginManager().registerEvents(new BombInteractListener(sessionRegistry, bombService), this);
         getServer().getPluginManager().registerEvents(new WeaponSelectionListener(sessionRegistry), this);
         getServer().getPluginManager().registerEvents(new WeaponFireListener(sessionRegistry, weaponItems, loadoutInventory), this);

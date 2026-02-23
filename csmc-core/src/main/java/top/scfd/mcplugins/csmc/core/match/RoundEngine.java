@@ -176,6 +176,9 @@ public final class RoundEngine {
         if (phase != RoundPhase.LIVE && phase != RoundPhase.BUY && phase != RoundPhase.BOMB_PLANTED) {
             return;
         }
+        if (phase == RoundPhase.BOMB_PLANTED && eliminatedSide != TeamSide.COUNTER_TERRORIST) {
+            return;
+        }
         TeamSide winner = eliminatedSide == TeamSide.TERRORIST
             ? TeamSide.COUNTER_TERRORIST
             : TeamSide.TERRORIST;
