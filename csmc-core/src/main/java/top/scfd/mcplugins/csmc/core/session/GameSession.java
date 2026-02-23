@@ -29,6 +29,8 @@ import top.scfd.mcplugins.csmc.core.weapon.WeaponRegistry;
 import top.scfd.mcplugins.csmc.core.weapon.WeaponSpec;
 
 public final class GameSession {
+    private static final int FIRST_ROUND_COUNTDOWN_SECONDS = 3;
+    private static final int NEXT_ROUND_COUNTDOWN_SECONDS = 5;
     private final UUID id;
     private final GameMode mode;
     private final int maxPlayers;
@@ -42,6 +44,7 @@ public final class GameSession {
     private final WeaponRegistry weaponRegistry;
     private final List<RoundEventListener> roundListeners = new CopyOnWriteArrayList<>();
     private final List<EconomyEventListener> economyListeners = new CopyOnWriteArrayList<>();
+    private volatile int nextRoundCountdownSeconds = -1;
 
     public GameSession(UUID id, GameMode mode, int maxPlayers, ModeRules rules, ShopCatalog catalog) {
         this.id = id;
@@ -122,6 +125,9 @@ public final class GameSession {
     public void removePlayer(UUID playerId) {
         players.remove(playerId);
         loadouts.remove(playerId);
+        if (!canStartRound()) {
+            nextRoundCountdownSeconds = -1;
+        }
     }
 
     public TeamSide joinPlayer(UUID playerId) {
@@ -131,6 +137,11 @@ public final class GameSession {
         }
         economy.reset(playerId);
         loadouts.put(playerId, createDefaultLoadout(assigned));
+        if (state == SessionState.WAITING && nextRoundCountdownSeconds < 0 && canStartRound()) {
+            nextRoundCountdownSeconds = roundEngine.matchState().roundNumber() == 0
+                ? FIRST_ROUND_COUNTDOWN_SECONDS
+                : NEXT_ROUND_COUNTDOWN_SECONDS;
+        }
         return assigned;
     }
 
@@ -178,15 +189,55 @@ public final class GameSession {
     }
 
     public void startRound() {
+        if (state != SessionState.WAITING && state != SessionState.WARMUP) {
+            return;
+        }
+        if (!canStartRound()) {
+            return;
+        }
         roundEngine.startRound();
         state = SessionState.LIVE;
+        nextRoundCountdownSeconds = -1;
     }
 
     public void tickRound() {
-        roundEngine.tick();
-        if (roundEngine.phase() == RoundPhase.END && state == SessionState.LIVE) {
-            state = SessionState.WAITING;
+        if (state == SessionState.FINISHED) {
+            return;
         }
+        if (state == SessionState.LIVE) {
+            roundEngine.tick();
+            if (roundEngine.phase() == RoundPhase.END) {
+                if (roundEngine.matchState().winner().isPresent()) {
+                    state = SessionState.FINISHED;
+                    nextRoundCountdownSeconds = -1;
+                    return;
+                }
+                state = SessionState.WAITING;
+                nextRoundCountdownSeconds = NEXT_ROUND_COUNTDOWN_SECONDS;
+            }
+            return;
+        }
+        if (state != SessionState.WAITING) {
+            return;
+        }
+        if (!canStartRound()) {
+            nextRoundCountdownSeconds = -1;
+            return;
+        }
+        if (nextRoundCountdownSeconds < 0) {
+            nextRoundCountdownSeconds = roundEngine.matchState().roundNumber() == 0
+                ? FIRST_ROUND_COUNTDOWN_SECONDS
+                : NEXT_ROUND_COUNTDOWN_SECONDS;
+            return;
+        }
+        nextRoundCountdownSeconds = Math.max(0, nextRoundCountdownSeconds - 1);
+        if (nextRoundCountdownSeconds == 0) {
+            startRound();
+        }
+    }
+
+    public int nextRoundCountdownSeconds() {
+        return nextRoundCountdownSeconds;
     }
 
     public void onBombPlanted() {
@@ -246,6 +297,19 @@ public final class GameSession {
             }
         }
         return tCount <= ctCount ? TeamSide.TERRORIST : TeamSide.COUNTER_TERRORIST;
+    }
+
+    private boolean canStartRound() {
+        int tCount = 0;
+        int ctCount = 0;
+        for (TeamSide side : players.values()) {
+            if (side == TeamSide.TERRORIST) {
+                tCount++;
+            } else if (side == TeamSide.COUNTER_TERRORIST) {
+                ctCount++;
+            }
+        }
+        return tCount > 0 && ctCount > 0;
     }
 
     private PlayerLoadout createDefaultLoadout(TeamSide side) {

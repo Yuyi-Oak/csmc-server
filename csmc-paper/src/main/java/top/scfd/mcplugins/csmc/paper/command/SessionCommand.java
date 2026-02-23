@@ -6,6 +6,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import top.scfd.mcplugins.csmc.api.GameMode;
+import top.scfd.mcplugins.csmc.api.SessionState;
 import top.scfd.mcplugins.csmc.api.TeamSide;
 import top.scfd.mcplugins.csmc.core.shop.BuyResult;
 import top.scfd.mcplugins.csmc.core.shop.ShopCategory;
@@ -114,8 +115,15 @@ public final class SessionCommand implements CommandExecutor {
             player.sendMessage("You are not in a session.");
             return true;
         }
+        SessionState before = session.state();
         session.startRound();
-        player.sendMessage("Round started.");
+        if (session.state() == SessionState.LIVE && before != SessionState.LIVE) {
+            player.sendMessage("Round started.");
+        } else if (before == SessionState.LIVE) {
+            player.sendMessage("Round is already live.");
+        } else {
+            player.sendMessage("Cannot start round yet. Both teams need at least one player.");
+        }
         return true;
     }
 
