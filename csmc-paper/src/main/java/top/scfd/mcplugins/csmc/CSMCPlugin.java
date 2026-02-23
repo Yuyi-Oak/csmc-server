@@ -13,6 +13,8 @@ import top.scfd.mcplugins.csmc.paper.PaperEconomyNotifier;
 import top.scfd.mcplugins.csmc.paper.PaperRoundNotifier;
 import top.scfd.mcplugins.csmc.paper.PaperShopService;
 import top.scfd.mcplugins.csmc.paper.PaperSessionTicker;
+import top.scfd.mcplugins.csmc.paper.BombInteractListener;
+import top.scfd.mcplugins.csmc.paper.BombService;
 import top.scfd.mcplugins.csmc.paper.CombatStatsListener;
 import top.scfd.mcplugins.csmc.paper.HudTicker;
 import top.scfd.mcplugins.csmc.paper.PlayerSessionListener;
@@ -45,7 +47,8 @@ public final class CSMCPlugin extends JavaPlugin {
 
         PaperShopCatalogLoader shopLoader = new PaperShopCatalogLoader(this);
         StatsService statsService = new StatsService(storageManager);
-        sessionRegistry = new SessionRegistry(core.sessions(), core.mapRegistry(), shopLoader.load(), statsService);
+        BombService bombService = new BombService();
+        sessionRegistry = new SessionRegistry(core.sessions(), core.mapRegistry(), shopLoader.load(), statsService, bombService);
 
         PaperRoundNotifier roundNotifier = new PaperRoundNotifier(messages, sessionRegistry);
         PaperEconomyNotifier economyNotifier = new PaperEconomyNotifier(sessionRegistry);
@@ -63,6 +66,7 @@ public final class CSMCPlugin extends JavaPlugin {
         getCommand("csmc").setExecutor(new SessionCommand(sessionRegistry, shopService));
         getServer().getPluginManager().registerEvents(new PlayerSessionListener(sessionRegistry), this);
         getServer().getPluginManager().registerEvents(new CombatStatsListener(sessionRegistry, statsService), this);
+        getServer().getPluginManager().registerEvents(new BombInteractListener(sessionRegistry, bombService), this);
     }
 
     @Override
