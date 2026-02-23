@@ -13,6 +13,7 @@ import org.bukkit.entity.Projectile;
 public final class CombatStatsListener implements Listener {
     private final SessionRegistry sessions;
     private final StatsService statsService;
+    private final java.util.Map<java.util.UUID, java.util.UUID> lastHit = new java.util.concurrent.ConcurrentHashMap<>();
 
     public CombatStatsListener(SessionRegistry sessions, StatsService statsService) {
         this.sessions = sessions;
@@ -35,6 +36,7 @@ public final class CombatStatsListener implements Listener {
             return;
         }
         // Placeholder for future damage tracking (headshots, weapon type, etc.)
+        lastHit.put(victim.getUniqueId(), attacker.getUniqueId());
     }
 
     @EventHandler
@@ -53,6 +55,11 @@ public final class CombatStatsListener implements Listener {
         killerSession.onKill(killerId);
         statsService.recordKill(killerId);
         statsService.recordDeath(victim.getUniqueId());
+        UUID assisterId = lastHit.remove(victim.getUniqueId());
+        if (assisterId != null && !assisterId.equals(killerId)) {
+            killerSession.onAssist(assisterId);
+            statsService.recordAssist(assisterId);
+        }
         // Assist logic will be added later with damage tracking.
     }
 
