@@ -122,7 +122,20 @@ public final class SessionRegistry {
     }
 
     public TeamSide joinSession(Player player, GameSession session) {
-        TeamSide side = session.joinPlayer(player.getUniqueId());
+        UUID playerId = player.getUniqueId();
+        UUID previousSessionId = playerSessions.get(playerId);
+        if (previousSessionId != null && !previousSessionId.equals(session.id())) {
+            playerSessions.remove(playerId, previousSessionId);
+            GameSession previousSession = sessionManager.getSession(previousSessionId);
+            if (previousSession != null) {
+                previousSession.removePlayer(playerId);
+                if (previousSession.players().isEmpty()) {
+                    removeSession(previousSession);
+                }
+            }
+        }
+
+        TeamSide side = session.joinPlayer(playerId);
         if (side != TeamSide.SPECTATOR) {
             assignPlayer(player, session);
         }
@@ -137,7 +150,26 @@ public final class SessionRegistry {
         GameSession session = sessionManager.getSession(sessionId);
         if (session != null) {
             session.removePlayer(player.getUniqueId());
+            if (session.players().isEmpty()) {
+                removeSession(session);
+            }
         }
+    }
+
+    public int sessionCount() {
+        return sessionManager.allSessions().size();
+    }
+
+    public void removeSession(GameSession session) {
+        if (session == null) {
+            return;
+        }
+        UUID sessionId = session.id();
+        for (UUID playerId : session.players()) {
+            playerSessions.remove(playerId, sessionId);
+        }
+        sessionMaps.remove(sessionId);
+        sessionManager.removeSession(sessionId);
     }
 
     public void addRoundListener(RoundEventListener listener) {

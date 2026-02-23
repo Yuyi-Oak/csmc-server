@@ -16,6 +16,7 @@ import top.scfd.mcplugins.csmc.core.shop.ShopCategory;
 import top.scfd.mcplugins.csmc.core.shop.ShopItem;
 import top.scfd.mcplugins.csmc.core.session.GameSession;
 import top.scfd.mcplugins.csmc.paper.LoadoutInventoryService;
+import top.scfd.mcplugins.csmc.paper.MatchQueueService;
 import top.scfd.mcplugins.csmc.paper.PaperShopService;
 import top.scfd.mcplugins.csmc.paper.SessionRegistry;
 import top.scfd.mcplugins.csmc.paper.StatsService;
@@ -27,12 +28,20 @@ public final class SessionCommand implements CommandExecutor {
     private final PaperShopService shopService;
     private final LoadoutInventoryService loadoutInventory;
     private final StatsService stats;
+    private final MatchQueueService queue;
 
-    public SessionCommand(SessionRegistry sessions, PaperShopService shopService, LoadoutInventoryService loadoutInventory, StatsService stats) {
+    public SessionCommand(
+        SessionRegistry sessions,
+        PaperShopService shopService,
+        LoadoutInventoryService loadoutInventory,
+        StatsService stats,
+        MatchQueueService queue
+    ) {
         this.sessions = sessions;
         this.shopService = shopService;
         this.loadoutInventory = loadoutInventory;
         this.stats = stats;
+        this.queue = queue;
     }
 
     @Override
@@ -42,7 +51,7 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc stats [player] | /csmc top");
+            sender.sendMessage("Usage: /csmc create <mode> | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc stats [player] | /csmc top | /csmc queue <join|leave|status> [mode]");
             return true;
         }
         return switch (args[0].toLowerCase()) {
@@ -53,6 +62,7 @@ public final class SessionCommand implements CommandExecutor {
             case "buy" -> handleBuy(player, args);
             case "stats" -> handleStats(player, args);
             case "top" -> handleTop(player);
+            case "queue" -> handleQueue(player, args);
             default -> {
                 sender.sendMessage("Unknown subcommand.");
                 yield true;
@@ -72,6 +82,7 @@ public final class SessionCommand implements CommandExecutor {
             player.sendMessage("Invalid mode.");
             return true;
         }
+        queue.leave(player.getUniqueId());
         GameSession session = sessions.createSession(mode);
         TeamSide side = sessions.joinSession(player, session);
         player.sendMessage("Created session " + session.id() + " for " + mode + " as " + side);
@@ -98,6 +109,7 @@ public final class SessionCommand implements CommandExecutor {
             player.sendMessage("Session not found.");
             return true;
         }
+        queue.leave(player.getUniqueId());
         TeamSide side = sessions.joinSession(player, session);
         if (side == TeamSide.SPECTATOR) {
             player.sendMessage("Session is full.");
@@ -110,12 +122,18 @@ public final class SessionCommand implements CommandExecutor {
 
     private boolean handleLeave(Player player) {
         GameSession session = sessions.findSession(player);
-        if (session == null) {
-            player.sendMessage("You are not in a session.");
+        boolean leftQueue = queue.leave(player.getUniqueId());
+        if (session == null && !leftQueue) {
+            player.sendMessage("You are not in a session or queue.");
             return true;
         }
-        sessions.leaveSession(player);
-        player.sendMessage("You left the session.");
+        if (session != null) {
+            sessions.leaveSession(player);
+            player.sendMessage("You left the session.");
+        }
+        if (leftQueue) {
+            player.sendMessage("You left the queue.");
+        }
         return true;
     }
 
@@ -222,6 +240,61 @@ public final class SessionCommand implements CommandExecutor {
                     + " R:" + playerStats.roundsPlayed()
             );
             position++;
+        }
+        return true;
+    }
+
+    private boolean handleQueue(Player player, String[] args) {
+        if (args.length < 2) {
+            player.sendMessage("Usage: /csmc queue <join|leave|status> [mode]");
+            return true;
+        }
+        return switch (args[1].toLowerCase(Locale.ROOT)) {
+            case "join" -> handleQueueJoin(player, args);
+            case "leave" -> {
+                boolean removed = queue.leave(player.getUniqueId());
+                player.sendMessage(removed ? "You left the queue." : "You are not queued.");
+                yield true;
+            }
+            case "status" -> {
+                GameMode mode = queue.queuedMode(player.getUniqueId());
+                if (mode == null) {
+                    player.sendMessage("You are not queued.");
+                } else {
+                    int size = queue.queueSize(mode);
+                    int position = queue.queuePosition(player.getUniqueId());
+                    player.sendMessage("Queue " + mode + " | position " + position + " / " + size);
+                }
+                yield true;
+            }
+            default -> {
+                player.sendMessage("Usage: /csmc queue <join|leave|status> [mode]");
+                yield true;
+            }
+        };
+    }
+
+    private boolean handleQueueJoin(Player player, String[] args) {
+        GameMode mode = GameMode.COMPETITIVE;
+        if (args.length >= 3) {
+            try {
+                mode = GameMode.valueOf(args[2].toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException ex) {
+                player.sendMessage("Invalid mode.");
+                return true;
+            }
+        }
+        MatchQueueService.JoinResult result = queue.join(player.getUniqueId(), mode);
+        switch (result) {
+            case QUEUED -> player.sendMessage("Queued for " + mode + ".");
+            case MOVED -> player.sendMessage("Queue switched to " + mode + ".");
+            case ALREADY_IN_QUEUE -> player.sendMessage("Already queued for " + mode + ".");
+            case ALREADY_IN_SESSION -> player.sendMessage("You are already in a session.");
+        }
+        if (result == MatchQueueService.JoinResult.QUEUED || result == MatchQueueService.JoinResult.MOVED) {
+            int size = queue.queueSize(mode);
+            int position = queue.queuePosition(player.getUniqueId());
+            player.sendMessage("Queue " + mode + " | position " + position + " / " + size);
         }
         return true;
     }

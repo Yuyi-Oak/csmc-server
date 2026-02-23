@@ -22,8 +22,11 @@ import top.scfd.mcplugins.csmc.paper.GrenadeThrowListener;
 import top.scfd.mcplugins.csmc.paper.HudTicker;
 import top.scfd.mcplugins.csmc.paper.LoadoutInventoryService;
 import top.scfd.mcplugins.csmc.paper.MapProtectionListener;
+import top.scfd.mcplugins.csmc.paper.MatchQueueService;
+import top.scfd.mcplugins.csmc.paper.MatchQueueTicker;
 import top.scfd.mcplugins.csmc.paper.PlayerRoundStateService;
 import top.scfd.mcplugins.csmc.paper.PlayerSessionListener;
+import top.scfd.mcplugins.csmc.paper.QueuePlayerListener;
 import top.scfd.mcplugins.csmc.paper.SessionRegistry;
 import top.scfd.mcplugins.csmc.paper.StatsService;
 import top.scfd.mcplugins.csmc.paper.TeamEliminationResolver;
@@ -40,6 +43,7 @@ public final class CSMCPlugin extends JavaPlugin {
     private CSMCCore core;
     private PaperSessionTicker ticker;
     private HudTicker hudTicker;
+    private MatchQueueTicker queueTicker;
     private SessionRegistry sessionRegistry;
 
     @Override
@@ -64,6 +68,7 @@ public final class CSMCPlugin extends JavaPlugin {
         GrenadeItemService grenadeItems = new GrenadeItemService(this);
         TeamEliminationResolver eliminationResolver = new TeamEliminationResolver();
         sessionRegistry = new SessionRegistry(core.sessions(), core.mapRegistry(), shopLoader.load(), statsService, bombService, loadoutInventory);
+        MatchQueueService queueService = new MatchQueueService(sessionRegistry, config.server().maxSessions());
         PlayerRoundStateService roundStateService = new PlayerRoundStateService(this, sessionRegistry);
         sessionRegistry.setPlayerRoundState(roundStateService);
 
@@ -79,10 +84,14 @@ public final class CSMCPlugin extends JavaPlugin {
         hudTicker = new HudTicker(sessionRegistry);
         hudTicker.runTaskTimer(this, 20L, 20L);
 
+        queueTicker = new MatchQueueTicker(queueService);
+        queueTicker.runTaskTimer(this, 20L, 20L);
+
         PaperShopService shopService = new PaperShopService(grenadeItems);
-        getCommand("csmc").setExecutor(new SessionCommand(sessionRegistry, shopService, loadoutInventory, statsService));
+        getCommand("csmc").setExecutor(new SessionCommand(sessionRegistry, shopService, loadoutInventory, statsService, queueService));
         getServer().getPluginManager().registerEvents(roundStateService, this);
         getServer().getPluginManager().registerEvents(new PlayerSessionListener(sessionRegistry, eliminationResolver), this);
+        getServer().getPluginManager().registerEvents(new QueuePlayerListener(queueService), this);
         getServer().getPluginManager().registerEvents(new CombatStatsListener(sessionRegistry, statsService, eliminationResolver), this);
         getServer().getPluginManager().registerEvents(new BombInteractListener(sessionRegistry, bombService), this);
         getServer().getPluginManager().registerEvents(new WeaponSelectionListener(sessionRegistry), this);
@@ -103,6 +112,9 @@ public final class CSMCPlugin extends JavaPlugin {
         }
         if (hudTicker != null) {
             hudTicker.cancel();
+        }
+        if (queueTicker != null) {
+            queueTicker.cancel();
         }
     }
 }
