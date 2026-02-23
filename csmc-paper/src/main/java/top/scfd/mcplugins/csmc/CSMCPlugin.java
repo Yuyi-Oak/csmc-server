@@ -21,6 +21,7 @@ import top.scfd.mcplugins.csmc.paper.GrenadeThrowListener;
 import top.scfd.mcplugins.csmc.paper.HudTicker;
 import top.scfd.mcplugins.csmc.paper.LoadoutInventoryService;
 import top.scfd.mcplugins.csmc.paper.MapProtectionListener;
+import top.scfd.mcplugins.csmc.paper.PlayerRoundStateService;
 import top.scfd.mcplugins.csmc.paper.PlayerSessionListener;
 import top.scfd.mcplugins.csmc.paper.SessionRegistry;
 import top.scfd.mcplugins.csmc.paper.StatsService;
@@ -62,6 +63,8 @@ public final class CSMCPlugin extends JavaPlugin {
         GrenadeItemService grenadeItems = new GrenadeItemService(this);
         TeamEliminationResolver eliminationResolver = new TeamEliminationResolver();
         sessionRegistry = new SessionRegistry(core.sessions(), core.mapRegistry(), shopLoader.load(), statsService, bombService, loadoutInventory);
+        PlayerRoundStateService roundStateService = new PlayerRoundStateService(this, sessionRegistry);
+        sessionRegistry.setPlayerRoundState(roundStateService);
 
         PaperRoundNotifier roundNotifier = new PaperRoundNotifier(messages, sessionRegistry);
         PaperEconomyNotifier economyNotifier = new PaperEconomyNotifier(sessionRegistry);
@@ -77,6 +80,7 @@ public final class CSMCPlugin extends JavaPlugin {
 
         PaperShopService shopService = new PaperShopService(grenadeItems);
         getCommand("csmc").setExecutor(new SessionCommand(sessionRegistry, shopService, loadoutInventory));
+        getServer().getPluginManager().registerEvents(roundStateService, this);
         getServer().getPluginManager().registerEvents(new PlayerSessionListener(sessionRegistry, eliminationResolver), this);
         getServer().getPluginManager().registerEvents(new CombatStatsListener(sessionRegistry, statsService, eliminationResolver), this);
         getServer().getPluginManager().registerEvents(new BombInteractListener(sessionRegistry, bombService), this);

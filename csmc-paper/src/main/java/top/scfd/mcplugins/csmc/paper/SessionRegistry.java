@@ -25,6 +25,7 @@ public final class SessionRegistry {
     private final StatsService statsService;
     private final BombService bombs;
     private final LoadoutInventoryService loadoutInventory;
+    private volatile PlayerRoundStateService playerRoundState;
     private final Map<UUID, UUID> playerSessions = new ConcurrentHashMap<>();
     private final Map<UUID, MapDefinition> sessionMaps = new ConcurrentHashMap<>();
     private final List<RoundEventListener> roundListeners = new CopyOnWriteArrayList<>();
@@ -48,6 +49,9 @@ public final class SessionRegistry {
         }
         if (bombs != null) {
             session.addRoundListener(new BombRoundListener(session, bombs));
+        }
+        if (playerRoundState != null) {
+            session.addRoundListener(new RoundPlayerStateListener(session, playerRoundState));
         }
         MapDefinition map = resolveDefaultMap();
         if (map != null) {
@@ -146,6 +150,10 @@ public final class SessionRegistry {
         if (listener != null) {
             economyListeners.add(listener);
         }
+    }
+
+    public void setPlayerRoundState(PlayerRoundStateService playerRoundState) {
+        this.playerRoundState = playerRoundState;
     }
 
     private MapDefinition resolveDefaultMap() {
