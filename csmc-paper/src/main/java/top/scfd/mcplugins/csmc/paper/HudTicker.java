@@ -34,6 +34,8 @@ public final class HudTicker extends BukkitRunnable {
             int money = session.economy().balance(player.getUniqueId());
             TeamSide side = session.getSide(player.getUniqueId());
             var score = round.matchState().score();
+            var loadout = session.loadout(player.getUniqueId());
+            var weapon = loadout == null ? null : loadout.activeWeapon();
 
             StringBuilder text = new StringBuilder();
             text.append("R:").append(format(roundTime));
@@ -48,6 +50,9 @@ public final class HudTicker extends BukkitRunnable {
             text.append(" CT:").append(score.counterTerrorist());
             text.append(" $").append(money);
             text.append(" ").append(side.name());
+            if (weapon != null) {
+                text.append(" ").append(weapon.magazine()).append("/").append(weapon.reserve());
+            }
             player.sendActionBar(Component.text(text.toString()).color(NamedTextColor.WHITE));
         }
     }
