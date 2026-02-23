@@ -9,6 +9,12 @@ import org.bukkit.inventory.meta.ItemMeta;
 import top.scfd.mcplugins.csmc.core.shop.ShopItem;
 
 public final class PaperShopService {
+    private final GrenadeItemService grenades;
+
+    public PaperShopService(GrenadeItemService grenades) {
+        this.grenades = grenades;
+    }
+
     public void grant(Player player, ShopItem item) {
         ItemStack stack = toItemStack(item);
         if (stack == null) {
@@ -39,6 +45,9 @@ public final class PaperShopService {
         if (meta != null) {
             meta.displayName(Component.text(item.displayName()).color(NamedTextColor.WHITE));
             stack.setItemMeta(meta);
+        }
+        if (grenades != null && item.category() == top.scfd.mcplugins.csmc.core.shop.ShopCategory.GRENADE) {
+            grenades.tag(stack, item.key());
         }
         return stack;
     }

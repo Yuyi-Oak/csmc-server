@@ -126,4 +126,21 @@ public final class PlayerLoadout {
     public void clearGrenades() {
         grenades.clear();
     }
+
+    public boolean consumeGrenade(String key) {
+        if (key == null) {
+            return false;
+        }
+        String normalized = key.toLowerCase();
+        int current = grenades.getOrDefault(normalized, 0);
+        if (current <= 0) {
+            return false;
+        }
+        if (current == 1) {
+            grenades.remove(normalized);
+        } else {
+            grenades.put(normalized, current - 1);
+        }
+        return true;
+    }
 }

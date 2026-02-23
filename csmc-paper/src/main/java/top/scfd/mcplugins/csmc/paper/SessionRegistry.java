@@ -73,6 +73,14 @@ public final class SessionRegistry {
         return sessionManager.getSession(sessionId);
     }
 
+    public GameSession getSessionForPlayer(UUID playerId) {
+        if (playerId == null) {
+            return null;
+        }
+        UUID sessionId = playerSessions.get(playerId);
+        return sessionId == null ? null : sessionManager.getSession(sessionId);
+    }
+
     public MapDefinition mapForSession(GameSession session) {
         if (session == null) {
             return null;

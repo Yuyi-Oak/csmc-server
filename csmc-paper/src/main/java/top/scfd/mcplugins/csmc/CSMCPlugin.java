@@ -16,6 +16,8 @@ import top.scfd.mcplugins.csmc.paper.PaperSessionTicker;
 import top.scfd.mcplugins.csmc.paper.BombInteractListener;
 import top.scfd.mcplugins.csmc.paper.BombService;
 import top.scfd.mcplugins.csmc.paper.CombatStatsListener;
+import top.scfd.mcplugins.csmc.paper.GrenadeItemService;
+import top.scfd.mcplugins.csmc.paper.GrenadeThrowListener;
 import top.scfd.mcplugins.csmc.paper.HudTicker;
 import top.scfd.mcplugins.csmc.paper.LoadoutInventoryService;
 import top.scfd.mcplugins.csmc.paper.PlayerSessionListener;
@@ -55,6 +57,7 @@ public final class CSMCPlugin extends JavaPlugin {
         BombService bombService = new BombService();
         WeaponItemService weaponItems = new WeaponItemService(this);
         LoadoutInventoryService loadoutInventory = new LoadoutInventoryService(weaponItems);
+        GrenadeItemService grenadeItems = new GrenadeItemService(this);
         sessionRegistry = new SessionRegistry(core.sessions(), core.mapRegistry(), shopLoader.load(), statsService, bombService, loadoutInventory);
 
         PaperRoundNotifier roundNotifier = new PaperRoundNotifier(messages, sessionRegistry);
@@ -69,7 +72,7 @@ public final class CSMCPlugin extends JavaPlugin {
         hudTicker = new HudTicker(sessionRegistry);
         hudTicker.runTaskTimer(this, 20L, 20L);
 
-        PaperShopService shopService = new PaperShopService();
+        PaperShopService shopService = new PaperShopService(grenadeItems);
         getCommand("csmc").setExecutor(new SessionCommand(sessionRegistry, shopService, loadoutInventory));
         getServer().getPluginManager().registerEvents(new PlayerSessionListener(sessionRegistry), this);
         getServer().getPluginManager().registerEvents(new CombatStatsListener(sessionRegistry, statsService), this);
@@ -77,6 +80,7 @@ public final class CSMCPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new WeaponSelectionListener(sessionRegistry), this);
         getServer().getPluginManager().registerEvents(new WeaponFireListener(sessionRegistry, weaponItems, loadoutInventory), this);
         getServer().getPluginManager().registerEvents(new WeaponReloadListener(sessionRegistry, weaponItems, loadoutInventory), this);
+        getServer().getPluginManager().registerEvents(new GrenadeThrowListener(sessionRegistry, grenadeItems, this), this);
     }
 
     @Override
