@@ -16,6 +16,7 @@ import top.scfd.mcplugins.csmc.paper.PaperSessionTicker;
 import top.scfd.mcplugins.csmc.paper.BombInteractListener;
 import top.scfd.mcplugins.csmc.paper.BombService;
 import top.scfd.mcplugins.csmc.paper.CombatStatsListener;
+import top.scfd.mcplugins.csmc.paper.FreezePhaseListener;
 import top.scfd.mcplugins.csmc.paper.GrenadeItemService;
 import top.scfd.mcplugins.csmc.paper.GrenadeThrowListener;
 import top.scfd.mcplugins.csmc.paper.HudTicker;
@@ -89,6 +90,7 @@ public final class CSMCPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new WeaponReloadListener(sessionRegistry, weaponItems, loadoutInventory, this), this);
         getServer().getPluginManager().registerEvents(new GrenadeThrowListener(sessionRegistry, grenadeItems, this), this);
         getServer().getPluginManager().registerEvents(new MapProtectionListener(sessionRegistry), this);
+        getServer().getPluginManager().registerEvents(new FreezePhaseListener(sessionRegistry), this);
     }
 
     @Override
