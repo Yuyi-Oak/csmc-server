@@ -20,6 +20,7 @@ import top.scfd.mcplugins.csmc.paper.GrenadeItemService;
 import top.scfd.mcplugins.csmc.paper.GrenadeThrowListener;
 import top.scfd.mcplugins.csmc.paper.HudTicker;
 import top.scfd.mcplugins.csmc.paper.LoadoutInventoryService;
+import top.scfd.mcplugins.csmc.paper.MapProtectionListener;
 import top.scfd.mcplugins.csmc.paper.PlayerSessionListener;
 import top.scfd.mcplugins.csmc.paper.SessionRegistry;
 import top.scfd.mcplugins.csmc.paper.StatsService;
@@ -81,6 +82,7 @@ public final class CSMCPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new WeaponFireListener(sessionRegistry, weaponItems, loadoutInventory), this);
         getServer().getPluginManager().registerEvents(new WeaponReloadListener(sessionRegistry, weaponItems, loadoutInventory), this);
         getServer().getPluginManager().registerEvents(new GrenadeThrowListener(sessionRegistry, grenadeItems, this), this);
+        getServer().getPluginManager().registerEvents(new MapProtectionListener(sessionRegistry), this);
     }
 
     @Override
