@@ -10,6 +10,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.entity.Projectile;
 import top.scfd.mcplugins.csmc.api.TeamSide;
+import top.scfd.mcplugins.csmc.core.match.RoundPhase;
 
 public final class CombatStatsListener implements Listener {
     private final SessionRegistry sessions;
@@ -29,19 +30,32 @@ public final class CombatStatsListener implements Listener {
             return;
         }
         Player attacker = resolveAttacker(event.getDamager());
-        if (attacker == null) {
-            return;
-        }
         var victimSession = sessions.findSession(victim);
         if (victimSession == null) {
             return;
         }
-        var attackerSession = sessions.findSession(attacker);
-        if (attackerSession == null || attackerSession != victimSession) {
+        if (attacker == null) {
             return;
         }
-        // Placeholder for future damage tracking (headshots, weapon type, etc.)
-        lastHit.put(victim.getUniqueId(), attacker.getUniqueId());
+        var attackerSession = sessions.findSession(attacker);
+        if (attackerSession == null || attackerSession != victimSession) {
+            event.setCancelled(true);
+            return;
+        }
+        if (!isCombatPhase(victimSession.roundEngine().phase())) {
+            event.setCancelled(true);
+            return;
+        }
+        TeamSide victimSide = victimSession.getSide(victim.getUniqueId());
+        TeamSide attackerSide = victimSession.getSide(attacker.getUniqueId());
+        if (victimSide == attackerSide && victimSide != TeamSide.SPECTATOR) {
+            event.setCancelled(true);
+            return;
+        }
+        if (!victim.getUniqueId().equals(attacker.getUniqueId())) {
+            // Placeholder for future damage tracking (headshots, weapon type, etc.)
+            lastHit.put(victim.getUniqueId(), attacker.getUniqueId());
+        }
     }
 
     @EventHandler
@@ -49,6 +63,9 @@ public final class CombatStatsListener implements Listener {
         Player victim = event.getEntity();
         var victimSession = sessions.findSession(victim);
         if (victimSession == null) {
+            return;
+        }
+        if (!isCombatPhase(victimSession.roundEngine().phase())) {
             return;
         }
         TeamSide victimSide = victimSession.getSide(victim.getUniqueId());
@@ -82,5 +99,9 @@ public final class CombatStatsListener implements Listener {
             }
         }
         return null;
+    }
+
+    private boolean isCombatPhase(RoundPhase phase) {
+        return phase == RoundPhase.BUY || phase == RoundPhase.LIVE || phase == RoundPhase.BOMB_PLANTED;
     }
 }
