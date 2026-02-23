@@ -1,6 +1,10 @@
 package top.scfd.mcplugins.csmc.paper.command;
 
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -15,16 +19,20 @@ import top.scfd.mcplugins.csmc.core.session.GameSession;
 import top.scfd.mcplugins.csmc.paper.LoadoutInventoryService;
 import top.scfd.mcplugins.csmc.paper.PaperShopService;
 import top.scfd.mcplugins.csmc.paper.SessionRegistry;
+import top.scfd.mcplugins.csmc.paper.StatsService;
+import top.scfd.mcplugins.csmc.storage.PlayerStats;
 
 public final class SessionCommand implements CommandExecutor {
     private final SessionRegistry sessions;
     private final PaperShopService shopService;
     private final LoadoutInventoryService loadoutInventory;
+    private final StatsService stats;
 
-    public SessionCommand(SessionRegistry sessions, PaperShopService shopService, LoadoutInventoryService loadoutInventory) {
+    public SessionCommand(SessionRegistry sessions, PaperShopService shopService, LoadoutInventoryService loadoutInventory, StatsService stats) {
         this.sessions = sessions;
         this.shopService = shopService;
         this.loadoutInventory = loadoutInventory;
+        this.stats = stats;
     }
 
     @Override
@@ -34,7 +42,7 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item>");
+            sender.sendMessage("Usage: /csmc create <mode> | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc stats [player] | /csmc top");
             return true;
         }
         return switch (args[0].toLowerCase()) {
@@ -43,6 +51,8 @@ public final class SessionCommand implements CommandExecutor {
             case "leave" -> handleLeave(player);
             case "start" -> handleStart(player);
             case "buy" -> handleBuy(player, args);
+            case "stats" -> handleStats(player, args);
+            case "top" -> handleTop(player);
             default -> {
                 sender.sendMessage("Unknown subcommand.");
                 yield true;
@@ -164,6 +174,65 @@ public final class SessionCommand implements CommandExecutor {
             case UNKNOWN_ITEM -> player.sendMessage("Unknown item.");
             case NOT_IN_SESSION -> player.sendMessage("You are not in a session.");
             case INVENTORY_FULL -> player.sendMessage("Inventory full.");
+        }
+        return true;
+    }
+
+    private boolean handleStats(Player sender, String[] args) {
+        Player target = sender;
+        if (args.length >= 2) {
+            target = Bukkit.getPlayerExact(args[1]);
+            if (target == null) {
+                sender.sendMessage("Player not found (must be online).");
+                return true;
+            }
+        }
+        PlayerStats playerStats = stats.get(target.getUniqueId());
+        double kd = playerStats.deaths() == 0
+            ? playerStats.kills()
+            : (double) playerStats.kills() / playerStats.deaths();
+        sender.sendMessage("Stats - " + target.getName()
+            + " | K:" + playerStats.kills()
+            + " D:" + playerStats.deaths()
+            + " A:" + playerStats.assists()
+            + " HS:" + playerStats.headshots()
+            + " R:" + playerStats.roundsWon() + "/" + playerStats.roundsPlayed()
+            + " KD:" + String.format(Locale.ROOT, "%.2f", kd));
+        return true;
+    }
+
+    private boolean handleTop(Player sender) {
+        Map<UUID, PlayerStats> snapshot = stats.cachedSnapshot();
+        if (snapshot.isEmpty()) {
+            sender.sendMessage("No local stats cached yet.");
+            return true;
+        }
+        List<Map.Entry<UUID, PlayerStats>> ranking = snapshot.entrySet().stream()
+            .sorted((left, right) -> {
+                int byKills = Long.compare(right.getValue().kills(), left.getValue().kills());
+                if (byKills != 0) {
+                    return byKills;
+                }
+                return Long.compare(right.getValue().roundsWon(), left.getValue().roundsWon());
+            })
+            .limit(10)
+            .toList();
+
+        sender.sendMessage("Top 10 (cached, by kills):");
+        int position = 1;
+        for (Map.Entry<UUID, PlayerStats> entry : ranking) {
+            String name = Bukkit.getOfflinePlayer(entry.getKey()).getName();
+            if (name == null || name.isBlank()) {
+                name = entry.getKey().toString();
+            }
+            PlayerStats playerStats = entry.getValue();
+            sender.sendMessage(
+                position + ". " + name
+                    + " K:" + playerStats.kills()
+                    + " W:" + playerStats.roundsWon()
+                    + " R:" + playerStats.roundsPlayed()
+            );
+            position++;
         }
         return true;
     }

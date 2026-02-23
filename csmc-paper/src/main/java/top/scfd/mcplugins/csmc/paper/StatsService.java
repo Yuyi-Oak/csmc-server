@@ -19,6 +19,10 @@ public final class StatsService {
         return cache.computeIfAbsent(playerId, storageManager::loadPlayerStats);
     }
 
+    public Map<UUID, PlayerStats> cachedSnapshot() {
+        return Map.copyOf(cache);
+    }
+
     public void recordKill(UUID playerId) {
         update(playerId, stats -> new PlayerStats(
             stats.kills() + 1,

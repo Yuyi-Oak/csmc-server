@@ -80,7 +80,7 @@ public final class CSMCPlugin extends JavaPlugin {
         hudTicker.runTaskTimer(this, 20L, 20L);
 
         PaperShopService shopService = new PaperShopService(grenadeItems);
-        getCommand("csmc").setExecutor(new SessionCommand(sessionRegistry, shopService, loadoutInventory));
+        getCommand("csmc").setExecutor(new SessionCommand(sessionRegistry, shopService, loadoutInventory, statsService));
         getServer().getPluginManager().registerEvents(roundStateService, this);
         getServer().getPluginManager().registerEvents(new PlayerSessionListener(sessionRegistry, eliminationResolver), this);
         getServer().getPluginManager().registerEvents(new CombatStatsListener(sessionRegistry, statsService, eliminationResolver), this);
