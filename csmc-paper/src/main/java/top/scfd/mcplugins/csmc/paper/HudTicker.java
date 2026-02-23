@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import top.scfd.mcplugins.csmc.api.TeamSide;
 import top.scfd.mcplugins.csmc.core.match.RoundEngine;
+import top.scfd.mcplugins.csmc.core.match.RoundPhase;
 import top.scfd.mcplugins.csmc.core.session.GameSession;
 
 public final class HudTicker extends BukkitRunnable {
@@ -28,11 +29,23 @@ public final class HudTicker extends BukkitRunnable {
             RoundEngine round = session.roundEngine();
             int roundTime = round.roundRemainingSeconds();
             int buyTime = round.buyRemainingSeconds();
+            int bombTime = round.bombRemainingSeconds();
+            int defuseTime = round.defuseRemainingSeconds();
             int money = session.economy().balance(player.getUniqueId());
             TeamSide side = session.getSide(player.getUniqueId());
 
-            String text = "R:" + format(roundTime) + " B:" + format(buyTime) + " $" + money + " " + side.name();
-            player.sendActionBar(Component.text(text).color(NamedTextColor.WHITE));
+            StringBuilder text = new StringBuilder();
+            text.append("R:").append(format(roundTime));
+            if (round.phase() == RoundPhase.BOMB_PLANTED) {
+                text.append(" C4:").append(format(bombTime));
+            }
+            if (defuseTime > 0) {
+                text.append(" D:").append(format(defuseTime));
+            }
+            text.append(" B:").append(format(buyTime));
+            text.append(" $").append(money);
+            text.append(" ").append(side.name());
+            player.sendActionBar(Component.text(text.toString()).color(NamedTextColor.WHITE));
         }
     }
 
