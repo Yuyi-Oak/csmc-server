@@ -27,3 +27,23 @@ shop:
       name: "Kevlar"
       price: 650
       category: armor
+    hegrenade:
+      name: "HE Grenade"
+      price: 300
+      category: grenade
+    flashbang:
+      name: "Flashbang"
+      price: 200
+      category: grenade
+    smoke:
+      name: "Smoke Grenade"
+      price: 300
+      category: grenade
+    molotov:
+      name: "Molotov"
+      price: 400
+      category: grenade
+    decoy:
+      name: "Decoy"
+      price: 50
+      category: grenade

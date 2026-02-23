@@ -263,7 +263,9 @@ public final class GameSession {
             case PRIMARY, SECONDARY, MELEE -> weaponRegistry.find(item.key()).isPresent()
                 ? BuyResult.SUCCESS
                 : BuyResult.UNKNOWN_ITEM;
-            case GRENADE -> loadout.canAddGrenade(item.key(), 4, 1) ? BuyResult.SUCCESS : BuyResult.INVENTORY_FULL;
+            case GRENADE -> loadout.canAddGrenade(item.key(), grenadeMaxTotal(), grenadeMaxPerType(item.key()))
+                ? BuyResult.SUCCESS
+                : BuyResult.INVENTORY_FULL;
             case ARMOR -> loadout.armor().armor() >= 100 ? BuyResult.INVENTORY_FULL : BuyResult.SUCCESS;
             case UTILITY, UNKNOWN -> BuyResult.UNKNOWN_ITEM;
         };
@@ -281,11 +283,22 @@ public final class GameSession {
                 .ifPresent(spec -> loadout.setSecondary(WeaponInstance.full(spec)));
             case MELEE -> weaponRegistry.find(item.key())
                 .ifPresent(spec -> loadout.setMelee(WeaponInstance.full(spec)));
-            case GRENADE -> loadout.addGrenade(item.key(), 4, 1);
+            case GRENADE -> loadout.addGrenade(item.key(), grenadeMaxTotal(), grenadeMaxPerType(item.key()));
             case ARMOR -> loadout.armor().grantKevlar();
             case UTILITY, UNKNOWN -> {
             }
         }
+    }
+
+    private int grenadeMaxTotal() {
+        return 4;
+    }
+
+    private int grenadeMaxPerType(String key) {
+        if (key == null) {
+            return 1;
+        }
+        return "flashbang".equalsIgnoreCase(key) ? 2 : 1;
     }
 
     private Map<UUID, TeamSide> playersSnapshot() {

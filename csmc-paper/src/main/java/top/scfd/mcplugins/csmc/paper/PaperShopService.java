@@ -23,6 +23,11 @@ public final class PaperShopService {
             case "ak47", "m4a1s" -> Material.CROSSBOW;
             case "awp" -> Material.SPYGLASS;
             case "kevlar" -> Material.LEATHER_CHESTPLATE;
+            case "hegrenade" -> Material.SNOWBALL;
+            case "flashbang" -> Material.EGG;
+            case "smoke" -> Material.FIREWORK_STAR;
+            case "molotov" -> Material.FIRE_CHARGE;
+            case "decoy" -> Material.PAPER;
             default -> null;
         };
         if (material == null) {

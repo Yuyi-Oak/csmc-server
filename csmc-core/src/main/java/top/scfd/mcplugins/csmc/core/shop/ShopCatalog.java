@@ -15,6 +15,11 @@ public final class ShopCatalog {
         register(new ShopItem("m4a1s", "M4A1-S", 2900, ShopCategory.PRIMARY));
         register(new ShopItem("awp", "AWP", 4750, ShopCategory.PRIMARY));
         register(new ShopItem("kevlar", "Kevlar", 650, ShopCategory.ARMOR));
+        register(new ShopItem("hegrenade", "HE Grenade", 300, ShopCategory.GRENADE));
+        register(new ShopItem("flashbang", "Flashbang", 200, ShopCategory.GRENADE));
+        register(new ShopItem("smoke", "Smoke Grenade", 300, ShopCategory.GRENADE));
+        register(new ShopItem("molotov", "Molotov", 400, ShopCategory.GRENADE));
+        register(new ShopItem("decoy", "Decoy", 50, ShopCategory.GRENADE));
     }
 
     public ShopCatalog(Map<String, ShopItem> items) {
