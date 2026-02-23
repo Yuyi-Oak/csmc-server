@@ -17,6 +17,12 @@ public final class ShopCatalog {
         register(new ShopItem("kevlar", "Kevlar", 650));
     }
 
+    public ShopCatalog(Map<String, ShopItem> items) {
+        if (items != null) {
+            this.items.putAll(items);
+        }
+    }
+
     public Optional<ShopItem> find(String key) {
         if (key == null) {
             return Optional.empty();
@@ -26,6 +32,14 @@ public final class ShopCatalog {
 
     public Map<String, ShopItem> items() {
         return Collections.unmodifiableMap(items);
+    }
+
+    public boolean isEmpty() {
+        return items.isEmpty();
+    }
+
+    public ShopCatalog copy() {
+        return new ShopCatalog(items);
     }
 
     public void register(ShopItem item) {

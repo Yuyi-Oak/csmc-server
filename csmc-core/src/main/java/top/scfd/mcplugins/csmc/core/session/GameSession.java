@@ -31,11 +31,11 @@ public final class GameSession {
     private final RoundEngine roundEngine;
     private volatile SessionState state;
     private final Map<UUID, TeamSide> players = new ConcurrentHashMap<>();
-    private final ShopCatalog catalog = new ShopCatalog();
+    private final ShopCatalog catalog;
     private final List<RoundEventListener> roundListeners = new CopyOnWriteArrayList<>();
     private final List<EconomyEventListener> economyListeners = new CopyOnWriteArrayList<>();
 
-    public GameSession(UUID id, GameMode mode, int maxPlayers, ModeRules rules) {
+    public GameSession(UUID id, GameMode mode, int maxPlayers, ModeRules rules, ShopCatalog catalog) {
         this.id = id;
         this.mode = mode;
         this.maxPlayers = maxPlayers;
@@ -43,6 +43,11 @@ public final class GameSession {
         this.economy = new EconomyService(rules.economy(), economyListener());
         this.roundEngine = new RoundEngine(rules, this.economy, this::playersSnapshot, roundListener());
         this.state = SessionState.WAITING;
+        if (catalog == null || catalog.isEmpty()) {
+            this.catalog = new ShopCatalog();
+        } else {
+            this.catalog = catalog.copy();
+        }
     }
 
     public UUID id() {

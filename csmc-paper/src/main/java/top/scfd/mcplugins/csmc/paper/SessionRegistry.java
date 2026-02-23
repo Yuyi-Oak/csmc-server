@@ -12,19 +12,22 @@ import top.scfd.mcplugins.csmc.core.economy.EconomyEventListener;
 import top.scfd.mcplugins.csmc.core.match.RoundEventListener;
 import top.scfd.mcplugins.csmc.core.session.GameSession;
 import top.scfd.mcplugins.csmc.core.session.GameSessionManager;
+import top.scfd.mcplugins.csmc.core.shop.ShopCatalog;
 
 public final class SessionRegistry {
     private final GameSessionManager sessionManager;
+    private final ShopCatalog catalog;
     private final Map<UUID, UUID> playerSessions = new ConcurrentHashMap<>();
     private final List<RoundEventListener> roundListeners = new CopyOnWriteArrayList<>();
     private final List<EconomyEventListener> economyListeners = new CopyOnWriteArrayList<>();
 
-    public SessionRegistry(GameSessionManager sessionManager) {
+    public SessionRegistry(GameSessionManager sessionManager, ShopCatalog catalog) {
         this.sessionManager = sessionManager;
+        this.catalog = catalog;
     }
 
     public GameSession createSession(GameMode mode) {
-        GameSession session = sessionManager.createSession(mode, 0);
+        GameSession session = sessionManager.createSession(mode, 0, catalog);
         roundListeners.forEach(session::addRoundListener);
         economyListeners.forEach(session::addEconomyListener);
         return session;

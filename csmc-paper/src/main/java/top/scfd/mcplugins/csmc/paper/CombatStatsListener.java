@@ -12,9 +12,11 @@ import org.bukkit.entity.Projectile;
 
 public final class CombatStatsListener implements Listener {
     private final SessionRegistry sessions;
+    private final StatsService statsService;
 
-    public CombatStatsListener(SessionRegistry sessions) {
+    public CombatStatsListener(SessionRegistry sessions, StatsService statsService) {
         this.sessions = sessions;
+        this.statsService = statsService;
     }
 
     @EventHandler
@@ -43,10 +45,14 @@ public final class CombatStatsListener implements Listener {
             return;
         }
         UUID killerId = killer.getUniqueId();
-        if (sessions.findSession(killer) == null) {
+        var killerSession = sessions.findSession(killer);
+        var victimSession = sessions.findSession(victim);
+        if (killerSession == null || victimSession == null || killerSession != victimSession) {
             return;
         }
-        sessions.findSession(killer).onKill(killerId);
+        killerSession.onKill(killerId);
+        statsService.recordKill(killerId);
+        statsService.recordDeath(victim.getUniqueId());
         // Assist logic will be added later with damage tracking.
     }
 

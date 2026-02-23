@@ -1,0 +1,22 @@
+# CSMC shop configuration (English)
+# Define shop items. Each key is an internal item id.
+shop:
+  items:
+    glock:
+      name: "Glock-18"
+      price: 200
+    usp:
+      name: "USP-S"
+      price: 200
+    ak47:
+      name: "AK-47"
+      price: 2700
+    m4a1s:
+      name: "M4A1-S"
+      price: 2900
+    awp:
+      name: "AWP"
+      price: 4750
+    kevlar:
+      name: "Kevlar"
+      price: 650

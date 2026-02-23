@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import top.scfd.mcplugins.csmc.api.GameMode;
 import top.scfd.mcplugins.csmc.core.rules.ModeRules;
 import top.scfd.mcplugins.csmc.core.rules.ModeRulesRegistry;
+import top.scfd.mcplugins.csmc.core.shop.ShopCatalog;
 
 public final class GameSessionManager {
     private final Map<UUID, GameSession> sessions = new ConcurrentHashMap<>();
@@ -17,10 +18,14 @@ public final class GameSessionManager {
     }
 
     public GameSession createSession(GameMode mode, int maxPlayers) {
+        return createSession(mode, maxPlayers, null);
+    }
+
+    public GameSession createSession(GameMode mode, int maxPlayers, ShopCatalog catalog) {
         UUID id = UUID.randomUUID();
         ModeRules rules = rulesRegistry.rulesFor(mode);
         int resolvedMaxPlayers = maxPlayers > 0 ? maxPlayers : rules.maxPlayers();
-        GameSession session = new GameSession(id, mode, resolvedMaxPlayers, rules);
+        GameSession session = new GameSession(id, mode, resolvedMaxPlayers, rules, catalog);
         sessions.put(id, session);
         return session;
     }

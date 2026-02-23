@@ -2,6 +2,7 @@ package top.scfd.mcplugins.csmc;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import top.scfd.mcplugins.csmc.config.PaperConfigLoader;
+import top.scfd.mcplugins.csmc.config.PaperShopCatalogLoader;
 import top.scfd.mcplugins.csmc.core.CSMCCore;
 import top.scfd.mcplugins.csmc.core.config.CSMCConfig;
 import top.scfd.mcplugins.csmc.core.i18n.MessageService;
@@ -15,6 +16,7 @@ import top.scfd.mcplugins.csmc.paper.CombatStatsListener;
 import top.scfd.mcplugins.csmc.paper.HudTicker;
 import top.scfd.mcplugins.csmc.paper.PlayerSessionListener;
 import top.scfd.mcplugins.csmc.paper.SessionRegistry;
+import top.scfd.mcplugins.csmc.paper.StatsService;
 import top.scfd.mcplugins.csmc.paper.command.SessionCommand;
 import top.scfd.mcplugins.csmc.storage.PaperStorageProviderFactory;
 import top.scfd.mcplugins.csmc.storage.StorageManager;
@@ -37,7 +39,8 @@ public final class CSMCPlugin extends JavaPlugin {
         core = new CSMCCore(platform, config, messages, storageManager);
         core.start();
 
-        sessionRegistry = new SessionRegistry(core.sessions());
+        PaperShopCatalogLoader shopLoader = new PaperShopCatalogLoader(this);
+        sessionRegistry = new SessionRegistry(core.sessions(), shopLoader.load());
 
         PaperRoundNotifier roundNotifier = new PaperRoundNotifier(messages, sessionRegistry);
         PaperEconomyNotifier economyNotifier = new PaperEconomyNotifier(sessionRegistry);
@@ -52,9 +55,10 @@ public final class CSMCPlugin extends JavaPlugin {
         hudTicker.runTaskTimer(this, 20L, 20L);
 
         PaperShopService shopService = new PaperShopService();
+        StatsService statsService = new StatsService(storageManager);
         getCommand("csmc").setExecutor(new SessionCommand(sessionRegistry, shopService));
         getServer().getPluginManager().registerEvents(new PlayerSessionListener(sessionRegistry), this);
-        getServer().getPluginManager().registerEvents(new CombatStatsListener(sessionRegistry), this);
+        getServer().getPluginManager().registerEvents(new CombatStatsListener(sessionRegistry, statsService), this);
     }
 
     @Override
