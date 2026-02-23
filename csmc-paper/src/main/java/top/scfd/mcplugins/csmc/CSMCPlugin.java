@@ -45,7 +45,7 @@ public final class CSMCPlugin extends JavaPlugin {
 
         PaperShopCatalogLoader shopLoader = new PaperShopCatalogLoader(this);
         StatsService statsService = new StatsService(storageManager);
-        sessionRegistry = new SessionRegistry(core.sessions(), shopLoader.load(), statsService);
+        sessionRegistry = new SessionRegistry(core.sessions(), core.mapRegistry(), shopLoader.load(), statsService);
 
         PaperRoundNotifier roundNotifier = new PaperRoundNotifier(messages, sessionRegistry);
         PaperEconomyNotifier economyNotifier = new PaperEconomyNotifier(sessionRegistry);

@@ -8,6 +8,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.bukkit.entity.Player;
 import top.scfd.mcplugins.csmc.api.GameMode;
 import top.scfd.mcplugins.csmc.api.TeamSide;
+import top.scfd.mcplugins.csmc.core.map.MapDefinition;
+import top.scfd.mcplugins.csmc.core.map.MapRegistry;
 import top.scfd.mcplugins.csmc.core.economy.EconomyEventListener;
 import top.scfd.mcplugins.csmc.core.match.RoundEventListener;
 import top.scfd.mcplugins.csmc.core.session.GameSession;
@@ -16,14 +18,17 @@ import top.scfd.mcplugins.csmc.core.shop.ShopCatalog;
 
 public final class SessionRegistry {
     private final GameSessionManager sessionManager;
+    private final MapRegistry mapRegistry;
     private final ShopCatalog catalog;
     private final StatsService statsService;
     private final Map<UUID, UUID> playerSessions = new ConcurrentHashMap<>();
+    private final Map<UUID, MapDefinition> sessionMaps = new ConcurrentHashMap<>();
     private final List<RoundEventListener> roundListeners = new CopyOnWriteArrayList<>();
     private final List<EconomyEventListener> economyListeners = new CopyOnWriteArrayList<>();
 
-    public SessionRegistry(GameSessionManager sessionManager, ShopCatalog catalog, StatsService statsService) {
+    public SessionRegistry(GameSessionManager sessionManager, MapRegistry mapRegistry, ShopCatalog catalog, StatsService statsService) {
         this.sessionManager = sessionManager;
+        this.mapRegistry = mapRegistry;
         this.catalog = catalog;
         this.statsService = statsService;
     }
@@ -34,6 +39,11 @@ public final class SessionRegistry {
         economyListeners.forEach(session::addEconomyListener);
         if (statsService != null) {
             session.addRoundListener(new StatsRoundListener(session, statsService));
+        }
+        MapDefinition map = resolveDefaultMap();
+        if (map != null) {
+            sessionMaps.put(session.id(), map);
+            session.addRoundListener(new RoundSpawnListener(session, map));
         }
         return session;
     }
@@ -49,6 +59,13 @@ public final class SessionRegistry {
 
     public GameSession getSession(UUID sessionId) {
         return sessionManager.getSession(sessionId);
+    }
+
+    public MapDefinition mapForSession(GameSession session) {
+        if (session == null) {
+            return null;
+        }
+        return sessionMaps.get(session.id());
     }
 
     public TeamSide joinSession(Player player, GameSession session) {
@@ -80,5 +97,12 @@ public final class SessionRegistry {
         if (listener != null) {
             economyListeners.add(listener);
         }
+    }
+
+    private MapDefinition resolveDefaultMap() {
+        if (mapRegistry == null) {
+            return null;
+        }
+        return mapRegistry.all().stream().findFirst().orElse(null);
     }
 }
