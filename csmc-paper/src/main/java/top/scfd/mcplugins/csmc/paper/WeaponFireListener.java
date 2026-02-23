@@ -58,6 +58,9 @@ public final class WeaponFireListener implements Listener {
             return;
         }
         long tick = player.getWorld().getFullTime();
+        if (weapon.state().isReloading(tick)) {
+            return;
+        }
         double minTicks = Math.max(1.0, 20.0 / Math.max(0.1, spec.fireRate()));
         if (tick - weapon.state().lastShotTick() < minTicks) {
             return;

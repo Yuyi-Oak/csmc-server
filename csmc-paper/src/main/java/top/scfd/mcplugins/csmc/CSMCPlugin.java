@@ -80,7 +80,7 @@ public final class CSMCPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new BombInteractListener(sessionRegistry, bombService), this);
         getServer().getPluginManager().registerEvents(new WeaponSelectionListener(sessionRegistry), this);
         getServer().getPluginManager().registerEvents(new WeaponFireListener(sessionRegistry, weaponItems, loadoutInventory), this);
-        getServer().getPluginManager().registerEvents(new WeaponReloadListener(sessionRegistry, weaponItems, loadoutInventory), this);
+        getServer().getPluginManager().registerEvents(new WeaponReloadListener(sessionRegistry, weaponItems, loadoutInventory, this), this);
         getServer().getPluginManager().registerEvents(new GrenadeThrowListener(sessionRegistry, grenadeItems, this), this);
         getServer().getPluginManager().registerEvents(new MapProtectionListener(sessionRegistry), this);
     }
