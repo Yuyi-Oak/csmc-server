@@ -29,6 +29,15 @@ public final class ArmorState {
         defuseKit = true;
     }
 
+    public int applyArmorDamage(double damage) {
+        if (damage <= 0) {
+            return 0;
+        }
+        int absorbed = (int) Math.min(armor, Math.ceil(damage));
+        armor = Math.max(0, armor - absorbed);
+        return absorbed;
+    }
+
     public void reset() {
         armor = 0;
         helmet = false;

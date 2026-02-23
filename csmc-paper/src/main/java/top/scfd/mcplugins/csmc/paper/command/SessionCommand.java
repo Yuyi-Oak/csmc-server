@@ -8,18 +8,22 @@ import org.bukkit.entity.Player;
 import top.scfd.mcplugins.csmc.api.GameMode;
 import top.scfd.mcplugins.csmc.api.TeamSide;
 import top.scfd.mcplugins.csmc.core.shop.BuyResult;
+import top.scfd.mcplugins.csmc.core.shop.ShopCategory;
 import top.scfd.mcplugins.csmc.core.shop.ShopItem;
 import top.scfd.mcplugins.csmc.core.session.GameSession;
+import top.scfd.mcplugins.csmc.paper.LoadoutInventoryService;
 import top.scfd.mcplugins.csmc.paper.PaperShopService;
 import top.scfd.mcplugins.csmc.paper.SessionRegistry;
 
 public final class SessionCommand implements CommandExecutor {
     private final SessionRegistry sessions;
     private final PaperShopService shopService;
+    private final LoadoutInventoryService loadoutInventory;
 
-    public SessionCommand(SessionRegistry sessions, PaperShopService shopService) {
+    public SessionCommand(SessionRegistry sessions, PaperShopService shopService, LoadoutInventoryService loadoutInventory) {
         this.sessions = sessions;
         this.shopService = shopService;
+        this.loadoutInventory = loadoutInventory;
     }
 
     @Override
@@ -60,6 +64,9 @@ public final class SessionCommand implements CommandExecutor {
         GameSession session = sessions.createSession(mode);
         TeamSide side = sessions.joinSession(player, session);
         player.sendMessage("Created session " + session.id() + " for " + mode + " as " + side);
+        if (side != TeamSide.SPECTATOR) {
+            loadoutInventory.applyWeapons(player, session.loadout(player.getUniqueId()));
+        }
         return true;
     }
 
@@ -86,6 +93,7 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         player.sendMessage("Joined session " + session.id() + " as " + side);
+        loadoutInventory.applyWeapons(player, session.loadout(player.getUniqueId()));
         return true;
     }
 
@@ -133,7 +141,14 @@ public final class SessionCommand implements CommandExecutor {
         BuyResult result = session.buy(player.getUniqueId(), args[1]);
         switch (result) {
             case SUCCESS -> {
-                shopService.grant(player, item);
+                ShopCategory category = item.category();
+                if (category == null) {
+                    category = ShopCategory.UNKNOWN;
+                }
+                switch (category) {
+                    case PRIMARY, SECONDARY, MELEE -> loadoutInventory.applyWeapons(player, session.loadout(player.getUniqueId()));
+                    default -> shopService.grant(player, item);
+                }
                 player.sendMessage("Purchase successful.");
             }
             case BUY_TIME_OVER -> player.sendMessage("Buy time is over.");

@@ -17,9 +17,13 @@ import top.scfd.mcplugins.csmc.paper.BombInteractListener;
 import top.scfd.mcplugins.csmc.paper.BombService;
 import top.scfd.mcplugins.csmc.paper.CombatStatsListener;
 import top.scfd.mcplugins.csmc.paper.HudTicker;
+import top.scfd.mcplugins.csmc.paper.LoadoutInventoryService;
 import top.scfd.mcplugins.csmc.paper.PlayerSessionListener;
 import top.scfd.mcplugins.csmc.paper.SessionRegistry;
 import top.scfd.mcplugins.csmc.paper.StatsService;
+import top.scfd.mcplugins.csmc.paper.WeaponFireListener;
+import top.scfd.mcplugins.csmc.paper.WeaponItemService;
+import top.scfd.mcplugins.csmc.paper.WeaponSelectionListener;
 import top.scfd.mcplugins.csmc.paper.command.SessionCommand;
 import top.scfd.mcplugins.csmc.storage.PaperStorageProviderFactory;
 import top.scfd.mcplugins.csmc.storage.StorageManager;
@@ -48,7 +52,9 @@ public final class CSMCPlugin extends JavaPlugin {
         PaperShopCatalogLoader shopLoader = new PaperShopCatalogLoader(this);
         StatsService statsService = new StatsService(storageManager);
         BombService bombService = new BombService();
-        sessionRegistry = new SessionRegistry(core.sessions(), core.mapRegistry(), shopLoader.load(), statsService, bombService);
+        WeaponItemService weaponItems = new WeaponItemService(this);
+        LoadoutInventoryService loadoutInventory = new LoadoutInventoryService(weaponItems);
+        sessionRegistry = new SessionRegistry(core.sessions(), core.mapRegistry(), shopLoader.load(), statsService, bombService, loadoutInventory);
 
         PaperRoundNotifier roundNotifier = new PaperRoundNotifier(messages, sessionRegistry);
         PaperEconomyNotifier economyNotifier = new PaperEconomyNotifier(sessionRegistry);
@@ -63,10 +69,12 @@ public final class CSMCPlugin extends JavaPlugin {
         hudTicker.runTaskTimer(this, 20L, 20L);
 
         PaperShopService shopService = new PaperShopService();
-        getCommand("csmc").setExecutor(new SessionCommand(sessionRegistry, shopService));
+        getCommand("csmc").setExecutor(new SessionCommand(sessionRegistry, shopService, loadoutInventory));
         getServer().getPluginManager().registerEvents(new PlayerSessionListener(sessionRegistry), this);
         getServer().getPluginManager().registerEvents(new CombatStatsListener(sessionRegistry, statsService), this);
         getServer().getPluginManager().registerEvents(new BombInteractListener(sessionRegistry, bombService), this);
+        getServer().getPluginManager().registerEvents(new WeaponSelectionListener(sessionRegistry), this);
+        getServer().getPluginManager().registerEvents(new WeaponFireListener(sessionRegistry, weaponItems, loadoutInventory), this);
     }
 
     @Override

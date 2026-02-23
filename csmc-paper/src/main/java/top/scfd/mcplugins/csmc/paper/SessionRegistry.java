@@ -24,17 +24,19 @@ public final class SessionRegistry {
     private final ShopCatalog catalog;
     private final StatsService statsService;
     private final BombService bombs;
+    private final LoadoutInventoryService loadoutInventory;
     private final Map<UUID, UUID> playerSessions = new ConcurrentHashMap<>();
     private final Map<UUID, MapDefinition> sessionMaps = new ConcurrentHashMap<>();
     private final List<RoundEventListener> roundListeners = new CopyOnWriteArrayList<>();
     private final List<EconomyEventListener> economyListeners = new CopyOnWriteArrayList<>();
 
-    public SessionRegistry(GameSessionManager sessionManager, MapRegistry mapRegistry, ShopCatalog catalog, StatsService statsService, BombService bombs) {
+    public SessionRegistry(GameSessionManager sessionManager, MapRegistry mapRegistry, ShopCatalog catalog, StatsService statsService, BombService bombs, LoadoutInventoryService loadoutInventory) {
         this.sessionManager = sessionManager;
         this.mapRegistry = mapRegistry;
         this.catalog = catalog;
         this.statsService = statsService;
         this.bombs = bombs;
+        this.loadoutInventory = loadoutInventory;
     }
 
     public GameSession createSession(GameMode mode) {
@@ -51,6 +53,9 @@ public final class SessionRegistry {
         if (map != null) {
             sessionMaps.put(session.id(), map);
             session.addRoundListener(new RoundSpawnListener(session, map));
+        }
+        if (loadoutInventory != null) {
+            session.addRoundListener(new LoadoutRoundListener(session, loadoutInventory));
         }
         return session;
     }
