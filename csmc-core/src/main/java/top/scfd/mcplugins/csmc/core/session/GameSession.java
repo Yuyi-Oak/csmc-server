@@ -17,10 +17,16 @@ import top.scfd.mcplugins.csmc.core.match.RoundEndReason;
 import top.scfd.mcplugins.csmc.core.match.RoundEngine;
 import top.scfd.mcplugins.csmc.core.match.RoundEventListener;
 import top.scfd.mcplugins.csmc.core.match.RoundPhase;
+import top.scfd.mcplugins.csmc.core.player.PlayerLoadout;
+import top.scfd.mcplugins.csmc.core.player.WeaponInstance;
+import top.scfd.mcplugins.csmc.core.player.WeaponSlot;
 import top.scfd.mcplugins.csmc.core.rules.ModeRules;
 import top.scfd.mcplugins.csmc.core.shop.BuyResult;
 import top.scfd.mcplugins.csmc.core.shop.ShopCatalog;
+import top.scfd.mcplugins.csmc.core.shop.ShopCategory;
 import top.scfd.mcplugins.csmc.core.shop.ShopItem;
+import top.scfd.mcplugins.csmc.core.weapon.WeaponRegistry;
+import top.scfd.mcplugins.csmc.core.weapon.WeaponSpec;
 
 public final class GameSession {
     private final UUID id;
@@ -31,7 +37,9 @@ public final class GameSession {
     private final RoundEngine roundEngine;
     private volatile SessionState state;
     private final Map<UUID, TeamSide> players = new ConcurrentHashMap<>();
+    private final Map<UUID, PlayerLoadout> loadouts = new ConcurrentHashMap<>();
     private final ShopCatalog catalog;
+    private final WeaponRegistry weaponRegistry;
     private final List<RoundEventListener> roundListeners = new CopyOnWriteArrayList<>();
     private final List<EconomyEventListener> economyListeners = new CopyOnWriteArrayList<>();
 
@@ -43,6 +51,7 @@ public final class GameSession {
         this.economy = new EconomyService(rules.economy(), economyListener());
         this.roundEngine = new RoundEngine(rules, this.economy, this::playersSnapshot, roundListener());
         this.state = SessionState.WAITING;
+        this.weaponRegistry = new WeaponRegistry();
         if (catalog == null || catalog.isEmpty()) {
             this.catalog = new ShopCatalog();
         } else {
@@ -112,6 +121,7 @@ public final class GameSession {
 
     public void removePlayer(UUID playerId) {
         players.remove(playerId);
+        loadouts.remove(playerId);
     }
 
     public TeamSide joinPlayer(UUID playerId) {
@@ -120,6 +130,7 @@ public final class GameSession {
             return TeamSide.SPECTATOR;
         }
         economy.reset(playerId);
+        loadouts.put(playerId, createDefaultLoadout(assigned));
         return assigned;
     }
 
@@ -129,6 +140,10 @@ public final class GameSession {
 
     public Set<UUID> players() {
         return Set.copyOf(players.keySet());
+    }
+
+    public PlayerLoadout loadout(UUID playerId) {
+        return loadouts.get(playerId);
     }
 
     public BuyResult buy(UUID playerId, String itemKey) {
@@ -142,8 +157,20 @@ public final class GameSession {
         if (item == null) {
             return BuyResult.UNKNOWN_ITEM;
         }
+        PlayerLoadout loadout = loadouts.get(playerId);
+        if (loadout == null) {
+            return BuyResult.NOT_IN_SESSION;
+        }
+        BuyResult validation = validatePurchase(item, loadout);
+        if (validation != BuyResult.SUCCESS) {
+            return validation;
+        }
         boolean success = economy.spend(playerId, item.price());
-        return success ? BuyResult.SUCCESS : BuyResult.INSUFFICIENT_FUNDS;
+        if (!success) {
+            return BuyResult.INSUFFICIENT_FUNDS;
+        }
+        grantPurchase(item, loadout);
+        return BuyResult.SUCCESS;
     }
 
     public ShopItem findItem(String itemKey) {
@@ -211,6 +238,54 @@ public final class GameSession {
             }
         }
         return tCount <= ctCount ? TeamSide.TERRORIST : TeamSide.COUNTER_TERRORIST;
+    }
+
+    private PlayerLoadout createDefaultLoadout(TeamSide side) {
+        PlayerLoadout loadout = new PlayerLoadout();
+        WeaponSpec pistol = weaponRegistry.find(side == TeamSide.COUNTER_TERRORIST ? "usp" : "glock").orElse(null);
+        WeaponSpec knife = weaponRegistry.find("knife").orElse(null);
+        if (pistol != null) {
+            loadout.setSecondary(WeaponInstance.full(pistol));
+            loadout.setActiveSlot(WeaponSlot.SECONDARY);
+        }
+        if (knife != null) {
+            loadout.setMelee(WeaponInstance.full(knife));
+        }
+        return loadout;
+    }
+
+    private BuyResult validatePurchase(ShopItem item, PlayerLoadout loadout) {
+        ShopCategory category = item.category();
+        if (category == null) {
+            category = ShopCategory.UNKNOWN;
+        }
+        return switch (category) {
+            case PRIMARY, SECONDARY, MELEE -> weaponRegistry.find(item.key()).isPresent()
+                ? BuyResult.SUCCESS
+                : BuyResult.UNKNOWN_ITEM;
+            case GRENADE -> loadout.canAddGrenade(item.key(), 4, 1) ? BuyResult.SUCCESS : BuyResult.INVENTORY_FULL;
+            case ARMOR -> loadout.armor().armor() >= 100 ? BuyResult.INVENTORY_FULL : BuyResult.SUCCESS;
+            case UTILITY, UNKNOWN -> BuyResult.UNKNOWN_ITEM;
+        };
+    }
+
+    private void grantPurchase(ShopItem item, PlayerLoadout loadout) {
+        ShopCategory category = item.category();
+        if (category == null) {
+            category = ShopCategory.UNKNOWN;
+        }
+        switch (category) {
+            case PRIMARY -> weaponRegistry.find(item.key())
+                .ifPresent(spec -> loadout.setPrimary(WeaponInstance.full(spec)));
+            case SECONDARY -> weaponRegistry.find(item.key())
+                .ifPresent(spec -> loadout.setSecondary(WeaponInstance.full(spec)));
+            case MELEE -> weaponRegistry.find(item.key())
+                .ifPresent(spec -> loadout.setMelee(WeaponInstance.full(spec)));
+            case GRENADE -> loadout.addGrenade(item.key(), 4, 1);
+            case ARMOR -> loadout.armor().grantKevlar();
+            case UTILITY, UNKNOWN -> {
+            }
+        }
     }
 
     private Map<UUID, TeamSide> playersSnapshot() {

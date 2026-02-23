@@ -5,6 +5,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import top.scfd.mcplugins.csmc.core.shop.ShopCatalog;
+import top.scfd.mcplugins.csmc.core.shop.ShopCategory;
 import top.scfd.mcplugins.csmc.core.shop.ShopItem;
 
 public final class PaperShopCatalogLoader {
@@ -29,10 +30,11 @@ public final class PaperShopCatalogLoader {
             for (String key : items.getKeys(false)) {
                 String name = items.getString(key + ".name", key);
                 int price = items.getInt(key + ".price", 0);
+                ShopCategory category = ShopCategory.fromConfig(items.getString(key + ".category"));
                 if (price <= 0) {
                     continue;
                 }
-                catalog.register(new ShopItem(key, name, price));
+                catalog.register(new ShopItem(key, name, price, category));
             }
         }
         return catalog;

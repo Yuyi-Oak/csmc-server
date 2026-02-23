@@ -9,12 +9,12 @@ public final class ShopCatalog {
     private final Map<String, ShopItem> items = new LinkedHashMap<>();
 
     public ShopCatalog() {
-        register(new ShopItem("glock", "Glock-18", 200));
-        register(new ShopItem("usp", "USP-S", 200));
-        register(new ShopItem("ak47", "AK-47", 2700));
-        register(new ShopItem("m4a1s", "M4A1-S", 2900));
-        register(new ShopItem("awp", "AWP", 4750));
-        register(new ShopItem("kevlar", "Kevlar", 650));
+        register(new ShopItem("glock", "Glock-18", 200, ShopCategory.SECONDARY));
+        register(new ShopItem("usp", "USP-S", 200, ShopCategory.SECONDARY));
+        register(new ShopItem("ak47", "AK-47", 2700, ShopCategory.PRIMARY));
+        register(new ShopItem("m4a1s", "M4A1-S", 2900, ShopCategory.PRIMARY));
+        register(new ShopItem("awp", "AWP", 4750, ShopCategory.PRIMARY));
+        register(new ShopItem("kevlar", "Kevlar", 650, ShopCategory.ARMOR));
     }
 
     public ShopCatalog(Map<String, ShopItem> items) {

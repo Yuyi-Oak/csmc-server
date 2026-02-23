@@ -136,6 +136,7 @@ public final class SessionCommand implements CommandExecutor {
             case INSUFFICIENT_FUNDS -> player.sendMessage("Not enough money.");
             case UNKNOWN_ITEM -> player.sendMessage("Unknown item.");
             case NOT_IN_SESSION -> player.sendMessage("You are not in a session.");
+            case INVENTORY_FULL -> player.sendMessage("Inventory full.");
         }
         return true;
     }

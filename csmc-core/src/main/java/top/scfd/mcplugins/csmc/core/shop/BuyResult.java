@@ -5,5 +5,6 @@ public enum BuyResult {
     NOT_IN_SESSION,
     BUY_TIME_OVER,
     INSUFFICIENT_FUNDS,
-    UNKNOWN_ITEM
+    UNKNOWN_ITEM,
+    INVENTORY_FULL
 }

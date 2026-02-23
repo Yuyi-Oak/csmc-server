@@ -14,6 +14,7 @@ public final class WeaponRegistry {
         register(new WeaponSpec("ak47", "AK-47", WeaponType.RIFLE, 2700, 36, 100, 0.77, 10.0, 30, 2.5));
         register(new WeaponSpec("m4a1s", "M4A1-S", WeaponType.RIFLE, 2900, 33, 90, 0.7, 11.0, 25, 3.1));
         register(new WeaponSpec("awp", "AWP", WeaponType.SNIPER, 4750, 115, 300, 0.97, 1.0, 10, 3.6));
+        register(new WeaponSpec("knife", "Knife", WeaponType.KNIFE, 0, 55, 2, 1.0, 1.0, 1, 0.0));
     }
 
     public Optional<WeaponSpec> find(String key) {
