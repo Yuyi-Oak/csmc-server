@@ -10,12 +10,15 @@ dependencies {
     implementation project(':csmc-storage')
 }
 
-processResources {
+def pluginResourceProps = [
+    version: version.toString(),
+    apiVersion: rootProject.ext.apiVersion.toString()
+]
+
+tasks.named('processResources', ProcessResources).configure {
+    inputs.properties(pluginResourceProps)
     filesMatching('plugin.yml') {
-        expand(
-            version: project.version,
-            apiVersion: rootProject.ext.apiVersion
-        )
+        expand(pluginResourceProps)
     }
 }
 
