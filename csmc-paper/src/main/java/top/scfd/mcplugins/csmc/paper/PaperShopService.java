@@ -28,6 +28,7 @@ public final class PaperShopService {
             case "smoke" -> Material.FIREWORK_STAR;
             case "molotov" -> Material.FIRE_CHARGE;
             case "decoy" -> Material.PAPER;
+            case "defuse_kit" -> Material.SHEARS;
             default -> null;
         };
         if (material == null) {

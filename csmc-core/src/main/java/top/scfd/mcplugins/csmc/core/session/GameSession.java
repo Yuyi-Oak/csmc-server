@@ -275,7 +275,13 @@ public final class GameSession {
                 ? BuyResult.SUCCESS
                 : BuyResult.INVENTORY_FULL;
             case ARMOR -> loadout.armor().armor() >= 100 ? BuyResult.INVENTORY_FULL : BuyResult.SUCCESS;
-            case UTILITY, UNKNOWN -> BuyResult.UNKNOWN_ITEM;
+            case UTILITY -> {
+                if (isDefuseKit(item.key())) {
+                    yield loadout.armor().defuseKit() ? BuyResult.INVENTORY_FULL : BuyResult.SUCCESS;
+                }
+                yield BuyResult.UNKNOWN_ITEM;
+            }
+            case UNKNOWN -> BuyResult.UNKNOWN_ITEM;
         };
     }
 
@@ -293,7 +299,12 @@ public final class GameSession {
                 .ifPresent(spec -> loadout.setMelee(WeaponInstance.full(spec)));
             case GRENADE -> loadout.addGrenade(item.key(), grenadeMaxTotal(), grenadeMaxPerType(item.key()));
             case ARMOR -> loadout.armor().grantKevlar();
-            case UTILITY, UNKNOWN -> {
+            case UTILITY -> {
+                if (isDefuseKit(item.key())) {
+                    loadout.armor().grantDefuseKit();
+                }
+            }
+            case UNKNOWN -> {
             }
         }
     }
@@ -307,6 +318,10 @@ public final class GameSession {
             return 1;
         }
         return "flashbang".equalsIgnoreCase(key) ? 2 : 1;
+    }
+
+    private boolean isDefuseKit(String key) {
+        return key != null && "defuse_kit".equalsIgnoreCase(key);
     }
 
     private Map<UUID, TeamSide> playersSnapshot() {

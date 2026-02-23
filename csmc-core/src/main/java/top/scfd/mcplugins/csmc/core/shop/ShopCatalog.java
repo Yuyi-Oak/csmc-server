@@ -20,6 +20,7 @@ public final class ShopCatalog {
         register(new ShopItem("smoke", "Smoke Grenade", 300, ShopCategory.GRENADE));
         register(new ShopItem("molotov", "Molotov", 400, ShopCategory.GRENADE));
         register(new ShopItem("decoy", "Decoy", 50, ShopCategory.GRENADE));
+        register(new ShopItem("defuse_kit", "Defuse Kit", 400, ShopCategory.UTILITY));
     }
 
     public ShopCatalog(Map<String, ShopItem> items) {

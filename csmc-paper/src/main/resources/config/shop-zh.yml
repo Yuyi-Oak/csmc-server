@@ -47,3 +47,7 @@ shop:
       name: "Decoy"
       price: 50
       category: grenade
+    defuse_kit:
+      name: "Defuse Kit"
+      price: 400
+      category: utility
