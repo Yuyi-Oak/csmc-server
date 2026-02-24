@@ -87,6 +87,9 @@ public final class SessionRegistry {
         if (loadoutInventory != null) {
             session.addRoundListener(new LoadoutRoundListener(session, loadoutInventory));
         }
+        if (combatTracker != null) {
+            session.addRoundListener(new RoundScoreboardNotifier(session, combatTracker));
+        }
         if (matchHistory != null) {
             String resolvedMapId = map == null ? "unknown" : map.id();
             session.addRoundListener(new SessionHistoryRoundListener(
