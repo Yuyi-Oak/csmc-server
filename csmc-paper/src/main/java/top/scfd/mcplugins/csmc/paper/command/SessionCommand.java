@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -264,19 +265,33 @@ public final class SessionCommand implements CommandExecutor {
     }
 
     private boolean handleStats(Player sender, String[] args) {
-        Player target = sender;
+        UUID targetId = sender.getUniqueId();
+        String targetName = sender.getName();
         if (args.length >= 2) {
-            target = Bukkit.getPlayerExact(args[1]);
-            if (target == null) {
-                sender.sendMessage("Player not found (must be online).");
-                return true;
+            UUID parsedId = parseUuid(args[1]);
+            if (parsedId != null) {
+                targetId = parsedId;
+                OfflinePlayer offline = Bukkit.getOfflinePlayer(parsedId);
+                targetName = resolveName(offline, parsedId);
+            } else {
+                OfflinePlayer offline = Bukkit.getOfflinePlayer(args[1]);
+                if (offline.getUniqueId() == null) {
+                    sender.sendMessage("Player not found.");
+                    return true;
+                }
+                if (!offline.isOnline() && !offline.hasPlayedBefore()) {
+                    sender.sendMessage("Player not found.");
+                    return true;
+                }
+                targetId = offline.getUniqueId();
+                targetName = resolveName(offline, targetId);
             }
         }
-        PlayerStats playerStats = stats.get(target.getUniqueId());
+        PlayerStats playerStats = stats.get(targetId);
         double kd = playerStats.deaths() == 0
             ? playerStats.kills()
             : (double) playerStats.kills() / playerStats.deaths();
-        sender.sendMessage("Stats - " + target.getName()
+        sender.sendMessage("Stats - " + targetName
             + " | K:" + playerStats.kills()
             + " D:" + playerStats.deaths()
             + " A:" + playerStats.assists()
@@ -371,5 +386,20 @@ public final class SessionCommand implements CommandExecutor {
             player.sendMessage("Queue " + mode + " (" + mapText + ") | position " + position + " / " + size);
         }
         return true;
+    }
+
+    private UUID parseUuid(String value) {
+        try {
+            return UUID.fromString(value);
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
+    }
+
+    private String resolveName(OfflinePlayer offline, UUID fallbackId) {
+        if (offline != null && offline.getName() != null && !offline.getName().isBlank()) {
+            return offline.getName();
+        }
+        return fallbackId.toString();
     }
 }
