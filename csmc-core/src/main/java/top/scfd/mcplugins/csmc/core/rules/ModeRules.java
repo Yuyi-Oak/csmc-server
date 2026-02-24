@@ -7,6 +7,7 @@ public record ModeRules(
     int maxPlayers,
     int roundsToWin,
     int maxRounds,
+    boolean friendlyFireEnabled,
     boolean overtimeEnabled,
     int overtimeRoundsToWin,
     int overtimeMaxRounds,

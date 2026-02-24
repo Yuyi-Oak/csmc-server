@@ -112,7 +112,7 @@ public final class WeaponFireListener implements Listener {
         }
         TeamSide attackerSide = session.getSide(player.getUniqueId());
         TeamSide victimSide = session.getSide(victim.getUniqueId());
-        if (attackerSide == victimSide && attackerSide != TeamSide.SPECTATOR) {
+        if (!session.rules().friendlyFireEnabled() && attackerSide == victimSide && attackerSide != TeamSide.SPECTATOR) {
             return;
         }
         PlayerLoadout victimLoadout = session.loadout(victim.getUniqueId());

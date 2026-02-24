@@ -58,7 +58,8 @@ public final class CombatStatsListener implements Listener {
         }
         TeamSide victimSide = victimSession.getSide(victim.getUniqueId());
         TeamSide attackerSide = victimSession.getSide(attacker.getUniqueId());
-        if (victimSide == attackerSide && victimSide != TeamSide.SPECTATOR) {
+        boolean sameTeam = victimSide == attackerSide && victimSide != TeamSide.SPECTATOR;
+        if (!victimSession.rules().friendlyFireEnabled() && sameTeam) {
             event.setCancelled(true);
             return;
         }
@@ -88,17 +89,21 @@ public final class CombatStatsListener implements Listener {
             UUID killerId = killer.getUniqueId();
             var killerSession = sessions.findSession(killer);
             if (killerSession != null && killerSession == victimSession && !killerId.equals(victim.getUniqueId())) {
-                killerSession.onKill(killerId);
-                statsService.recordKill(killerId);
-                combatTracker.recordKill(killerSession, killerId);
-                if (headshots.consumeIfMatching(victim.getUniqueId(), killerId, victim.getWorld().getFullTime())) {
-                    statsService.recordHeadshot(killerId);
-                    combatTracker.recordHeadshot(killerSession, killerId);
-                }
-                if (assisterId != null && !assisterId.equals(killerId)) {
-                    killerSession.onAssist(assisterId);
-                    statsService.recordAssist(assisterId);
-                    combatTracker.recordAssist(killerSession, assisterId);
+                TeamSide killerSide = killerSession.getSide(killerId);
+                boolean teamKill = killerSide == victimSide && killerSide != TeamSide.SPECTATOR;
+                if (!teamKill) {
+                    killerSession.onKill(killerId);
+                    statsService.recordKill(killerId);
+                    combatTracker.recordKill(killerSession, killerId);
+                    if (headshots.consumeIfMatching(victim.getUniqueId(), killerId, victim.getWorld().getFullTime())) {
+                        statsService.recordHeadshot(killerId);
+                        combatTracker.recordHeadshot(killerSession, killerId);
+                    }
+                    if (assisterId != null && !assisterId.equals(killerId) && killerSession.getSide(assisterId) == killerSide) {
+                        killerSession.onAssist(assisterId);
+                        statsService.recordAssist(assisterId);
+                        combatTracker.recordAssist(killerSession, assisterId);
+                    }
                 }
             }
         }

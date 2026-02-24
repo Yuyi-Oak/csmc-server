@@ -97,6 +97,7 @@ final class GameSessionTest {
             10,
             roundsToWin,
             maxRounds,
+            true,
             false,
             0,
             0,
