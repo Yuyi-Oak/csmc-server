@@ -18,7 +18,7 @@ public final class CombatStatsListener implements Listener {
     private final MatchCombatTrackerService combatTracker;
     private final TeamEliminationResolver eliminations;
     private final HeadshotTrackerService headshots;
-    private final java.util.Map<java.util.UUID, java.util.UUID> lastHit = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.Map<java.util.UUID, LastHitContext> lastHit = new java.util.concurrent.ConcurrentHashMap<>();
 
     public CombatStatsListener(
         SessionRegistry sessions,
@@ -65,7 +65,14 @@ public final class CombatStatsListener implements Listener {
         }
         if (!victim.getUniqueId().equals(attacker.getUniqueId())) {
             // Placeholder for future damage tracking (headshots, weapon type, etc.)
-            lastHit.put(victim.getUniqueId(), attacker.getUniqueId());
+            lastHit.put(
+                victim.getUniqueId(),
+                new LastHitContext(
+                    attacker.getUniqueId(),
+                    victimSession.id(),
+                    victimSession.roundEngine().matchState().roundNumber()
+                )
+            );
         }
     }
 
@@ -82,7 +89,13 @@ public final class CombatStatsListener implements Listener {
         TeamSide victimSide = victimSession.getSide(victim.getUniqueId());
         statsService.recordDeath(victim.getUniqueId());
         combatTracker.recordDeath(victimSession, victim.getUniqueId());
-        UUID assisterId = lastHit.remove(victim.getUniqueId());
+        UUID assisterId = null;
+        LastHitContext context = lastHit.remove(victim.getUniqueId());
+        if (context != null
+            && context.sessionId().equals(victimSession.id())
+            && context.roundNumber() == victimSession.roundEngine().matchState().roundNumber()) {
+            assisterId = context.attackerId();
+        }
 
         Player killer = victim.getKiller();
         if (killer != null) {
@@ -125,5 +138,8 @@ public final class CombatStatsListener implements Listener {
 
     private boolean isCombatPhase(RoundPhase phase) {
         return phase == RoundPhase.BUY || phase == RoundPhase.LIVE || phase == RoundPhase.BOMB_PLANTED;
+    }
+
+    private record LastHitContext(UUID attackerId, UUID sessionId, int roundNumber) {
     }
 }

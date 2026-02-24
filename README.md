@@ -35,6 +35,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Stats persistence is now buffered and flushed asynchronously in batches for smoother tick performance.
 - Per-match live scoreboard is available via `/csmc scoreboard`.
 - End-of-round top players and match MVP are broadcast to session chat automatically.
+- Assist credit is now constrained to hits from the same round/session to avoid stale carryover.
 - `/csmc` now includes tab-completion for modes/maps/session IDs/view targets.
 - `/csmcmap` now includes tab-completion for map IDs, sides, bomb sites, and removable point indexes.
 - Friendly fire is mode-aware: enabled for competitive/wingman/demolition, disabled for casual/deathmatch-style modes.
