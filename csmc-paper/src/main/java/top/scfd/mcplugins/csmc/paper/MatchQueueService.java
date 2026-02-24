@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import top.scfd.mcplugins.csmc.api.GameMode;
@@ -100,6 +102,7 @@ public final class MatchQueueService {
 
     public synchronized void tick() {
         if (sessions.sessionCount() >= maxSessions) {
+            updateQueueActionBar();
             return;
         }
         for (GameMode mode : GameMode.values()) {
@@ -124,6 +127,7 @@ public final class MatchQueueService {
                 }
             }
         }
+        updateQueueActionBar();
     }
 
     private List<QueuedPlayer> fillSession(GameMode mode, String selectedMap, GameSession session) {
@@ -228,6 +232,25 @@ public final class MatchQueueService {
         }
         String normalized = mapId.trim().toLowerCase(java.util.Locale.ROOT);
         return normalized.isEmpty() ? null : normalized;
+    }
+
+    private void updateQueueActionBar() {
+        for (Map.Entry<UUID, GameMode> entry : queuedModes.entrySet()) {
+            UUID playerId = entry.getKey();
+            GameMode mode = entry.getValue();
+            Player player = Bukkit.getPlayer(playerId);
+            if (player == null || !player.isOnline()) {
+                continue;
+            }
+            int size = queueSize(mode);
+            int position = queuePosition(playerId);
+            String map = queuedMaps.get(playerId);
+            String mapText = map == null ? "auto" : map;
+            player.sendActionBar(
+                Component.text("Queue " + mode + " (" + mapText + ") " + position + "/" + size)
+                    .color(NamedTextColor.AQUA)
+            );
+        }
     }
 
     private static final class QueuedPlayer {
