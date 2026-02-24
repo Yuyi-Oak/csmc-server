@@ -40,6 +40,7 @@ import top.scfd.mcplugins.csmc.paper.map.MapEditorCommand;
 import top.scfd.mcplugins.csmc.paper.map.MapEditorService;
 import top.scfd.mcplugins.csmc.paper.security.AntiCheatService;
 import top.scfd.mcplugins.csmc.paper.security.AntiCheatTicker;
+import top.scfd.mcplugins.csmc.paper.security.MovementAntiCheatListener;
 import top.scfd.mcplugins.csmc.paper.sync.ClusterSyncService;
 import top.scfd.mcplugins.csmc.paper.sync.NoopClusterSyncService;
 import top.scfd.mcplugins.csmc.paper.sync.RedisClusterSyncService;
@@ -120,6 +121,7 @@ public final class CSMCPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new GrenadeThrowListener(sessionRegistry, grenadeItems, this), this);
         getServer().getPluginManager().registerEvents(new MapProtectionListener(sessionRegistry), this);
         getServer().getPluginManager().registerEvents(new FreezePhaseListener(sessionRegistry), this);
+        getServer().getPluginManager().registerEvents(new MovementAntiCheatListener(sessionRegistry, antiCheat), this);
     }
 
     @Override
