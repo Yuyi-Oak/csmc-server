@@ -1,11 +1,13 @@
 package top.scfd.mcplugins.csmc.core.session;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import top.scfd.mcplugins.csmc.api.GameMode;
 import top.scfd.mcplugins.csmc.api.SessionState;
+import top.scfd.mcplugins.csmc.api.TeamSide;
 import top.scfd.mcplugins.csmc.core.rules.EconomyRules;
 import top.scfd.mcplugins.csmc.core.rules.ModeRules;
 import top.scfd.mcplugins.csmc.core.rules.RoundDurations;
@@ -14,7 +16,7 @@ import top.scfd.mcplugins.csmc.core.shop.ShopCatalog;
 final class GameSessionTest {
     @Test
     void autoStartsFirstRoundCountdownWhenTeamsReady() {
-        GameSession session = new GameSession(UUID.randomUUID(), GameMode.COMPETITIVE, 10, rules(13), new ShopCatalog());
+        GameSession session = new GameSession(UUID.randomUUID(), GameMode.COMPETITIVE, 10, rules(13, 24), new ShopCatalog());
         session.joinPlayer(UUID.randomUUID());
         session.joinPlayer(UUID.randomUUID());
 
@@ -34,7 +36,7 @@ final class GameSessionTest {
 
     @Test
     void startRoundDoesNotRestartWhenAlreadyLive() {
-        GameSession session = new GameSession(UUID.randomUUID(), GameMode.COMPETITIVE, 10, rules(13), new ShopCatalog());
+        GameSession session = new GameSession(UUID.randomUUID(), GameMode.COMPETITIVE, 10, rules(13, 24), new ShopCatalog());
         session.joinPlayer(UUID.randomUUID());
         session.joinPlayer(UUID.randomUUID());
 
@@ -48,7 +50,7 @@ final class GameSessionTest {
 
     @Test
     void sessionBecomesFinishedWhenMatchWinnerExists() {
-        GameSession session = new GameSession(UUID.randomUUID(), GameMode.COMPETITIVE, 10, rules(1), new ShopCatalog());
+        GameSession session = new GameSession(UUID.randomUUID(), GameMode.COMPETITIVE, 10, rules(1, 24), new ShopCatalog());
         session.joinPlayer(UUID.randomUUID());
         session.joinPlayer(UUID.randomUUID());
 
@@ -60,12 +62,41 @@ final class GameSessionTest {
         assertEquals(-1, session.nextRoundCountdownSeconds());
     }
 
-    private ModeRules rules(int roundsToWin) {
+    @Test
+    void sidesSwapAndEconomyResetAtHalftime() {
+        GameSession session = new GameSession(UUID.randomUUID(), GameMode.COMPETITIVE, 10, rules(3, 4), new ShopCatalog());
+        UUID first = UUID.randomUUID();
+        UUID second = UUID.randomUUID();
+        session.joinPlayer(first);
+        session.joinPlayer(second);
+
+        assertEquals(TeamSide.TERRORIST, session.getSide(first));
+        assertEquals(TeamSide.COUNTER_TERRORIST, session.getSide(second));
+
+        session.onKill(first);
+        assertEquals(1100, session.economy().balance(first));
+
+        session.startRound();
+        session.tickRound();
+        session.tickRound();
+        session.startRound();
+        session.tickRound();
+        session.tickRound();
+
+        assertEquals(SessionState.WAITING, session.state());
+        assertTrue(session.sidesSwapped());
+        assertEquals(10, session.nextRoundCountdownSeconds());
+        assertEquals(TeamSide.COUNTER_TERRORIST, session.getSide(first));
+        assertEquals(TeamSide.TERRORIST, session.getSide(second));
+        assertEquals(800, session.economy().balance(first));
+    }
+
+    private ModeRules rules(int roundsToWin, int maxRounds) {
         return new ModeRules(
             GameMode.COMPETITIVE,
             10,
             roundsToWin,
-            24,
+            maxRounds,
             false,
             0,
             0,

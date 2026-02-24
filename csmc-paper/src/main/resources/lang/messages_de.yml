@@ -9,3 +9,4 @@ ui:
   phase_buy: "Kaufzeit"
   phase_live: "Runde läuft"
   team_eliminated: "Team eliminiert"
+  sides_swapped: "Seiten wurden gewechselt"

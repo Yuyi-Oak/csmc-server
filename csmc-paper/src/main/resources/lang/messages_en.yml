@@ -9,3 +9,4 @@ ui:
   phase_buy: "Buy time"
   phase_live: "Round live"
   team_eliminated: "Team eliminated"
+  sides_swapped: "Sides have been swapped"

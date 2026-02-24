@@ -22,5 +22,7 @@ public interface RoundEventListener {
 
     default void onTeamEliminated(int roundNumber, TeamSide eliminatedSide, TeamSide winner) {}
 
+    default void onSideSwap(int roundNumber) {}
+
     default void onRoundEnd(int roundNumber, TeamSide winner, RoundEndReason reason, int terroristScore, int counterTerroristScore) {}
 }

@@ -9,3 +9,4 @@ ui:
   phase_buy: "Время покупки"
   phase_live: "Раунд начался"
   team_eliminated: "Команда уничтожена"
+  sides_swapped: "Стороны поменялись"

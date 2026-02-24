@@ -58,6 +58,11 @@ public final class PaperRoundNotifier implements RoundEventListener {
     }
 
     @Override
+    public void onSideSwap(int roundNumber) {
+        broadcast(messages.message("ui.sides_swapped"), NamedTextColor.AQUA);
+    }
+
+    @Override
     public void onRoundEnd(int roundNumber, TeamSide winner, RoundEndReason reason, int terroristScore, int counterTerroristScore) {
         String message = messages.message("ui.round_end");
         broadcast(message + " (" + terroristScore + "-" + counterTerroristScore + ")", NamedTextColor.YELLOW);

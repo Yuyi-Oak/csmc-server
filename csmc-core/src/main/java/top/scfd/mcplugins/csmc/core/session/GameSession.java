@@ -31,6 +31,7 @@ import top.scfd.mcplugins.csmc.core.weapon.WeaponSpec;
 public final class GameSession {
     private static final int FIRST_ROUND_COUNTDOWN_SECONDS = 3;
     private static final int NEXT_ROUND_COUNTDOWN_SECONDS = 5;
+    private static final int HALFTIME_COUNTDOWN_SECONDS = 10;
     private final UUID id;
     private final GameMode mode;
     private final int maxPlayers;
@@ -45,6 +46,7 @@ public final class GameSession {
     private final List<RoundEventListener> roundListeners = new CopyOnWriteArrayList<>();
     private final List<EconomyEventListener> economyListeners = new CopyOnWriteArrayList<>();
     private volatile int nextRoundCountdownSeconds = -1;
+    private volatile boolean sidesSwapped;
 
     public GameSession(UUID id, GameMode mode, int maxPlayers, ModeRules rules, ShopCatalog catalog) {
         this.id = id;
@@ -213,7 +215,12 @@ public final class GameSession {
                     return;
                 }
                 state = SessionState.WAITING;
-                nextRoundCountdownSeconds = NEXT_ROUND_COUNTDOWN_SECONDS;
+                if (shouldSwapSidesForHalftime()) {
+                    swapSidesForHalftime();
+                    nextRoundCountdownSeconds = HALFTIME_COUNTDOWN_SECONDS;
+                } else {
+                    nextRoundCountdownSeconds = NEXT_ROUND_COUNTDOWN_SECONDS;
+                }
             }
             return;
         }
@@ -238,6 +245,10 @@ public final class GameSession {
 
     public int nextRoundCountdownSeconds() {
         return nextRoundCountdownSeconds;
+    }
+
+    public boolean sidesSwapped() {
+        return sidesSwapped;
     }
 
     public void onBombPlanted() {
@@ -310,6 +321,36 @@ public final class GameSession {
             }
         }
         return tCount > 0 && ctCount > 0;
+    }
+
+    private boolean shouldSwapSidesForHalftime() {
+        if (sidesSwapped || rules.maxRounds() <= 1) {
+            return false;
+        }
+        int halfRounds = rules.maxRounds() / 2;
+        if (halfRounds <= 0) {
+            return false;
+        }
+        return roundEngine.matchState().roundNumber() >= halfRounds;
+    }
+
+    private void swapSidesForHalftime() {
+        for (Map.Entry<UUID, TeamSide> entry : players.entrySet()) {
+            UUID playerId = entry.getKey();
+            TeamSide side = entry.getValue();
+            if (side == TeamSide.TERRORIST) {
+                players.put(playerId, TeamSide.COUNTER_TERRORIST);
+            } else if (side == TeamSide.COUNTER_TERRORIST) {
+                players.put(playerId, TeamSide.TERRORIST);
+            }
+            TeamSide newSide = players.get(playerId);
+            if (newSide == TeamSide.TERRORIST || newSide == TeamSide.COUNTER_TERRORIST) {
+                loadouts.put(playerId, createDefaultLoadout(newSide));
+                economy.reset(playerId);
+            }
+        }
+        sidesSwapped = true;
+        notifyRound(listener -> listener.onSideSwap(roundEngine.matchState().roundNumber()));
     }
 
     private PlayerLoadout createDefaultLoadout(TeamSide side) {
