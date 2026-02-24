@@ -34,6 +34,7 @@ public final class SessionRegistry {
     private final BombService bombs;
     private final LoadoutInventoryService loadoutInventory;
     private final MatchHistoryService matchHistory;
+    private final MatchCombatTrackerService combatTracker;
     private volatile PlayerRoundStateService playerRoundState;
     private final Map<UUID, UUID> playerSessions = new ConcurrentHashMap<>();
     private final Map<UUID, MapDefinition> sessionMaps = new ConcurrentHashMap<>();
@@ -48,7 +49,8 @@ public final class SessionRegistry {
         StatsService statsService,
         BombService bombs,
         LoadoutInventoryService loadoutInventory,
-        MatchHistoryService matchHistory
+        MatchHistoryService matchHistory,
+        MatchCombatTrackerService combatTracker
     ) {
         this.sessionManager = sessionManager;
         this.mapRegistry = mapRegistry;
@@ -57,6 +59,7 @@ public final class SessionRegistry {
         this.bombs = bombs;
         this.loadoutInventory = loadoutInventory;
         this.matchHistory = matchHistory;
+        this.combatTracker = combatTracker;
     }
 
     public GameSession createSession(GameMode mode) {
@@ -225,6 +228,9 @@ public final class SessionRegistry {
         sessionMaps.remove(sessionId);
         finishedSessionTtl.remove(sessionId);
         sessionManager.removeSession(sessionId);
+        if (combatTracker != null) {
+            combatTracker.clearSession(sessionId);
+        }
     }
 
     public void tickSessions() {
@@ -305,5 +311,8 @@ public final class SessionRegistry {
         sessionMaps.remove(sessionId);
         finishedSessionTtl.remove(sessionId);
         sessionManager.removeSession(sessionId);
+        if (combatTracker != null) {
+            combatTracker.clearSession(sessionId);
+        }
     }
 }

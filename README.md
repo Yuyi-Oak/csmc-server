@@ -15,7 +15,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 ## Notes
 - Configuration templates and language files are under `csmc-paper/src/main/resources/`.
 - Storage backends currently available: YAML, SQLite, MySQL, PostgreSQL, MongoDB, Redis.
-- Command highlights: `/csmc create <mode> [mapId]`, `/csmc maps`, `/csmc sessions`, `/csmc view <free|next|prev|player>`, `/csmc queue join [mode] [mapId]`, `/csmc queue status`, `/csmc stats [player]`, `/csmc history [player|uuid] [limit]`, `/csmc top`.
+- Command highlights: `/csmc create <mode> [mapId]`, `/csmc maps`, `/csmc sessions`, `/csmc scoreboard [limit]`, `/csmc view <free|next|prev|player>`, `/csmc queue join [mode] [mapId]`, `/csmc queue status`, `/csmc stats [player]`, `/csmc history [player|uuid] [limit]`, `/csmc top`.
 - Queue monitoring command: `/csmc queue list` (all mode queue sizes).
 - Session diagnostic command: `/csmc info` (mode/map/state/phase/score/player split).
 - Queue map preference supports `auto` (default) or explicit map IDs from `/csmc maps`.
@@ -30,3 +30,4 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Baseline anti-cheat also flags abnormal movement bursts (`speed`/`fly`) during combat phases.
 - Match history is persisted to `plugins/CSMC/data/match-history.yml` and queryable via `/csmc history`.
 - Stats persistence is now buffered and flushed asynchronously in batches for smoother tick performance.
+- Per-match live scoreboard is available via `/csmc scoreboard`.

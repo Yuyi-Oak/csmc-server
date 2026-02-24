@@ -15,6 +15,7 @@ import top.scfd.mcplugins.csmc.core.match.RoundPhase;
 public final class CombatStatsListener implements Listener {
     private final SessionRegistry sessions;
     private final StatsService statsService;
+    private final MatchCombatTrackerService combatTracker;
     private final TeamEliminationResolver eliminations;
     private final HeadshotTrackerService headshots;
     private final java.util.Map<java.util.UUID, java.util.UUID> lastHit = new java.util.concurrent.ConcurrentHashMap<>();
@@ -22,11 +23,13 @@ public final class CombatStatsListener implements Listener {
     public CombatStatsListener(
         SessionRegistry sessions,
         StatsService statsService,
+        MatchCombatTrackerService combatTracker,
         TeamEliminationResolver eliminations,
         HeadshotTrackerService headshots
     ) {
         this.sessions = sessions;
         this.statsService = statsService;
+        this.combatTracker = combatTracker;
         this.eliminations = eliminations;
         this.headshots = headshots;
     }
@@ -77,6 +80,7 @@ public final class CombatStatsListener implements Listener {
         }
         TeamSide victimSide = victimSession.getSide(victim.getUniqueId());
         statsService.recordDeath(victim.getUniqueId());
+        combatTracker.recordDeath(victimSession, victim.getUniqueId());
         UUID assisterId = lastHit.remove(victim.getUniqueId());
 
         Player killer = victim.getKiller();
@@ -86,12 +90,15 @@ public final class CombatStatsListener implements Listener {
             if (killerSession != null && killerSession == victimSession && !killerId.equals(victim.getUniqueId())) {
                 killerSession.onKill(killerId);
                 statsService.recordKill(killerId);
+                combatTracker.recordKill(killerSession, killerId);
                 if (headshots.consumeIfMatching(victim.getUniqueId(), killerId, victim.getWorld().getFullTime())) {
                     statsService.recordHeadshot(killerId);
+                    combatTracker.recordHeadshot(killerSession, killerId);
                 }
                 if (assisterId != null && !assisterId.equals(killerId)) {
                     killerSession.onAssist(assisterId);
                     statsService.recordAssist(assisterId);
+                    combatTracker.recordAssist(killerSession, assisterId);
                 }
             }
         }

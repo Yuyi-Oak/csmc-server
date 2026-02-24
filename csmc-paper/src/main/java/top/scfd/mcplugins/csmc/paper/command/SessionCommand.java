@@ -22,8 +22,10 @@ import top.scfd.mcplugins.csmc.core.shop.ShopCategory;
 import top.scfd.mcplugins.csmc.core.shop.ShopItem;
 import top.scfd.mcplugins.csmc.core.session.GameSession;
 import top.scfd.mcplugins.csmc.paper.LoadoutInventoryService;
+import top.scfd.mcplugins.csmc.paper.MatchCombatTrackerService;
 import top.scfd.mcplugins.csmc.paper.MatchQueueService;
 import top.scfd.mcplugins.csmc.paper.PaperShopService;
+import top.scfd.mcplugins.csmc.paper.PlayerCombatSnapshot;
 import top.scfd.mcplugins.csmc.paper.SessionRegistry;
 import top.scfd.mcplugins.csmc.paper.StatsService;
 import top.scfd.mcplugins.csmc.paper.history.MatchHistoryEntry;
@@ -41,6 +43,7 @@ public final class SessionCommand implements CommandExecutor {
     private final PaperShopService shopService;
     private final LoadoutInventoryService loadoutInventory;
     private final StatsService stats;
+    private final MatchCombatTrackerService combatTracker;
     private final MatchQueueService queue;
     private final MatchHistoryService history;
 
@@ -49,6 +52,7 @@ public final class SessionCommand implements CommandExecutor {
         PaperShopService shopService,
         LoadoutInventoryService loadoutInventory,
         StatsService stats,
+        MatchCombatTrackerService combatTracker,
         MatchQueueService queue,
         MatchHistoryService history
     ) {
@@ -56,6 +60,7 @@ public final class SessionCommand implements CommandExecutor {
         this.shopService = shopService;
         this.loadoutInventory = loadoutInventory;
         this.stats = stats;
+        this.combatTracker = combatTracker;
         this.queue = queue;
         this.history = history;
     }
@@ -67,7 +72,7 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc info | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list> [mode] [mapId]");
+            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list> [mode] [mapId]");
             return true;
         }
         return switch (args[0].toLowerCase()) {
@@ -75,6 +80,7 @@ public final class SessionCommand implements CommandExecutor {
             case "maps" -> handleMaps(player);
             case "sessions" -> handleSessions(player);
             case "info" -> handleInfo(player);
+            case "scoreboard", "board" -> handleScoreboard(player, args);
             case "join" -> handleJoin(player, args);
             case "leave" -> handleLeave(player);
             case "start" -> handleStart(player);
@@ -200,6 +206,46 @@ public final class SessionCommand implements CommandExecutor {
             + " | phase=" + round.phase()
             + " | score T/CT=" + score.terrorist() + "/" + score.counterTerrorist()
             + " | players T/CT=" + t + "/" + ct);
+        return true;
+    }
+
+    private boolean handleScoreboard(Player player, String[] args) {
+        GameSession session = sessions.findSession(player);
+        if (session == null) {
+            player.sendMessage("You are not in a session.");
+            return true;
+        }
+        int limit = 10;
+        if (args.length >= 2) {
+            Integer parsed = parsePositiveInt(args[1]);
+            if (parsed == null) {
+                player.sendMessage("Invalid limit. Use a positive integer.");
+                return true;
+            }
+            limit = Math.min(20, parsed);
+        }
+        List<PlayerCombatSnapshot> ranking = combatTracker.leaderboard(session, limit);
+        if (ranking.isEmpty()) {
+            player.sendMessage("No combat stats recorded yet.");
+            return true;
+        }
+        player.sendMessage("Match scoreboard (top " + ranking.size() + "):");
+        int position = 1;
+        for (PlayerCombatSnapshot snapshot : ranking) {
+            String name = resolveName(Bukkit.getOfflinePlayer(snapshot.playerId()), snapshot.playerId());
+            double kd = snapshot.deaths() == 0
+                ? snapshot.kills()
+                : (double) snapshot.kills() / snapshot.deaths();
+            player.sendMessage(
+                position + ". " + name
+                    + " | K:" + snapshot.kills()
+                    + " D:" + snapshot.deaths()
+                    + " A:" + snapshot.assists()
+                    + " HS:" + snapshot.headshots()
+                    + " KD:" + String.format(Locale.ROOT, "%.2f", kd)
+            );
+            position++;
+        }
         return true;
     }
 
