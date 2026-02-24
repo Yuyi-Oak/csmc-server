@@ -27,6 +27,7 @@ import top.scfd.mcplugins.csmc.paper.MatchCombatTrackerService;
 import top.scfd.mcplugins.csmc.paper.MatchQueueService;
 import top.scfd.mcplugins.csmc.paper.PaperShopService;
 import top.scfd.mcplugins.csmc.paper.PlayerCombatSnapshot;
+import top.scfd.mcplugins.csmc.paper.RemoteQueueSourceStatus;
 import top.scfd.mcplugins.csmc.paper.SessionRegistry;
 import top.scfd.mcplugins.csmc.paper.StatsService;
 import top.scfd.mcplugins.csmc.paper.history.MatchHistoryEntry;
@@ -77,7 +78,7 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list|votes|global> [mode] [mapId] | /csmc ac <status|reset|top> [player]");
+            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list|votes|global> [mode|detail] [mapId] | /csmc ac <status|reset|top> [player]");
             return true;
         }
         return switch (args[0].toLowerCase()) {
@@ -622,7 +623,7 @@ public final class SessionCommand implements CommandExecutor {
 
     private boolean handleQueue(Player player, String[] args) {
         if (args.length < 2) {
-            player.sendMessage("Usage: /csmc queue <join|leave|status|list|votes|global> [mode] [mapId]");
+            player.sendMessage("Usage: /csmc queue <join|leave|status|list|votes|global> [mode|detail] [mapId]");
             return true;
         }
         return switch (args[1].toLowerCase(Locale.ROOT)) {
@@ -658,7 +659,7 @@ public final class SessionCommand implements CommandExecutor {
                 yield true;
             }
             default -> {
-                player.sendMessage("Usage: /csmc queue <join|leave|status|list|votes|global> [mode] [mapId]");
+                player.sendMessage("Usage: /csmc queue <join|leave|status|list|votes|global> [mode|detail] [mapId]");
                 yield true;
             }
         };
@@ -755,6 +756,9 @@ public final class SessionCommand implements CommandExecutor {
     }
 
     private boolean handleQueueGlobal(Player player, String[] args) {
+        if (args.length >= 3 && "detail".equalsIgnoreCase(args[2])) {
+            return handleQueueGlobalDetail(player);
+        }
         GameMode mode = null;
         if (args.length >= 3) {
             try {
@@ -799,6 +803,34 @@ public final class SessionCommand implements CommandExecutor {
             shown++;
         }
         player.sendMessage(builder.toString());
+        return true;
+    }
+
+    private boolean handleQueueGlobalDetail(Player player) {
+        List<RemoteQueueSourceStatus> sources = queue.remoteSourceStatuses();
+        if (sources.isEmpty()) {
+            player.sendMessage("Queue global detail: no remote queue sources.");
+            return true;
+        }
+        player.sendMessage("Queue global detail (remote sources " + sources.size() + "):");
+        for (RemoteQueueSourceStatus source : sources) {
+            StringBuilder line = new StringBuilder(" - ")
+                .append(source.serverId())
+                .append(" | age ")
+                .append(source.ageSeconds())
+                .append("s | ");
+            int index = 0;
+            for (GameMode mode : GameMode.values()) {
+                if (index > 0) {
+                    line.append(" ");
+                }
+                line.append(mode.name())
+                    .append("=")
+                    .append(source.queueSizes().getOrDefault(mode, 0));
+                index++;
+            }
+            player.sendMessage(line.toString());
+        }
         return true;
     }
 

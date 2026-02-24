@@ -136,7 +136,9 @@ public final class SessionTabCompleter implements TabCompleter {
         }
         if ("global".equalsIgnoreCase(args[1])) {
             if (args.length == 3) {
-                return match(args[2], modeNames());
+                List<String> choices = new ArrayList<>(modeNames());
+                choices.add("detail");
+                return match(args[2], choices);
             }
             return List.of();
         }

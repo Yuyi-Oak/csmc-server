@@ -1,6 +1,7 @@
 package top.scfd.mcplugins.csmc.paper;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -151,6 +152,21 @@ public final class MatchQueueService {
         long now = System.currentTimeMillis() / 1000L;
         pruneRemoteSnapshots(now);
         return remoteQueueSnapshots.size();
+    }
+
+    public synchronized List<RemoteQueueSourceStatus> remoteSourceStatuses() {
+        long now = System.currentTimeMillis() / 1000L;
+        pruneRemoteSnapshots(now);
+        List<RemoteQueueSourceStatus> statuses = new ArrayList<>();
+        for (QueueSnapshot snapshot : remoteQueueSnapshots.values()) {
+            long age = Math.max(0L, now - snapshot.epochSecond());
+            statuses.add(new RemoteQueueSourceStatus(snapshot.serverId(), age, snapshot.queueSizes()));
+        }
+        statuses.sort(
+            Comparator.comparingLong(RemoteQueueSourceStatus::ageSeconds)
+                .thenComparing(RemoteQueueSourceStatus::serverId, String.CASE_INSENSITIVE_ORDER)
+        );
+        return statuses;
     }
 
     private Map<GameMode, Integer> remoteQueueSizesInternal() {
