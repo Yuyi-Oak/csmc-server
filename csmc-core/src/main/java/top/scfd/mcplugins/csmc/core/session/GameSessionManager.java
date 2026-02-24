@@ -30,6 +30,10 @@ public final class GameSessionManager {
         return session;
     }
 
+    public ModeRules rulesFor(GameMode mode) {
+        return rulesRegistry.rulesFor(mode);
+    }
+
     public GameSession getSession(UUID id) {
         return sessions.get(id);
     }

@@ -17,6 +17,7 @@ import org.bukkit.entity.Player;
 import top.scfd.mcplugins.csmc.api.GameMode;
 import top.scfd.mcplugins.csmc.api.SessionState;
 import top.scfd.mcplugins.csmc.api.TeamSide;
+import top.scfd.mcplugins.csmc.core.rules.ModeRules;
 import top.scfd.mcplugins.csmc.core.shop.BuyResult;
 import top.scfd.mcplugins.csmc.core.shop.ShopCategory;
 import top.scfd.mcplugins.csmc.core.shop.ShopItem;
@@ -72,13 +73,14 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list> [mode] [mapId]");
+            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list> [mode] [mapId]");
             return true;
         }
         return switch (args[0].toLowerCase()) {
             case "create" -> handleCreate(player, args);
             case "maps" -> handleMaps(player);
             case "sessions" -> handleSessions(player);
+            case "rules" -> handleRules(player, args);
             case "info" -> handleInfo(player);
             case "scoreboard", "board" -> handleScoreboard(player, args);
             case "join" -> handleJoin(player, args);
@@ -176,6 +178,53 @@ public final class SessionCommand implements CommandExecutor {
                     + "T/CT/S=" + t + "/" + ct + "/" + spec
             );
         }
+        return true;
+    }
+
+    private boolean handleRules(Player player, String[] args) {
+        GameMode mode;
+        if (args.length >= 2) {
+            try {
+                mode = GameMode.valueOf(args[1].toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException ex) {
+                player.sendMessage("Invalid mode.");
+                return true;
+            }
+        } else {
+            GameSession session = sessions.findSession(player);
+            mode = session == null ? GameMode.COMPETITIVE : session.mode();
+        }
+        ModeRules rules = sessions.modeRules(mode);
+        if (rules == null) {
+            player.sendMessage("Rules not found for mode: " + mode);
+            return true;
+        }
+        var durations = rules.durations();
+        var economy = rules.economy();
+        player.sendMessage("Rules for " + mode + ":");
+        player.sendMessage("Players=" + rules.maxPlayers()
+            + " | roundsToWin=" + rules.roundsToWin()
+            + " | maxRounds=" + rules.maxRounds()
+            + " | friendlyFire=" + rules.friendlyFireEnabled());
+        player.sendMessage("Overtime=" + rules.overtimeEnabled()
+            + " | otRoundsToWin=" + rules.overtimeRoundsToWin()
+            + " | otMaxRounds=" + rules.overtimeMaxRounds());
+        player.sendMessage("Durations freeze/buy/round/bomb/defuse/plant="
+            + durations.freezeTimeSeconds() + "/"
+            + durations.buyTimeSeconds() + "/"
+            + durations.roundTimeSeconds() + "/"
+            + durations.bombTimerSeconds() + "/"
+            + durations.defuseTimeSeconds() + "/"
+            + durations.plantTimeSeconds());
+        player.sendMessage("Economy start/max/kill/assist/win/lossBase/lossInc/lossMax="
+            + economy.startMoney() + "/"
+            + economy.maxMoney() + "/"
+            + economy.killReward() + "/"
+            + economy.assistReward() + "/"
+            + economy.roundWinReward() + "/"
+            + economy.roundLossBase() + "/"
+            + economy.lossBonusIncrement() + "/"
+            + economy.lossBonusMax());
         return true;
     }
 

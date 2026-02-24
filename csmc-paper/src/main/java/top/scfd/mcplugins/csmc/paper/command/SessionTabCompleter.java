@@ -16,7 +16,7 @@ import top.scfd.mcplugins.csmc.paper.SessionRegistry;
 
 public final class SessionTabCompleter implements TabCompleter {
     private static final List<String> ROOT = List.of(
-        "create", "maps", "sessions", "info", "scoreboard", "join", "leave", "start",
+        "create", "maps", "sessions", "rules", "info", "scoreboard", "join", "leave", "start",
         "buy", "view", "stats", "history", "top", "queue"
     );
     private static final List<String> QUEUE = List.of("join", "leave", "status", "list");
@@ -36,6 +36,7 @@ public final class SessionTabCompleter implements TabCompleter {
         String sub = args[0].toLowerCase(Locale.ROOT);
         return switch (sub) {
             case "create" -> completeCreate(args);
+            case "rules" -> completeRules(args);
             case "join" -> completeJoin(args);
             case "view" -> completeView(sender, args);
             case "stats" -> completePlayerName(args);
@@ -52,6 +53,13 @@ public final class SessionTabCompleter implements TabCompleter {
         }
         if (args.length == 3) {
             return match(args[2], mapNames(false));
+        }
+        return List.of();
+    }
+
+    private List<String> completeRules(String[] args) {
+        if (args.length == 2) {
+            return match(args[1], modeNames());
         }
         return List.of();
     }

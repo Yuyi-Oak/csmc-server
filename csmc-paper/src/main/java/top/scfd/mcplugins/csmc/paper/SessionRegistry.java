@@ -19,6 +19,7 @@ import top.scfd.mcplugins.csmc.core.map.MapDefinition;
 import top.scfd.mcplugins.csmc.core.map.MapRegistry;
 import top.scfd.mcplugins.csmc.core.economy.EconomyEventListener;
 import top.scfd.mcplugins.csmc.core.match.RoundEventListener;
+import top.scfd.mcplugins.csmc.core.rules.ModeRules;
 import top.scfd.mcplugins.csmc.core.session.GameSession;
 import top.scfd.mcplugins.csmc.core.session.GameSessionManager;
 import top.scfd.mcplugins.csmc.core.shop.ShopCatalog;
@@ -212,6 +213,13 @@ public final class SessionRegistry {
 
     public int sessionCount() {
         return sessionManager.allSessions().size();
+    }
+
+    public ModeRules modeRules(GameMode mode) {
+        if (mode == null) {
+            return null;
+        }
+        return sessionManager.rulesFor(mode);
     }
 
     public List<GameSession> allSessions() {
