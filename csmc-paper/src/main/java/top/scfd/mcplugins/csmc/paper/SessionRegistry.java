@@ -110,6 +110,13 @@ public final class SessionRegistry {
             .toList();
     }
 
+    public boolean hasMap(String mapId) {
+        if (mapId == null || mapId.isBlank() || mapRegistry == null) {
+            return false;
+        }
+        return mapRegistry.find(mapId).isPresent();
+    }
+
     public boolean isInBuyZone(Player player, GameSession session) {
         if (player == null || session == null) {
             return false;

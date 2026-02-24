@@ -86,7 +86,12 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         queue.leave(player.getUniqueId());
-        String requestedMap = args.length >= 3 ? args[2] : null;
+        String requestedMap = args.length >= 3 ? normalizeAutoMap(args[2]) : null;
+        if (requestedMap != null && !sessions.hasMap(requestedMap)) {
+            player.sendMessage("Unknown map: " + requestedMap);
+            player.sendMessage("Use /csmc maps to list available maps.");
+            return true;
+        }
         GameSession session = sessions.createSession(mode, requestedMap);
         TeamSide side = sessions.joinSession(player, session);
         var map = sessions.mapForSession(session);
@@ -370,7 +375,12 @@ public final class SessionCommand implements CommandExecutor {
             }
         }
         if (args.length >= 4) {
-            mapId = args[3];
+            mapId = normalizeAutoMap(args[3]);
+            if (mapId != null && !sessions.hasMap(mapId)) {
+                player.sendMessage("Unknown map: " + mapId);
+                player.sendMessage("Use /csmc maps to list available maps.");
+                return true;
+            }
         }
         MatchQueueService.JoinResult result = queue.join(player.getUniqueId(), mode, mapId);
         String mapText = mapId == null || mapId.isBlank() ? "auto" : mapId.toLowerCase(Locale.ROOT);
@@ -401,5 +411,16 @@ public final class SessionCommand implements CommandExecutor {
             return offline.getName();
         }
         return fallbackId.toString();
+    }
+
+    private String normalizeAutoMap(String mapId) {
+        if (mapId == null) {
+            return null;
+        }
+        String normalized = mapId.trim().toLowerCase(Locale.ROOT);
+        if (normalized.isBlank() || "auto".equals(normalized)) {
+            return null;
+        }
+        return normalized;
     }
 }

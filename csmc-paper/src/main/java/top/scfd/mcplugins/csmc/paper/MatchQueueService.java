@@ -187,7 +187,9 @@ public final class MatchQueueService {
         while (iterator.hasNext()) {
             UUID playerId = iterator.next();
             Player player = Bukkit.getPlayer(playerId);
-            if (player == null || !player.isOnline() || sessions.getSessionForPlayer(playerId) != null) {
+            String queuedMap = queuedMaps.get(playerId);
+            boolean invalidMap = queuedMap != null && !sessions.hasMap(queuedMap);
+            if (player == null || !player.isOnline() || sessions.getSessionForPlayer(playerId) != null || invalidMap) {
                 iterator.remove();
                 queuedModes.remove(playerId);
                 queuedMaps.remove(playerId);
