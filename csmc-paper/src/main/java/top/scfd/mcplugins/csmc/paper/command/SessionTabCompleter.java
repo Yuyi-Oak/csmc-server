@@ -19,7 +19,7 @@ public final class SessionTabCompleter implements TabCompleter {
         "create", "maps", "sessions", "rules", "info", "scoreboard", "join", "leave", "start",
         "buy", "view", "stats", "history", "top", "queue", "ac"
     );
-    private static final List<String> QUEUE = List.of("join", "leave", "status", "list", "votes", "global");
+    private static final List<String> QUEUE = List.of("join", "leave", "status", "list", "votes", "global", "clear");
     private static final List<String> VIEW = List.of("free", "next", "prev");
     private static final List<String> AC = List.of("status", "reset", "top");
 
@@ -142,6 +142,12 @@ public final class SessionTabCompleter implements TabCompleter {
             }
             if (args.length == 4 && "detail".equalsIgnoreCase(args[2])) {
                 return match(args[3], List.of("5", "10", "20", "50"));
+            }
+            return List.of();
+        }
+        if ("clear".equalsIgnoreCase(args[1])) {
+            if (args.length == 3) {
+                return match(args[2], modeNames());
             }
             return List.of();
         }
