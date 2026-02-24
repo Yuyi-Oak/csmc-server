@@ -109,12 +109,9 @@ public final class MatchQueueService {
     }
 
     public synchronized void tick() {
-        if (sessions.sessionCount() >= maxSessions) {
-            updateQueueActionBar();
-            return;
-        }
         for (GameMode mode : GameMode.values()) {
             sanitize(mode);
+            fillExistingSessions(mode);
             while (sessions.sessionCount() < maxSessions && queues.get(mode).size() >= 2) {
                 String selectedMap = pickMapPreference(mode);
                 GameSession session = sessions.createSession(mode, selectedMap);
@@ -138,9 +135,38 @@ public final class MatchQueueService {
         updateQueueActionBar();
     }
 
+    private void fillExistingSessions(GameMode mode) {
+        for (GameSession session : sessions.allSessions()) {
+            if (session.mode() != mode) {
+                continue;
+            }
+            if (session.state() != top.scfd.mcplugins.csmc.api.SessionState.WAITING) {
+                continue;
+            }
+            int available = session.maxPlayers() - session.players().size();
+            if (available <= 0) {
+                continue;
+            }
+            var map = sessions.mapForSession(session);
+            String selectedMap = map == null ? null : map.id();
+            List<QueuedPlayer> matched = fillSession(mode, selectedMap, session);
+            if (matched.isEmpty()) {
+                continue;
+            }
+            String mapLabel = selectedMap == null ? "auto" : selectedMap;
+            for (QueuedPlayer queued : matched) {
+                TeamSide side = session.getSide(queued.player.getUniqueId());
+                queued.player.sendMessage("Matched to existing " + mode + " (" + mapLabel + ") session " + session.id() + " as " + side + ".");
+            }
+        }
+    }
+
     private List<QueuedPlayer> fillSession(GameMode mode, String selectedMap, GameSession session) {
         List<QueuedPlayer> matched = new ArrayList<>();
-        int maxPlayers = Math.max(2, session.maxPlayers());
+        int maxPlayers = Math.max(0, session.maxPlayers() - session.players().size());
+        if (maxPlayers <= 0) {
+            return matched;
+        }
         boolean requireExactMap = selectedMap != null;
         fillByRule(mode, session, matched, maxPlayers, selectedMap, requireExactMap, false);
         if (selectedMap != null && matched.size() < maxPlayers) {
@@ -174,21 +200,26 @@ public final class MatchQueueService {
                 continue;
             }
 
-            iterator.remove();
-            queuedModes.remove(playerId);
-            queuedMaps.remove(playerId);
-
             Player player = Bukkit.getPlayer(playerId);
             if (player == null || !player.isOnline()) {
+                iterator.remove();
+                queuedModes.remove(playerId);
+                queuedMaps.remove(playerId);
                 continue;
             }
             if (sessions.getSessionForPlayer(playerId) != null) {
+                iterator.remove();
+                queuedModes.remove(playerId);
+                queuedMaps.remove(playerId);
                 continue;
             }
             TeamSide side = sessions.joinSession(player, session);
             if (side == TeamSide.SPECTATOR) {
-                continue;
+                break;
             }
+            iterator.remove();
+            queuedModes.remove(playerId);
+            queuedMaps.remove(playerId);
             matched.add(new QueuedPlayer(player, queuedMap));
         }
     }
