@@ -30,6 +30,7 @@ import top.scfd.mcplugins.csmc.paper.PlayerSessionListener;
 import top.scfd.mcplugins.csmc.paper.QueuePlayerListener;
 import top.scfd.mcplugins.csmc.paper.SessionRegistry;
 import top.scfd.mcplugins.csmc.paper.StatsService;
+import top.scfd.mcplugins.csmc.paper.StatsFlushTicker;
 import top.scfd.mcplugins.csmc.paper.TeamEliminationResolver;
 import top.scfd.mcplugins.csmc.paper.WeaponFireListener;
 import top.scfd.mcplugins.csmc.paper.WeaponItemService;
@@ -56,7 +57,9 @@ public final class CSMCPlugin extends JavaPlugin {
     private HudTicker hudTicker;
     private MatchQueueTicker queueTicker;
     private AntiCheatTicker antiCheatTicker;
+    private StatsFlushTicker statsFlushTicker;
     private SessionRegistry sessionRegistry;
+    private StatsService statsService;
     private ClusterSyncService clusterSync = new NoopClusterSyncService();
 
     @Override
@@ -76,7 +79,7 @@ public final class CSMCPlugin extends JavaPlugin {
         mapLoader.loadInto(core.mapRegistry());
 
         PaperShopCatalogLoader shopLoader = new PaperShopCatalogLoader(this);
-        StatsService statsService = new StatsService(storageManager, clusterSync);
+        statsService = new StatsService(storageManager, clusterSync, getLogger());
         BombService bombService = new BombService();
         WeaponItemService weaponItems = new WeaponItemService(this);
         LoadoutInventoryService loadoutInventory = new LoadoutInventoryService(weaponItems);
@@ -116,6 +119,9 @@ public final class CSMCPlugin extends JavaPlugin {
         antiCheatTicker = new AntiCheatTicker(antiCheat);
         antiCheatTicker.runTaskTimer(this, 20L, 20L);
 
+        statsFlushTicker = new StatsFlushTicker(statsService, 256);
+        statsFlushTicker.runTaskTimerAsynchronously(this, 20L, 20L);
+
         PaperShopService shopService = new PaperShopService(grenadeItems);
         getCommand("csmc").setExecutor(
             new SessionCommand(sessionRegistry, shopService, loadoutInventory, statsService, queueService, matchHistory)
@@ -138,9 +144,6 @@ public final class CSMCPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (core != null) {
-            core.stop();
-        }
         if (ticker != null) {
             ticker.cancel();
         }
@@ -152,6 +155,15 @@ public final class CSMCPlugin extends JavaPlugin {
         }
         if (antiCheatTicker != null) {
             antiCheatTicker.cancel();
+        }
+        if (statsFlushTicker != null) {
+            statsFlushTicker.cancel();
+        }
+        if (statsService != null) {
+            statsService.flushAll();
+        }
+        if (core != null) {
+            core.stop();
         }
         if (clusterSync != null) {
             clusterSync.close();

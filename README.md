@@ -29,3 +29,4 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Weapon-system headshot kills are now tracked into persistent player stats.
 - Baseline anti-cheat also flags abnormal movement bursts (`speed`/`fly`) during combat phases.
 - Match history is persisted to `plugins/CSMC/data/match-history.yml` and queryable via `/csmc history`.
+- Stats persistence is now buffered and flushed asynchronously in batches for smoother tick performance.
