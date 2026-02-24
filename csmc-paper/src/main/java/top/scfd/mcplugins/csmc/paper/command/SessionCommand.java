@@ -639,15 +639,17 @@ public final class SessionCommand implements CommandExecutor {
                 if (mode == null) {
                     player.sendMessage("You are not queued.");
                 } else {
-                    int size = queue.queueSize(mode);
+                    int localSize = queue.queueSize(mode);
+                    int globalSize = queue.queueSizeGlobal(mode);
                     int needed = queue.playersNeeded(mode);
                     int position = queue.queuePosition(player.getUniqueId());
                     String map = queue.queuedMap(player.getUniqueId());
                     String mapText = map == null ? "auto" : map;
                     int mapVotes = queue.mapVoteCount(mode, map);
-                    double mapShare = size == 0 ? 0.0 : (mapVotes * 100.0) / size;
+                    double mapShare = localSize == 0 ? 0.0 : (mapVotes * 100.0) / localSize;
                     player.sendMessage(
-                        "Queue " + mode + " (" + mapText + ") | position " + position + " / " + size
+                        "Queue " + mode + " (" + mapText + ") | position " + position + " / " + localSize
+                            + " | global " + globalSize
                             + " | need " + needed
                             + " | map votes " + mapVotes + " (" + String.format(Locale.ROOT, "%.1f", mapShare) + "%)"
                     );
@@ -689,13 +691,15 @@ public final class SessionCommand implements CommandExecutor {
             case ALREADY_IN_SESSION -> player.sendMessage("You are already in a session.");
         }
         if (result == MatchQueueService.JoinResult.QUEUED || result == MatchQueueService.JoinResult.MOVED) {
-            int size = queue.queueSize(mode);
+            int localSize = queue.queueSize(mode);
+            int globalSize = queue.queueSizeGlobal(mode);
             int needed = queue.playersNeeded(mode);
             int position = queue.queuePosition(player.getUniqueId());
             int mapVotes = queue.mapVoteCount(mode, mapId);
-            double mapShare = size == 0 ? 0.0 : (mapVotes * 100.0) / size;
+            double mapShare = localSize == 0 ? 0.0 : (mapVotes * 100.0) / localSize;
             player.sendMessage(
-                "Queue " + mode + " (" + mapText + ") | position " + position + " / " + size
+                "Queue " + mode + " (" + mapText + ") | position " + position + " / " + localSize
+                    + " | global " + globalSize
                     + " | need " + needed
                     + " | map votes " + mapVotes + " (" + String.format(Locale.ROOT, "%.1f", mapShare) + "%)"
             );

@@ -146,6 +146,13 @@ public final class MatchQueueService {
         return aggregate;
     }
 
+    public synchronized int queueSizeGlobal(GameMode mode) {
+        if (mode == null) {
+            return 0;
+        }
+        return queueSizesGlobal().getOrDefault(mode, 0);
+    }
+
     public synchronized Map<String, Integer> mapVotes(GameMode mode) {
         Map<String, Integer> votes = new HashMap<>();
         if (mode == null) {
