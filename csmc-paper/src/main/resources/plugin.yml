@@ -8,7 +8,7 @@ load: POSTWORLD
 commands:
   csmc:
     description: CSMC session command
-    usage: /csmc create <mode> [mapId] | /csmc maps | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|player> | /csmc stats [player] | /csmc top | /csmc queue <join|leave|status> [mode] [mapId]
+    usage: /csmc create <mode> [mapId] | /csmc maps | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|player> | /csmc stats [player] | /csmc top | /csmc queue <join|leave|status|list> [mode] [mapId]
   csmcmap:
     description: CSMC map editor command
     usage: /csmcmap list | /csmcmap info <id> | /csmcmap listpoints <id> | /csmcmap addspawn/removespawn | /csmcmap addbuy/removebuy | /csmcmap save <id>

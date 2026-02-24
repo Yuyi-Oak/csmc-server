@@ -81,6 +81,14 @@ public final class MatchQueueService {
         return queues.get(mode).size();
     }
 
+    public synchronized Map<GameMode, Integer> queueSizes() {
+        Map<GameMode, Integer> snapshot = new EnumMap<>(GameMode.class);
+        for (GameMode mode : GameMode.values()) {
+            snapshot.put(mode, queues.get(mode).size());
+        }
+        return snapshot;
+    }
+
     public synchronized String queuedMap(UUID playerId) {
         return queuedMaps.get(playerId);
     }

@@ -52,7 +52,7 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|player> | /csmc stats [player] | /csmc top | /csmc queue <join|leave|status> [mode] [mapId]");
+            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|player> | /csmc stats [player] | /csmc top | /csmc queue <join|leave|status|list> [mode] [mapId]");
             return true;
         }
         return switch (args[0].toLowerCase()) {
@@ -333,7 +333,7 @@ public final class SessionCommand implements CommandExecutor {
 
     private boolean handleQueue(Player player, String[] args) {
         if (args.length < 2) {
-            player.sendMessage("Usage: /csmc queue <join|leave|status> [mode] [mapId]");
+            player.sendMessage("Usage: /csmc queue <join|leave|status|list> [mode] [mapId]");
             return true;
         }
         return switch (args[1].toLowerCase(Locale.ROOT)) {
@@ -343,6 +343,7 @@ public final class SessionCommand implements CommandExecutor {
                 player.sendMessage(removed ? "You left the queue." : "You are not queued.");
                 yield true;
             }
+            case "list" -> handleQueueList(player);
             case "status" -> {
                 GameMode mode = queue.queuedMode(player.getUniqueId());
                 if (mode == null) {
@@ -357,7 +358,7 @@ public final class SessionCommand implements CommandExecutor {
                 yield true;
             }
             default -> {
-                player.sendMessage("Usage: /csmc queue <join|leave|status> [mode] [mapId]");
+                player.sendMessage("Usage: /csmc queue <join|leave|status|list> [mode] [mapId]");
                 yield true;
             }
         };
@@ -395,6 +396,22 @@ public final class SessionCommand implements CommandExecutor {
             int position = queue.queuePosition(player.getUniqueId());
             player.sendMessage("Queue " + mode + " (" + mapText + ") | position " + position + " / " + size);
         }
+        return true;
+    }
+
+    private boolean handleQueueList(Player player) {
+        var sizes = queue.queueSizes();
+        StringBuilder builder = new StringBuilder("Queue sizes: ");
+        int shown = 0;
+        for (GameMode mode : GameMode.values()) {
+            int size = sizes.getOrDefault(mode, 0);
+            if (shown > 0) {
+                builder.append(" | ");
+            }
+            builder.append(mode.name()).append("=").append(size);
+            shown++;
+        }
+        player.sendMessage(builder.toString());
         return true;
     }
 
