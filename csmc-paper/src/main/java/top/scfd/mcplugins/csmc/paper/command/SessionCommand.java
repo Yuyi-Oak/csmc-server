@@ -719,11 +719,12 @@ public final class SessionCommand implements CommandExecutor {
             }
         }
         var votes = queue.mapVotes(mode);
-        if (votes.isEmpty()) {
+        int total = queue.queueSize(mode);
+        if (votes.isEmpty() || total <= 0) {
             player.sendMessage("No queue votes for " + mode + ".");
             return true;
         }
-        player.sendMessage("Queue map votes for " + mode + ":");
+        player.sendMessage("Queue map votes for " + mode + " (total " + total + "):");
         votes.entrySet().stream()
             .sorted((left, right) -> {
                 int byCount = Integer.compare(right.getValue(), left.getValue());
@@ -732,7 +733,10 @@ public final class SessionCommand implements CommandExecutor {
                 }
                 return left.getKey().compareToIgnoreCase(right.getKey());
             })
-            .forEach(entry -> player.sendMessage(" - " + entry.getKey() + ": " + entry.getValue()));
+            .forEach(entry -> {
+                double ratio = total == 0 ? 0.0 : (entry.getValue() * 100.0) / total;
+                player.sendMessage(" - " + entry.getKey() + ": " + entry.getValue() + " (" + String.format(Locale.ROOT, "%.1f", ratio) + "%)");
+            });
         return true;
     }
 
