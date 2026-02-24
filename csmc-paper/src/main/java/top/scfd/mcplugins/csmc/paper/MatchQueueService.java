@@ -337,8 +337,15 @@ public final class MatchQueueService {
             int position = queuePosition(playerId);
             String map = queuedMaps.get(playerId);
             String mapText = map == null ? "auto" : map;
+            int mapVotes = mapVoteCount(mode, map);
+            double mapShare = size == 0 ? 0.0 : (mapVotes * 100.0) / size;
             player.sendActionBar(
-                Component.text("Queue " + mode + " (" + mapText + ") " + position + "/" + size + " need " + needed)
+                Component.text(
+                    "Queue " + mode + " (" + mapText + ") "
+                        + position + "/" + size
+                        + " need " + needed
+                        + " votes " + mapVotes + " (" + String.format(java.util.Locale.ROOT, "%.0f", mapShare) + "%)"
+                )
                     .color(NamedTextColor.AQUA)
             );
         }

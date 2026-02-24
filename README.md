@@ -21,6 +21,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Queue map preference insight command: `/csmc queue votes [mode]`.
 - Queue vote output includes per-map share percentages.
 - Queue join/status output now includes your selected map's current vote share.
+- Queue list/actionbar now also surfaces top-voted map share for quicker matchmaking visibility.
 - Queue status/actionbar now includes `need N` (players still needed before next match assignment).
 - Matchmaking now prioritizes filling existing waiting sessions before creating new sessions.
 - Session diagnostic command: `/csmc info` (mode/map/state/phase/score/player split).
