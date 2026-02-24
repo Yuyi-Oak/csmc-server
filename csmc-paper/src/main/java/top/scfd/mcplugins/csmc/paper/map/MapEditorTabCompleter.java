@@ -71,6 +71,12 @@ public final class MapEditorTabCompleter implements TabCompleter {
                 default -> List.of();
             };
         }
+        if (args.length == 3 && "save".equals(sub)) {
+            return match(args[2], List.of("force"));
+        }
+        if (args.length == 2 && "saveall".equals(sub)) {
+            return match(args[1], List.of("force"));
+        }
         return List.of();
     }
 

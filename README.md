@@ -29,6 +29,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Map editor now supports draft cloning: `/csmcmap clone <sourceId> <targetId> [name]`.
 - Map editor supports bulk draft persistence: `/csmcmap saveall`.
 - Map editor supports structural checks before save: `/csmcmap validate <id>`.
+- Map save commands now enforce validation by default; append `force` to override (`/csmcmap save <id> force`, `/csmcmap saveall force`).
 - Cross-server stats cache invalidation is enabled automatically when `storage.type` is `REDIS`.
 - Redis storage now maintains a kills leaderboard sorted-set index to speed up `/csmc top` queries.
 - Bundled starter maps: `dust2`, `mirage`, `inferno`, `nuke`, `anubis`, `ancient`, `vertigo`, `summit` (original).

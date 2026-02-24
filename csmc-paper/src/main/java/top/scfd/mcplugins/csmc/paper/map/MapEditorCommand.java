@@ -28,7 +28,7 @@ public final class MapEditorCommand implements CommandExecutor {
             sender.sendMessage("Usage: /csmcmap list | /csmcmap create <id> [name] | /csmcmap clone <sourceId> <targetId> [name] | /csmcmap info <id> | /csmcmap setname <id> <name>");
             sender.sendMessage("       /csmcmap setworld <id> [world] | /csmcmap listpoints <id> | /csmcmap addspawn <id> <t|ct> | /csmcmap removespawn <id> <t|ct> <index> | /csmcmap clearspawns <id> <t|ct>");
             sender.sendMessage("       /csmcmap setbomb <id> <A|B> <radius> | /csmcmap removebomb <id> <A|B>");
-            sender.sendMessage("       /csmcmap addbuy <id> <t|ct> <radius> | /csmcmap removebuy <id> <t|ct> <index> | /csmcmap clearbuy <id> <t|ct> | /csmcmap validate <id> | /csmcmap save <id> | /csmcmap saveall | /csmcmap reload");
+            sender.sendMessage("       /csmcmap addbuy <id> <t|ct> <radius> | /csmcmap removebuy <id> <t|ct> <index> | /csmcmap clearbuy <id> <t|ct> | /csmcmap validate <id> | /csmcmap save <id> [force] | /csmcmap saveall [force] | /csmcmap reload");
             return true;
         }
         return switch (args[0].toLowerCase(Locale.ROOT)) {
@@ -49,7 +49,7 @@ public final class MapEditorCommand implements CommandExecutor {
             case "clearbuy" -> handleClearBuy(sender, args);
             case "validate" -> handleValidate(sender, args);
             case "save" -> handleSave(sender, args);
-            case "saveall" -> handleSaveAll(sender);
+            case "saveall" -> handleSaveAll(sender, args);
             case "reload" -> handleReload(sender);
             default -> {
                 sender.sendMessage("Unknown subcommand.");
@@ -374,12 +374,19 @@ public final class MapEditorCommand implements CommandExecutor {
 
     private boolean handleSave(CommandSender sender, String[] args) {
         if (args.length < 2) {
-            sender.sendMessage("Usage: /csmcmap save <id>");
+            sender.sendMessage("Usage: /csmcmap save <id> [force]");
             return true;
         }
         EditableMap map = maps.get(args[1]);
         if (map == null) {
             sender.sendMessage("Map not found.");
+            return true;
+        }
+        boolean force = args.length >= 3 && "force".equalsIgnoreCase(args[2]);
+        MapEditorService.ValidationResult validation = maps.validate(map);
+        if (!force && !validation.errors().isEmpty()) {
+            sender.sendMessage("Validation failed. Use /csmcmap validate " + map.id() + " and fix issues.");
+            sender.sendMessage("Use /csmcmap save " + map.id() + " force to override.");
             return true;
         }
         boolean success = maps.save(map);
@@ -425,9 +432,15 @@ public final class MapEditorCommand implements CommandExecutor {
         return true;
     }
 
-    private boolean handleSaveAll(CommandSender sender) {
-        MapEditorService.SaveAllResult result = maps.saveAll();
-        sender.sendMessage("Saved drafts: " + result.saved() + ", failed: " + result.failed() + ".");
+    private boolean handleSaveAll(CommandSender sender, String[] args) {
+        boolean force = args.length >= 2 && "force".equalsIgnoreCase(args[1]);
+        MapEditorService.SaveAllResult result = maps.saveAll(force);
+        sender.sendMessage(
+            "Saved drafts: " + result.saved()
+                + ", failed: " + result.failed()
+                + ", skipped invalid: " + result.skippedInvalid()
+                + "."
+        );
         return true;
     }
 

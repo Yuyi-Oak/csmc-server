@@ -210,10 +210,16 @@ public final class MapEditorService {
         return new ValidationResult(List.copyOf(errors), List.copyOf(warnings));
     }
 
-    public SaveAllResult saveAll() {
+    public SaveAllResult saveAll(boolean force) {
         int saved = 0;
         int failed = 0;
+        int skippedInvalid = 0;
         for (EditableMap map : cache.values()) {
+            ValidationResult validation = validate(map);
+            if (!force && !validation.errors().isEmpty()) {
+                skippedInvalid++;
+                continue;
+            }
             if (save(map, false)) {
                 saved++;
             } else {
@@ -223,7 +229,7 @@ public final class MapEditorService {
         if (saved > 0) {
             mapLoader.loadInto(mapRegistry);
         }
-        return new SaveAllResult(saved, failed);
+        return new SaveAllResult(saved, failed, skippedInvalid);
     }
 
     private boolean save(EditableMap map, boolean reloadAfterSave) {
@@ -392,7 +398,7 @@ public final class MapEditorService {
         }
     }
 
-    public record SaveAllResult(int saved, int failed) {
+    public record SaveAllResult(int saved, int failed, int skippedInvalid) {
     }
 
     public record ValidationResult(List<String> errors, List<String> warnings) {
