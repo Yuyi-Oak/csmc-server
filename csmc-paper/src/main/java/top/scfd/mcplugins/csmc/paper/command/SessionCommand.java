@@ -52,12 +52,13 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|player> | /csmc stats [player] | /csmc top | /csmc queue <join|leave|status|list> [mode] [mapId]");
+            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc info | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|player> | /csmc stats [player] | /csmc top | /csmc queue <join|leave|status|list> [mode] [mapId]");
             return true;
         }
         return switch (args[0].toLowerCase()) {
             case "create" -> handleCreate(player, args);
             case "maps" -> handleMaps(player);
+            case "info" -> handleInfo(player);
             case "join" -> handleJoin(player, args);
             case "leave" -> handleLeave(player);
             case "start" -> handleStart(player);
@@ -119,6 +120,36 @@ public final class SessionCommand implements CommandExecutor {
             builder.append(maps.get(index).id());
         }
         player.sendMessage(builder.toString());
+        return true;
+    }
+
+    private boolean handleInfo(Player player) {
+        GameSession session = sessions.findSession(player);
+        if (session == null) {
+            player.sendMessage("You are not in a session.");
+            return true;
+        }
+        int t = 0;
+        int ct = 0;
+        for (UUID playerId : session.players()) {
+            TeamSide side = session.getSide(playerId);
+            if (side == TeamSide.TERRORIST) {
+                t++;
+            } else if (side == TeamSide.COUNTER_TERRORIST) {
+                ct++;
+            }
+        }
+        var map = sessions.mapForSession(session);
+        var round = session.roundEngine();
+        var score = round.matchState().score();
+        player.sendMessage("Session " + session.id()
+            + " | mode=" + session.mode()
+            + " | state=" + session.state()
+            + " | map=" + (map == null ? "none" : map.id()));
+        player.sendMessage("Round " + round.matchState().roundNumber()
+            + " | phase=" + round.phase()
+            + " | score T/CT=" + score.terrorist() + "/" + score.counterTerrorist()
+            + " | players T/CT=" + t + "/" + ct);
         return true;
     }
 
