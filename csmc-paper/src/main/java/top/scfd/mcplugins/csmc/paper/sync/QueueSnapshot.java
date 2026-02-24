@@ -32,4 +32,12 @@ public record QueueSnapshot(String serverId, long epochSecond, Map<GameMode, Int
         }
         return queueSizes.getOrDefault(mode, 0);
     }
+
+    public int totalQueued() {
+        int total = 0;
+        for (GameMode mode : GameMode.values()) {
+            total += queueSizes.getOrDefault(mode, 0);
+        }
+        return total;
+    }
 }
