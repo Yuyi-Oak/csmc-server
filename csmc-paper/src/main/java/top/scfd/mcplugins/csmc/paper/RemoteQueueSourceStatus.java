@@ -8,4 +8,14 @@ public record RemoteQueueSourceStatus(
     long ageSeconds,
     Map<GameMode, Integer> queueSizes
 ) {
+    public int totalQueued() {
+        int total = 0;
+        if (queueSizes == null || queueSizes.isEmpty()) {
+            return 0;
+        }
+        for (GameMode mode : GameMode.values()) {
+            total += queueSizes.getOrDefault(mode, 0);
+        }
+        return total;
+    }
 }
