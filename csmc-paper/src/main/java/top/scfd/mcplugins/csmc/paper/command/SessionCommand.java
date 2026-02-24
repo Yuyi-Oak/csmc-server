@@ -585,10 +585,11 @@ public final class SessionCommand implements CommandExecutor {
                     player.sendMessage("You are not queued.");
                 } else {
                     int size = queue.queueSize(mode);
+                    int needed = queue.playersNeeded(mode);
                     int position = queue.queuePosition(player.getUniqueId());
                     String map = queue.queuedMap(player.getUniqueId());
                     String mapText = map == null ? "auto" : map;
-                    player.sendMessage("Queue " + mode + " (" + mapText + ") | position " + position + " / " + size);
+                    player.sendMessage("Queue " + mode + " (" + mapText + ") | position " + position + " / " + size + " | need " + needed);
                 }
                 yield true;
             }
@@ -628,8 +629,9 @@ public final class SessionCommand implements CommandExecutor {
         }
         if (result == MatchQueueService.JoinResult.QUEUED || result == MatchQueueService.JoinResult.MOVED) {
             int size = queue.queueSize(mode);
+            int needed = queue.playersNeeded(mode);
             int position = queue.queuePosition(player.getUniqueId());
-            player.sendMessage("Queue " + mode + " (" + mapText + ") | position " + position + " / " + size);
+            player.sendMessage("Queue " + mode + " (" + mapText + ") | position " + position + " / " + size + " | need " + needed);
         }
         return true;
     }

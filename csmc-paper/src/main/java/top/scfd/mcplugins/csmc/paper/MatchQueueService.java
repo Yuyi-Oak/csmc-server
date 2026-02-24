@@ -81,6 +81,30 @@ public final class MatchQueueService {
         return queues.get(mode).size();
     }
 
+    public synchronized int playersNeeded(GameMode mode) {
+        int queueSize = queues.get(mode).size();
+        int neededForNewSession = Math.max(0, 2 - queueSize);
+        int neededForOpenSession = Integer.MAX_VALUE;
+        for (GameSession session : sessions.allSessions()) {
+            if (session.mode() != mode) {
+                continue;
+            }
+            if (session.state() != top.scfd.mcplugins.csmc.api.SessionState.WAITING) {
+                continue;
+            }
+            int available = session.maxPlayers() - session.players().size();
+            if (available <= 0) {
+                continue;
+            }
+            int needed = queueSize > 0 ? 0 : 1;
+            neededForOpenSession = Math.min(neededForOpenSession, needed);
+        }
+        if (neededForOpenSession == Integer.MAX_VALUE) {
+            return neededForNewSession;
+        }
+        return Math.min(neededForNewSession, neededForOpenSession);
+    }
+
     public synchronized Map<GameMode, Integer> queueSizes() {
         Map<GameMode, Integer> snapshot = new EnumMap<>(GameMode.class);
         for (GameMode mode : GameMode.values()) {
@@ -257,9 +281,6 @@ public final class MatchQueueService {
             if (value > bestVotes || (value == bestVotes && best != null && map.compareToIgnoreCase(best) < 0)) {
                 best = map;
                 bestVotes = value;
-            } else if (value > bestVotes) {
-                best = map;
-                bestVotes = value;
             }
         }
         return best;
@@ -282,11 +303,12 @@ public final class MatchQueueService {
                 continue;
             }
             int size = queueSize(mode);
+            int needed = playersNeeded(mode);
             int position = queuePosition(playerId);
             String map = queuedMaps.get(playerId);
             String mapText = map == null ? "auto" : map;
             player.sendActionBar(
-                Component.text("Queue " + mode + " (" + mapText + ") " + position + "/" + size)
+                Component.text("Queue " + mode + " (" + mapText + ") " + position + "/" + size + " need " + needed)
                     .color(NamedTextColor.AQUA)
             );
         }

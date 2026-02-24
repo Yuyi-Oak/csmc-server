@@ -17,6 +17,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Storage backends currently available: YAML, SQLite, MySQL, PostgreSQL, MongoDB, Redis.
 - Command highlights: `/csmc create <mode> [mapId]`, `/csmc maps`, `/csmc sessions`, `/csmc scoreboard [limit]`, `/csmc view <free|next|prev|player>`, `/csmc queue join [mode] [mapId]`, `/csmc queue status`, `/csmc stats [player]`, `/csmc history [player|uuid] [limit]`, `/csmc top`.
 - Queue monitoring command: `/csmc queue list` (all mode queue sizes).
+- Queue status/actionbar now includes `need N` (players still needed before next match assignment).
 - Matchmaking now prioritizes filling existing waiting sessions before creating new sessions.
 - Session diagnostic command: `/csmc info` (mode/map/state/phase/score/player split).
 - Queue map preference supports `auto` (default) or explicit map IDs from `/csmc maps`.
