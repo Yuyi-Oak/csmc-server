@@ -140,6 +140,9 @@ public final class SessionTabCompleter implements TabCompleter {
                 choices.add("detail");
                 return match(args[2], choices);
             }
+            if (args.length == 4 && "detail".equalsIgnoreCase(args[2])) {
+                return match(args[3], List.of("5", "10", "20", "50"));
+            }
             return List.of();
         }
         if (!"join".equalsIgnoreCase(args[1])) {
