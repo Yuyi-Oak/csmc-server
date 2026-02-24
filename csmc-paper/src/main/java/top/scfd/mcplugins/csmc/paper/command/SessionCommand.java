@@ -3,6 +3,7 @@ package top.scfd.mcplugins.csmc.paper.command;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -11,6 +12,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import top.scfd.mcplugins.csmc.api.GameMode;
 import top.scfd.mcplugins.csmc.api.SessionState;
@@ -65,7 +67,7 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc info | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list> [mode] [mapId]");
+            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc info | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list> [mode] [mapId]");
             return true;
         }
         return switch (args[0].toLowerCase()) {
@@ -282,13 +284,24 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length < 2) {
-            viewer.sendMessage("Usage: /csmc view <free|player>");
+            viewer.sendMessage("Usage: /csmc view <free|next|prev|player>");
             return true;
         }
         String targetText = args[1];
         if ("free".equalsIgnoreCase(targetText) || "self".equalsIgnoreCase(targetText)) {
             viewer.setSpectatorTarget(null);
             viewer.sendMessage("Now in free spectator camera.");
+            return true;
+        }
+        if ("next".equalsIgnoreCase(targetText) || "prev".equalsIgnoreCase(targetText)) {
+            boolean forward = "next".equalsIgnoreCase(targetText);
+            Player target = pickSpectatorTarget(session, viewer, forward);
+            if (target == null) {
+                viewer.sendMessage("No alive players available to spectate.");
+                return true;
+            }
+            viewer.setSpectatorTarget(target);
+            viewer.sendMessage("Now spectating " + target.getName() + ".");
             return true;
         }
         Player target = Bukkit.getPlayerExact(targetText);
@@ -312,6 +325,46 @@ public final class SessionCommand implements CommandExecutor {
         viewer.setSpectatorTarget(target);
         viewer.sendMessage("Now spectating " + target.getName() + ".");
         return true;
+    }
+
+    private Player pickSpectatorTarget(GameSession session, Player viewer, boolean forward) {
+        List<Player> candidates = new ArrayList<>();
+        for (UUID playerId : session.players()) {
+            if (playerId.equals(viewer.getUniqueId())) {
+                continue;
+            }
+            Player player = Bukkit.getPlayer(playerId);
+            if (player == null || !player.isOnline()) {
+                continue;
+            }
+            if (player.getGameMode() == org.bukkit.GameMode.SPECTATOR || player.isDead() || player.getHealth() <= 0.0) {
+                continue;
+            }
+            candidates.add(player);
+        }
+        if (candidates.isEmpty()) {
+            return null;
+        }
+        candidates.sort((left, right) -> left.getName().compareToIgnoreCase(right.getName()));
+
+        int currentIndex = -1;
+        Entity currentTarget = viewer.getSpectatorTarget();
+        if (currentTarget instanceof Player currentPlayer) {
+            UUID currentId = currentPlayer.getUniqueId();
+            for (int index = 0; index < candidates.size(); index++) {
+                if (candidates.get(index).getUniqueId().equals(currentId)) {
+                    currentIndex = index;
+                    break;
+                }
+            }
+        }
+
+        if (currentIndex < 0) {
+            return candidates.get(0);
+        }
+        int offset = forward ? 1 : -1;
+        int nextIndex = (currentIndex + offset + candidates.size()) % candidates.size();
+        return candidates.get(nextIndex);
     }
 
     private boolean handleStats(Player sender, String[] args) {

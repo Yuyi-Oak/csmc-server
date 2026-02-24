@@ -14,6 +14,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.Plugin;
+import top.scfd.mcplugins.csmc.api.TeamSide;
 import top.scfd.mcplugins.csmc.core.match.RoundPhase;
 import top.scfd.mcplugins.csmc.core.session.GameSession;
 
@@ -54,6 +55,8 @@ public final class PlayerRoundStateService implements Listener {
             player.setGameMode(GameMode.SPECTATOR);
             player.setAllowFlight(true);
             player.setFlying(true);
+            Player target = resolveSpectatorTarget(session, player);
+            player.setSpectatorTarget(target);
         });
     }
 
@@ -101,19 +104,36 @@ public final class PlayerRoundStateService implements Listener {
     }
 
     private Location resolveSpectatorRespawn(GameSession session, Player player) {
-        for (UUID playerId : session.players()) {
-            if (playerId.equals(player.getUniqueId())) {
-                continue;
-            }
-            Player teammate = Bukkit.getPlayer(playerId);
-            if (teammate == null || !teammate.isOnline()) {
-                continue;
-            }
-            if (teammate.getGameMode() == GameMode.SPECTATOR || teammate.isDead() || teammate.getHealth() <= 0.0) {
-                continue;
-            }
-            return teammate.getLocation();
+        Player target = resolveSpectatorTarget(session, player);
+        return target == null ? player.getLocation() : target.getLocation();
+    }
+
+    private Player resolveSpectatorTarget(GameSession session, Player player) {
+        TeamSide playerSide = session.getSide(player.getUniqueId());
+        Player aliveTeammate = findAlivePlayer(session, player.getUniqueId(), playerSide);
+        if (aliveTeammate != null) {
+            return aliveTeammate;
         }
-        return player.getLocation();
+        return findAlivePlayer(session, player.getUniqueId(), null);
+    }
+
+    private Player findAlivePlayer(GameSession session, UUID excludePlayer, TeamSide sideFilter) {
+        for (UUID playerId : session.players()) {
+            if (playerId.equals(excludePlayer)) {
+                continue;
+            }
+            if (sideFilter != null && session.getSide(playerId) != sideFilter) {
+                continue;
+            }
+            Player candidate = Bukkit.getPlayer(playerId);
+            if (candidate == null || !candidate.isOnline()) {
+                continue;
+            }
+            if (candidate.getGameMode() == GameMode.SPECTATOR || candidate.isDead() || candidate.getHealth() <= 0.0) {
+                continue;
+            }
+            return candidate;
+        }
+        return null;
     }
 }
