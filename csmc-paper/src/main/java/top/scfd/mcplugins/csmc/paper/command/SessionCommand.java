@@ -78,7 +78,7 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list|votes|global> [mode|detail [limit]] [mapId] | /csmc ac <status|reset|top> [player|limit]");
+            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list|votes|global|clear> [mode|detail [limit]] [mapId] | /csmc ac <status|reset|top> [player|limit]");
             return true;
         }
         return switch (args[0].toLowerCase()) {
@@ -623,7 +623,7 @@ public final class SessionCommand implements CommandExecutor {
 
     private boolean handleQueue(Player player, String[] args) {
         if (args.length < 2) {
-            player.sendMessage("Usage: /csmc queue <join|leave|status|list|votes|global> [mode|detail [limit]] [mapId]");
+            player.sendMessage("Usage: /csmc queue <join|leave|status|list|votes|global|clear> [mode|detail [limit]] [mapId]");
             return true;
         }
         return switch (args[1].toLowerCase(Locale.ROOT)) {
@@ -633,6 +633,7 @@ public final class SessionCommand implements CommandExecutor {
                 player.sendMessage(removed ? "You left the queue." : "You are not queued.");
                 yield true;
             }
+            case "clear" -> handleQueueClear(player, args);
             case "list" -> handleQueueList(player);
             case "votes" -> handleQueueVotes(player, args);
             case "global" -> handleQueueGlobal(player, args);
@@ -659,10 +660,32 @@ public final class SessionCommand implements CommandExecutor {
                 yield true;
             }
             default -> {
-                player.sendMessage("Usage: /csmc queue <join|leave|status|list|votes|global> [mode|detail [limit]] [mapId]");
+                player.sendMessage("Usage: /csmc queue <join|leave|status|list|votes|global|clear> [mode|detail [limit]] [mapId]");
                 yield true;
             }
         };
+    }
+
+    private boolean handleQueueClear(Player player, String[] args) {
+        if (!player.isOp() && !player.hasPermission("csmc.queue.manage")) {
+            player.sendMessage("No permission.");
+            return true;
+        }
+        if (args.length >= 3) {
+            GameMode mode;
+            try {
+                mode = GameMode.valueOf(args[2].toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException ex) {
+                player.sendMessage("Invalid mode.");
+                return true;
+            }
+            int cleared = queue.clearMode(mode);
+            player.sendMessage("Cleared queue for " + mode + ": " + cleared + " player(s).");
+            return true;
+        }
+        int cleared = queue.clearAll();
+        player.sendMessage("Cleared all queue modes: " + cleared + " player(s).");
+        return true;
     }
 
     private boolean handleQueueJoin(Player player, String[] args) {
