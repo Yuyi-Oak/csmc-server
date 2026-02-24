@@ -163,7 +163,8 @@ public final class MatchQueueService {
             statuses.add(new RemoteQueueSourceStatus(snapshot.serverId(), age, snapshot.queueSizes()));
         }
         statuses.sort(
-            Comparator.comparingLong(RemoteQueueSourceStatus::ageSeconds)
+            Comparator.comparingInt(RemoteQueueSourceStatus::totalQueued).reversed()
+                .thenComparingLong(RemoteQueueSourceStatus::ageSeconds)
                 .thenComparing(RemoteQueueSourceStatus::serverId, String.CASE_INSENSITIVE_ORDER)
         );
         return statuses;
