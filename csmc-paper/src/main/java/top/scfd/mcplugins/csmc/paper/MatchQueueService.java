@@ -113,6 +113,19 @@ public final class MatchQueueService {
         return snapshot;
     }
 
+    public synchronized Map<String, Integer> mapVotes(GameMode mode) {
+        Map<String, Integer> votes = new HashMap<>();
+        if (mode == null) {
+            return votes;
+        }
+        for (UUID playerId : queues.get(mode)) {
+            String map = queuedMaps.get(playerId);
+            String key = (map == null || map.isBlank()) ? "auto" : map;
+            votes.merge(key, 1, Integer::sum);
+        }
+        return votes;
+    }
+
     public synchronized String queuedMap(UUID playerId) {
         return queuedMaps.get(playerId);
     }
