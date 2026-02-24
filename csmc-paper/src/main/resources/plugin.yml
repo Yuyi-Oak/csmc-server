@@ -9,3 +9,6 @@ commands:
   csmc:
     description: CSMC session command
     usage: /csmc create <mode> | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc stats [player] | /csmc top | /csmc queue <join|leave|status> [mode]
+  csmcmap:
+    description: CSMC map editor command
+    usage: /csmcmap list | /csmcmap create <id> [name] | /csmcmap info <id> | /csmcmap save <id>

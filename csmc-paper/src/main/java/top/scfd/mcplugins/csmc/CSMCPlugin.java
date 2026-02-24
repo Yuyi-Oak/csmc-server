@@ -35,6 +35,8 @@ import top.scfd.mcplugins.csmc.paper.WeaponItemService;
 import top.scfd.mcplugins.csmc.paper.WeaponReloadListener;
 import top.scfd.mcplugins.csmc.paper.WeaponSelectionListener;
 import top.scfd.mcplugins.csmc.paper.command.SessionCommand;
+import top.scfd.mcplugins.csmc.paper.map.MapEditorCommand;
+import top.scfd.mcplugins.csmc.paper.map.MapEditorService;
 import top.scfd.mcplugins.csmc.storage.PaperStorageProviderFactory;
 import top.scfd.mcplugins.csmc.storage.StorageManager;
 import top.scfd.mcplugins.csmc.storage.StorageProvider;
@@ -89,6 +91,8 @@ public final class CSMCPlugin extends JavaPlugin {
 
         PaperShopService shopService = new PaperShopService(grenadeItems);
         getCommand("csmc").setExecutor(new SessionCommand(sessionRegistry, shopService, loadoutInventory, statsService, queueService));
+        MapEditorService mapEditor = new MapEditorService(this, mapLoader, core.mapRegistry());
+        getCommand("csmcmap").setExecutor(new MapEditorCommand(mapEditor));
         getServer().getPluginManager().registerEvents(roundStateService, this);
         getServer().getPluginManager().registerEvents(new PlayerSessionListener(sessionRegistry, eliminationResolver), this);
         getServer().getPluginManager().registerEvents(new QueuePlayerListener(queueService), this);
