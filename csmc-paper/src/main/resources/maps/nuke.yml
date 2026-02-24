@@ -1,0 +1,60 @@
+# Classic-inspired map preset
+map:
+  id: "nuke"
+  name: "Nuke"
+  world: "csmc_nuke"
+  spawns:
+    terrorist:
+      - x: 55.0
+        y: 73.0
+        z: 6.0
+        yaw: -90.0
+        pitch: 0.0
+      - x: 52.0
+        y: 73.0
+        z: 9.0
+        yaw: -94.0
+        pitch: 0.0
+      - x: 51.0
+        y: 73.0
+        z: 4.0
+        yaw: -88.0
+        pitch: 0.0
+    counter_terrorist:
+      - x: -56.0
+        y: 74.0
+        z: -8.0
+        yaw: 90.0
+        pitch: 0.0
+      - x: -53.0
+        y: 74.0
+        z: -5.0
+        yaw: 86.0
+        pitch: 0.0
+      - x: -51.0
+        y: 74.0
+        z: -10.0
+        yaw: 95.0
+        pitch: 0.0
+  bomb_sites:
+    A:
+      x: -9.0
+      y: 75.0
+      z: -3.0
+      radius: 5.0
+    B:
+      x: 7.0
+      y: 64.0
+      z: 2.0
+      radius: 5.0
+  buy_zones:
+    terrorist:
+      - x: 53.0
+        y: 73.0
+        z: 6.0
+        radius: 8.0
+    counter_terrorist:
+      - x: -54.0
+        y: 74.0
+        z: -8.0
+        radius: 8.0

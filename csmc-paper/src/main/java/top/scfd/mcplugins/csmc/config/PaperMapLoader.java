@@ -106,10 +106,15 @@ public final class PaperMapLoader {
         if (!mapsDir.exists()) {
             mapsDir.mkdirs();
         }
-        File[] existing = mapsDir.listFiles((dir, name) -> name.endsWith(".yml"));
-        if (existing == null || existing.length == 0) {
-            saveTemplate("maps/template.yml");
-        }
+        saveTemplate("maps/template.yml");
+        saveTemplate("maps/dust2.yml");
+        saveTemplate("maps/mirage.yml");
+        saveTemplate("maps/inferno.yml");
+        saveTemplate("maps/nuke.yml");
+        saveTemplate("maps/anubis.yml");
+        saveTemplate("maps/ancient.yml");
+        saveTemplate("maps/vertigo.yml");
+        saveTemplate("maps/summit.yml");
     }
 
     private void saveTemplate(String resourcePath) {

@@ -1,0 +1,60 @@
+# Classic-inspired map preset
+map:
+  id: "anubis"
+  name: "Anubis"
+  world: "csmc_anubis"
+  spawns:
+    terrorist:
+      - x: 58.0
+        y: 67.0
+        z: -14.0
+        yaw: 180.0
+        pitch: 0.0
+      - x: 56.0
+        y: 67.0
+        z: -10.0
+        yaw: 176.0
+        pitch: 0.0
+      - x: 60.0
+        y: 67.0
+        z: -9.0
+        yaw: 184.0
+        pitch: 0.0
+    counter_terrorist:
+      - x: -58.0
+        y: 66.0
+        z: 15.0
+        yaw: 0.0
+        pitch: 0.0
+      - x: -55.0
+        y: 66.0
+        z: 12.0
+        yaw: 4.0
+        pitch: 0.0
+      - x: -53.0
+        y: 66.0
+        z: 18.0
+        yaw: -3.0
+        pitch: 0.0
+  bomb_sites:
+    A:
+      x: -14.0
+      y: 68.0
+      z: 3.0
+      radius: 5.0
+    B:
+      x: 11.0
+      y: 66.0
+      z: -6.0
+      radius: 5.0
+  buy_zones:
+    terrorist:
+      - x: 57.0
+        y: 67.0
+        z: -12.0
+        radius: 8.0
+    counter_terrorist:
+      - x: -56.0
+        y: 66.0
+        z: 15.0
+        radius: 8.0

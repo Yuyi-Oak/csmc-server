@@ -1,0 +1,60 @@
+# Classic-inspired map preset
+map:
+  id: "vertigo"
+  name: "Vertigo"
+  world: "csmc_vertigo"
+  spawns:
+    terrorist:
+      - x: 42.0
+        y: 112.0
+        z: -34.0
+        yaw: -135.0
+        pitch: 0.0
+      - x: 40.0
+        y: 112.0
+        z: -30.0
+        yaw: -132.0
+        pitch: 0.0
+      - x: 45.0
+        y: 112.0
+        z: -29.0
+        yaw: -138.0
+        pitch: 0.0
+    counter_terrorist:
+      - x: -42.0
+        y: 112.0
+        z: 33.0
+        yaw: 45.0
+        pitch: 0.0
+      - x: -40.0
+        y: 112.0
+        z: 29.0
+        yaw: 48.0
+        pitch: 0.0
+      - x: -45.0
+        y: 112.0
+        z: 28.0
+        yaw: 42.0
+        pitch: 0.0
+  bomb_sites:
+    A:
+      x: -8.0
+      y: 113.0
+      z: 11.0
+      radius: 5.0
+    B:
+      x: 9.0
+      y: 113.0
+      z: -13.0
+      radius: 5.0
+  buy_zones:
+    terrorist:
+      - x: 42.0
+        y: 112.0
+        z: -32.0
+        radius: 8.0
+    counter_terrorist:
+      - x: -42.0
+        y: 112.0
+        z: 31.0
+        radius: 8.0

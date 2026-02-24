@@ -192,6 +192,9 @@ public final class SessionRegistry {
         if (mapRegistry == null) {
             return null;
         }
-        return mapRegistry.all().stream().findFirst().orElse(null);
+        return mapRegistry.all().stream()
+            .sorted((left, right) -> left.id().compareToIgnoreCase(right.id()))
+            .findFirst()
+            .orElse(null);
     }
 }

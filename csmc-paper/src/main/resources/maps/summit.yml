@@ -1,0 +1,60 @@
+# Original map preset
+map:
+  id: "summit"
+  name: "Summit Relay"
+  world: "csmc_summit"
+  spawns:
+    terrorist:
+      - x: 61.0
+        y: 88.0
+        z: 8.0
+        yaw: 180.0
+        pitch: 0.0
+      - x: 58.0
+        y: 88.0
+        z: 12.0
+        yaw: 176.0
+        pitch: 0.0
+      - x: 63.0
+        y: 88.0
+        z: 12.0
+        yaw: 184.0
+        pitch: 0.0
+    counter_terrorist:
+      - x: -60.0
+        y: 88.0
+        z: -9.0
+        yaw: 0.0
+        pitch: 0.0
+      - x: -57.0
+        y: 88.0
+        z: -13.0
+        yaw: 4.0
+        pitch: 0.0
+      - x: -63.0
+        y: 88.0
+        z: -13.0
+        yaw: -4.0
+        pitch: 0.0
+  bomb_sites:
+    A:
+      x: -16.0
+      y: 89.0
+      z: -3.0
+      radius: 5.5
+    B:
+      x: 16.0
+      y: 89.0
+      z: 4.0
+      radius: 5.5
+  buy_zones:
+    terrorist:
+      - x: 60.0
+        y: 88.0
+        z: 10.0
+        radius: 8.0
+    counter_terrorist:
+      - x: -60.0
+        y: 88.0
+        z: -11.0
+        radius: 8.0

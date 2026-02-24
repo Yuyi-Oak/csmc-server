@@ -1,0 +1,60 @@
+# Classic-inspired map preset
+map:
+  id: "ancient"
+  name: "Ancient"
+  world: "csmc_ancient"
+  spawns:
+    terrorist:
+      - x: 47.0
+        y: 72.0
+        z: 28.0
+        yaw: 140.0
+        pitch: 0.0
+      - x: 44.0
+        y: 72.0
+        z: 25.0
+        yaw: 142.0
+        pitch: 0.0
+      - x: 50.0
+        y: 72.0
+        z: 24.0
+        yaw: 136.0
+        pitch: 0.0
+    counter_terrorist:
+      - x: -47.0
+        y: 73.0
+        z: -29.0
+        yaw: -40.0
+        pitch: 0.0
+      - x: -44.0
+        y: 73.0
+        z: -25.0
+        yaw: -38.0
+        pitch: 0.0
+      - x: -50.0
+        y: 73.0
+        z: -24.0
+        yaw: -44.0
+        pitch: 0.0
+  bomb_sites:
+    A:
+      x: -9.0
+      y: 74.0
+      z: -10.0
+      radius: 5.0
+    B:
+      x: 13.0
+      y: 72.0
+      z: 10.0
+      radius: 5.0
+  buy_zones:
+    terrorist:
+      - x: 46.0
+        y: 72.0
+        z: 27.0
+        radius: 8.0
+    counter_terrorist:
+      - x: -46.0
+        y: 73.0
+        z: -27.0
+        radius: 8.0
