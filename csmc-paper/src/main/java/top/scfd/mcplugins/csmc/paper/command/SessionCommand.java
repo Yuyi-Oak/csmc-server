@@ -77,7 +77,7 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list|votes> [mode] [mapId] | /csmc ac <status|reset|top> [player]");
+            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list|votes|global> [mode] [mapId] | /csmc ac <status|reset|top> [player]");
             return true;
         }
         return switch (args[0].toLowerCase()) {
@@ -622,7 +622,7 @@ public final class SessionCommand implements CommandExecutor {
 
     private boolean handleQueue(Player player, String[] args) {
         if (args.length < 2) {
-            player.sendMessage("Usage: /csmc queue <join|leave|status|list|votes> [mode] [mapId]");
+            player.sendMessage("Usage: /csmc queue <join|leave|status|list|votes|global> [mode] [mapId]");
             return true;
         }
         return switch (args[1].toLowerCase(Locale.ROOT)) {
@@ -634,6 +634,7 @@ public final class SessionCommand implements CommandExecutor {
             }
             case "list" -> handleQueueList(player);
             case "votes" -> handleQueueVotes(player, args);
+            case "global" -> handleQueueGlobal(player, args);
             case "status" -> {
                 GameMode mode = queue.queuedMode(player.getUniqueId());
                 if (mode == null) {
@@ -657,7 +658,7 @@ public final class SessionCommand implements CommandExecutor {
                 yield true;
             }
             default -> {
-                player.sendMessage("Usage: /csmc queue <join|leave|status|list|votes> [mode] [mapId]");
+                player.sendMessage("Usage: /csmc queue <join|leave|status|list|votes|global> [mode] [mapId]");
                 yield true;
             }
         };
@@ -747,6 +748,54 @@ public final class SessionCommand implements CommandExecutor {
                 .append(needed)
                 .append(voteHint)
                 .append(")");
+            shown++;
+        }
+        player.sendMessage(builder.toString());
+        return true;
+    }
+
+    private boolean handleQueueGlobal(Player player, String[] args) {
+        GameMode mode = null;
+        if (args.length >= 3) {
+            try {
+                mode = GameMode.valueOf(args[2].toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException ex) {
+                player.sendMessage("Invalid mode.");
+                return true;
+            }
+        }
+        var local = queue.queueSizes();
+        var remote = queue.queueSizesRemote();
+        var global = queue.queueSizesGlobal();
+        int sources = queue.activeRemoteSources();
+        if (mode != null) {
+            int localCount = local.getOrDefault(mode, 0);
+            int remoteCount = remote.getOrDefault(mode, 0);
+            int globalCount = global.getOrDefault(mode, localCount + remoteCount);
+            player.sendMessage(
+                "Queue global " + mode
+                    + " | local " + localCount
+                    + " | remote " + remoteCount
+                    + " | global " + globalCount
+                    + " | remoteSources " + sources
+            );
+            return true;
+        }
+        StringBuilder builder = new StringBuilder("Queue global (local/remote/global, sources ")
+            .append(sources)
+            .append("): ");
+        int shown = 0;
+        for (GameMode each : GameMode.values()) {
+            if (shown > 0) {
+                builder.append(" | ");
+            }
+            builder.append(each.name())
+                .append("=")
+                .append(local.getOrDefault(each, 0))
+                .append("/")
+                .append(remote.getOrDefault(each, 0))
+                .append("/")
+                .append(global.getOrDefault(each, 0));
             shown++;
         }
         player.sendMessage(builder.toString());

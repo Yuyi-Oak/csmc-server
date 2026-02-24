@@ -136,6 +136,28 @@ public final class MatchQueueService {
 
     public synchronized Map<GameMode, Integer> queueSizesGlobal() {
         Map<GameMode, Integer> aggregate = queueSizes();
+        Map<GameMode, Integer> remote = remoteQueueSizesInternal();
+        for (GameMode mode : GameMode.values()) {
+            aggregate.merge(mode, remote.getOrDefault(mode, 0), Integer::sum);
+        }
+        return aggregate;
+    }
+
+    public synchronized Map<GameMode, Integer> queueSizesRemote() {
+        return remoteQueueSizesInternal();
+    }
+
+    public synchronized int activeRemoteSources() {
+        long now = System.currentTimeMillis() / 1000L;
+        pruneRemoteSnapshots(now);
+        return remoteQueueSnapshots.size();
+    }
+
+    private Map<GameMode, Integer> remoteQueueSizesInternal() {
+        EnumMap<GameMode, Integer> aggregate = new EnumMap<>(GameMode.class);
+        for (GameMode mode : GameMode.values()) {
+            aggregate.put(mode, 0);
+        }
         long now = System.currentTimeMillis() / 1000L;
         pruneRemoteSnapshots(now);
         for (QueueSnapshot remoteSnapshot : remoteQueueSnapshots.values()) {
