@@ -51,11 +51,12 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc stats [player] | /csmc top | /csmc queue <join|leave|status> [mode]");
+            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc stats [player] | /csmc top | /csmc queue <join|leave|status> [mode]");
             return true;
         }
         return switch (args[0].toLowerCase()) {
             case "create" -> handleCreate(player, args);
+            case "maps" -> handleMaps(player);
             case "join" -> handleJoin(player, args);
             case "leave" -> handleLeave(player);
             case "start" -> handleStart(player);
@@ -72,7 +73,7 @@ public final class SessionCommand implements CommandExecutor {
 
     private boolean handleCreate(Player player, String[] args) {
         if (args.length < 2) {
-            player.sendMessage("Usage: /csmc create <mode>");
+            player.sendMessage("Usage: /csmc create <mode> [mapId]");
             return true;
         }
         GameMode mode;
@@ -83,12 +84,34 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         queue.leave(player.getUniqueId());
-        GameSession session = sessions.createSession(mode);
+        String requestedMap = args.length >= 3 ? args[2] : null;
+        GameSession session = sessions.createSession(mode, requestedMap);
         TeamSide side = sessions.joinSession(player, session);
-        player.sendMessage("Created session " + session.id() + " for " + mode + " as " + side);
+        var map = sessions.mapForSession(session);
+        player.sendMessage(
+            "Created session " + session.id() + " for " + mode + " as " + side
+                + (map == null ? "" : " on " + map.id())
+        );
         if (side != TeamSide.SPECTATOR) {
             loadoutInventory.applyWeapons(player, session.loadout(player.getUniqueId()));
         }
+        return true;
+    }
+
+    private boolean handleMaps(Player player) {
+        var maps = sessions.availableMaps();
+        if (maps.isEmpty()) {
+            player.sendMessage("No maps loaded.");
+            return true;
+        }
+        StringBuilder builder = new StringBuilder("Maps: ");
+        for (int index = 0; index < maps.size(); index++) {
+            if (index > 0) {
+                builder.append(", ");
+            }
+            builder.append(maps.get(index).id());
+        }
+        player.sendMessage(builder.toString());
         return true;
     }
 

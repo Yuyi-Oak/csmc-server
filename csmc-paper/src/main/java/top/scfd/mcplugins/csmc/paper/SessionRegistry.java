@@ -41,6 +41,10 @@ public final class SessionRegistry {
     }
 
     public GameSession createSession(GameMode mode) {
+        return createSession(mode, null);
+    }
+
+    public GameSession createSession(GameMode mode, String mapId) {
         GameSession session = sessionManager.createSession(mode, 0, catalog);
         roundListeners.forEach(session::addRoundListener);
         economyListeners.forEach(session::addEconomyListener);
@@ -53,7 +57,7 @@ public final class SessionRegistry {
         if (playerRoundState != null) {
             session.addRoundListener(new RoundPlayerStateListener(session, playerRoundState));
         }
-        MapDefinition map = resolveDefaultMap();
+        MapDefinition map = resolveMap(mapId);
         if (map != null) {
             sessionMaps.put(session.id(), map);
             session.addRoundListener(new RoundSpawnListener(session, map));
@@ -90,6 +94,15 @@ public final class SessionRegistry {
             return null;
         }
         return sessionMaps.get(session.id());
+    }
+
+    public List<MapDefinition> availableMaps() {
+        if (mapRegistry == null) {
+            return List.of();
+        }
+        return mapRegistry.all().stream()
+            .sorted((left, right) -> left.id().compareToIgnoreCase(right.id()))
+            .toList();
     }
 
     public boolean isInBuyZone(Player player, GameSession session) {
@@ -196,5 +209,15 @@ public final class SessionRegistry {
             .sorted((left, right) -> left.id().compareToIgnoreCase(right.id()))
             .findFirst()
             .orElse(null);
+    }
+
+    private MapDefinition resolveMap(String mapId) {
+        if (mapId == null || mapId.isBlank()) {
+            return resolveDefaultMap();
+        }
+        if (mapRegistry == null) {
+            return null;
+        }
+        return mapRegistry.find(mapId).orElseGet(this::resolveDefaultMap);
     }
 }
