@@ -15,6 +15,9 @@ import org.bukkit.entity.Player;
 import top.scfd.mcplugins.csmc.api.GameMode;
 import top.scfd.mcplugins.csmc.api.TeamSide;
 import top.scfd.mcplugins.csmc.core.session.GameSession;
+import top.scfd.mcplugins.csmc.paper.sync.ClusterSyncService;
+import top.scfd.mcplugins.csmc.paper.sync.NoopClusterSyncService;
+import top.scfd.mcplugins.csmc.paper.sync.QueueSnapshot;
 
 public final class MatchQueueService {
     public enum JoinResult {
@@ -24,18 +27,31 @@ public final class MatchQueueService {
         ALREADY_IN_SESSION
     }
 
+    private static final long REMOTE_SNAPSHOT_TTL_SECONDS = 20L;
+    private static final long SNAPSHOT_HEARTBEAT_SECONDS = 5L;
+
     private final SessionRegistry sessions;
     private final int maxSessions;
+    private final ClusterSyncService clusterSync;
     private final Map<GameMode, LinkedHashSet<UUID>> queues = new EnumMap<>(GameMode.class);
     private final Map<UUID, GameMode> queuedModes = new ConcurrentHashMap<>();
     private final Map<UUID, String> queuedMaps = new ConcurrentHashMap<>();
+    private final Map<String, QueueSnapshot> remoteQueueSnapshots = new ConcurrentHashMap<>();
+    private long lastSnapshotPublishEpochSecond;
+    private boolean localSnapshotDirty = true;
 
     public MatchQueueService(SessionRegistry sessions, int maxSessions) {
+        this(sessions, maxSessions, new NoopClusterSyncService());
+    }
+
+    public MatchQueueService(SessionRegistry sessions, int maxSessions, ClusterSyncService clusterSync) {
         this.sessions = sessions;
         this.maxSessions = Math.max(1, maxSessions);
+        this.clusterSync = clusterSync == null ? new NoopClusterSyncService() : clusterSync;
         for (GameMode mode : GameMode.values()) {
             queues.put(mode, new LinkedHashSet<>());
         }
+        this.clusterSync.onQueueSnapshot(this::acceptRemoteSnapshot);
     }
 
     public synchronized JoinResult join(UUID playerId, GameMode mode) {
@@ -61,6 +77,7 @@ public final class MatchQueueService {
         } else {
             queuedMaps.put(playerId, normalizedMap);
         }
+        markLocalSnapshotDirty();
         return oldMode == null ? JoinResult.QUEUED : JoinResult.MOVED;
     }
 
@@ -70,7 +87,11 @@ public final class MatchQueueService {
             return false;
         }
         queuedMaps.remove(playerId);
-        return queues.get(mode).remove(playerId);
+        boolean removed = queues.get(mode).remove(playerId);
+        if (removed) {
+            markLocalSnapshotDirty();
+        }
+        return removed;
     }
 
     public synchronized GameMode queuedMode(UUID playerId) {
@@ -111,6 +132,18 @@ public final class MatchQueueService {
             snapshot.put(mode, queues.get(mode).size());
         }
         return snapshot;
+    }
+
+    public synchronized Map<GameMode, Integer> queueSizesGlobal() {
+        Map<GameMode, Integer> aggregate = queueSizes();
+        long now = System.currentTimeMillis() / 1000L;
+        pruneRemoteSnapshots(now);
+        for (QueueSnapshot remoteSnapshot : remoteQueueSnapshots.values()) {
+            for (GameMode mode : GameMode.values()) {
+                aggregate.merge(mode, remoteSnapshot.queueSize(mode), Integer::sum);
+            }
+        }
+        return aggregate;
     }
 
     public synchronized Map<String, Integer> mapVotes(GameMode mode) {
@@ -186,6 +219,7 @@ public final class MatchQueueService {
                 }
             }
         }
+        publishLocalSnapshotIfNeeded();
         updateQueueActionBar();
     }
 
@@ -259,12 +293,14 @@ public final class MatchQueueService {
                 iterator.remove();
                 queuedModes.remove(playerId);
                 queuedMaps.remove(playerId);
+                markLocalSnapshotDirty();
                 continue;
             }
             if (sessions.getSessionForPlayer(playerId) != null) {
                 iterator.remove();
                 queuedModes.remove(playerId);
                 queuedMaps.remove(playerId);
+                markLocalSnapshotDirty();
                 continue;
             }
             TeamSide side = sessions.joinSession(player, session);
@@ -274,6 +310,7 @@ public final class MatchQueueService {
             iterator.remove();
             queuedModes.remove(playerId);
             queuedMaps.remove(playerId);
+            markLocalSnapshotDirty();
             matched.add(new QueuedPlayer(player, queuedMap));
         }
     }
@@ -290,6 +327,7 @@ public final class MatchQueueService {
                 iterator.remove();
                 queuedModes.remove(playerId);
                 queuedMaps.remove(playerId);
+                markLocalSnapshotDirty();
             }
         }
     }
@@ -349,6 +387,36 @@ public final class MatchQueueService {
                     .color(NamedTextColor.AQUA)
             );
         }
+    }
+
+    private void acceptRemoteSnapshot(QueueSnapshot snapshot) {
+        if (snapshot == null || snapshot.serverId() == null || snapshot.serverId().isBlank()) {
+            return;
+        }
+        remoteQueueSnapshots.put(snapshot.serverId(), snapshot);
+    }
+
+    private void pruneRemoteSnapshots(long nowEpochSecond) {
+        for (Map.Entry<String, QueueSnapshot> entry : remoteQueueSnapshots.entrySet()) {
+            QueueSnapshot snapshot = entry.getValue();
+            if (snapshot == null || nowEpochSecond - snapshot.epochSecond() > REMOTE_SNAPSHOT_TTL_SECONDS) {
+                remoteQueueSnapshots.remove(entry.getKey(), snapshot);
+            }
+        }
+    }
+
+    private void publishLocalSnapshotIfNeeded() {
+        long now = System.currentTimeMillis() / 1000L;
+        if (!localSnapshotDirty && now - lastSnapshotPublishEpochSecond < SNAPSHOT_HEARTBEAT_SECONDS) {
+            return;
+        }
+        clusterSync.publishQueueSnapshot(queueSizes());
+        lastSnapshotPublishEpochSecond = now;
+        localSnapshotDirty = false;
+    }
+
+    private void markLocalSnapshotDirty() {
+        localSnapshotDirty = true;
     }
 
     private static final class QueuedPlayer {

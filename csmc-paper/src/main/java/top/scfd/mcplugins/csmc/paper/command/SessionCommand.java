@@ -704,14 +704,16 @@ public final class SessionCommand implements CommandExecutor {
     }
 
     private boolean handleQueueList(Player player) {
-        var sizes = queue.queueSizes();
-        StringBuilder builder = new StringBuilder("Queue sizes: ");
+        var localSizes = queue.queueSizes();
+        var globalSizes = queue.queueSizesGlobal();
+        StringBuilder builder = new StringBuilder("Queue sizes (local/global): ");
         int shown = 0;
         for (GameMode mode : GameMode.values()) {
-            int size = sizes.getOrDefault(mode, 0);
+            int localSize = localSizes.getOrDefault(mode, 0);
+            int globalSize = globalSizes.getOrDefault(mode, localSize);
             int needed = queue.playersNeeded(mode);
             String voteHint = "";
-            if (size > 0) {
+            if (localSize > 0) {
                 var votes = queue.mapVotes(mode);
                 if (!votes.isEmpty()) {
                     var top = votes.entrySet().stream()
@@ -724,7 +726,7 @@ public final class SessionCommand implements CommandExecutor {
                         })
                         .findFirst();
                     if (top.isPresent()) {
-                        double share = (top.get().getValue() * 100.0) / size;
+                        double share = (top.get().getValue() * 100.0) / localSize;
                         voteHint = ",top=" + top.get().getKey() + ":" + String.format(Locale.ROOT, "%.0f", share) + "%";
                     }
                 }
@@ -734,7 +736,9 @@ public final class SessionCommand implements CommandExecutor {
             }
             builder.append(mode.name())
                 .append("=")
-                .append(size)
+                .append(localSize)
+                .append("/")
+                .append(globalSize)
                 .append("(need ")
                 .append(needed)
                 .append(voteHint)

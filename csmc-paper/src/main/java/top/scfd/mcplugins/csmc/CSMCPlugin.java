@@ -102,7 +102,7 @@ public final class CSMCPlugin extends JavaPlugin {
             matchHistory,
             combatTracker
         );
-        MatchQueueService queueService = new MatchQueueService(sessionRegistry, config.server().maxSessions());
+        MatchQueueService queueService = new MatchQueueService(sessionRegistry, config.server().maxSessions(), clusterSync);
         PlayerRoundStateService roundStateService = new PlayerRoundStateService(this, sessionRegistry);
         sessionRegistry.setPlayerRoundState(roundStateService);
 
