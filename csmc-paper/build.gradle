@@ -9,6 +9,10 @@ dependencies {
     implementation project(':csmc-core')
     implementation project(':csmc-storage')
     implementation 'io.lettuce:lettuce-core:6.8.1.RELEASE'
+
+    testImplementation platform('org.junit:junit-bom:5.12.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 def pluginResourceProps = [
