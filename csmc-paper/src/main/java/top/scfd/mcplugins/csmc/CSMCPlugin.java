@@ -38,6 +38,7 @@ import top.scfd.mcplugins.csmc.paper.WeaponItemService;
 import top.scfd.mcplugins.csmc.paper.WeaponReloadListener;
 import top.scfd.mcplugins.csmc.paper.WeaponSelectionListener;
 import top.scfd.mcplugins.csmc.paper.command.SessionCommand;
+import top.scfd.mcplugins.csmc.paper.command.SessionTabCompleter;
 import top.scfd.mcplugins.csmc.paper.history.MatchHistoryService;
 import top.scfd.mcplugins.csmc.paper.map.MapEditorCommand;
 import top.scfd.mcplugins.csmc.paper.map.MapEditorService;
@@ -137,6 +138,7 @@ public final class CSMCPlugin extends JavaPlugin {
                 matchHistory
             )
         );
+        getCommand("csmc").setTabCompleter(new SessionTabCompleter(sessionRegistry));
         MapEditorService mapEditor = new MapEditorService(this, mapLoader, core.mapRegistry());
         getCommand("csmcmap").setExecutor(new MapEditorCommand(mapEditor));
         getServer().getPluginManager().registerEvents(roundStateService, this);

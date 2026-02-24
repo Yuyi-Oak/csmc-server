@@ -31,3 +31,4 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Match history is persisted to `plugins/CSMC/data/match-history.yml` and queryable via `/csmc history`.
 - Stats persistence is now buffered and flushed asynchronously in batches for smoother tick performance.
 - Per-match live scoreboard is available via `/csmc scoreboard`.
+- `/csmc` now includes tab-completion for modes/maps/session IDs/view targets.
