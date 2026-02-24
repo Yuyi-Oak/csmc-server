@@ -19,3 +19,4 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Map editor tool: `/csmcmap create`, `/csmcmap addspawn`, `/csmcmap setbomb`, `/csmcmap addbuy`, `/csmcmap save`, `/csmcmap reload`.
 - Cross-server stats cache invalidation is enabled automatically when `storage.type` is `REDIS`.
 - Bundled starter maps: `dust2`, `mirage`, `inferno`, `nuke`, `anubis`, `ancient`, `vertigo`, `summit` (original).
+- Finished sessions auto-close after 15 seconds to free match slots for queueing.

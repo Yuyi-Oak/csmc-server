@@ -87,7 +87,7 @@ public final class CSMCPlugin extends JavaPlugin {
         sessionRegistry.addRoundListener(roundNotifier);
         sessionRegistry.addEconomyListener(economyNotifier);
 
-        ticker = new PaperSessionTicker(core.sessions());
+        ticker = new PaperSessionTicker(sessionRegistry);
         ticker.runTaskTimer(this, 20L, 20L);
 
         hudTicker = new HudTicker(sessionRegistry);

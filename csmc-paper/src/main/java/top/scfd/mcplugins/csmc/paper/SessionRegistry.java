@@ -1,13 +1,16 @@
 package top.scfd.mcplugins.csmc.paper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import top.scfd.mcplugins.csmc.api.GameMode;
+import top.scfd.mcplugins.csmc.api.SessionState;
 import top.scfd.mcplugins.csmc.api.TeamSide;
 import top.scfd.mcplugins.csmc.core.map.BuyZone;
 import top.scfd.mcplugins.csmc.core.map.MapDefinition;
@@ -19,6 +22,7 @@ import top.scfd.mcplugins.csmc.core.session.GameSessionManager;
 import top.scfd.mcplugins.csmc.core.shop.ShopCatalog;
 
 public final class SessionRegistry {
+    private static final int FINISHED_SESSION_TTL_SECONDS = 15;
     private final GameSessionManager sessionManager;
     private final MapRegistry mapRegistry;
     private final ShopCatalog catalog;
@@ -28,6 +32,7 @@ public final class SessionRegistry {
     private volatile PlayerRoundStateService playerRoundState;
     private final Map<UUID, UUID> playerSessions = new ConcurrentHashMap<>();
     private final Map<UUID, MapDefinition> sessionMaps = new ConcurrentHashMap<>();
+    private final Map<UUID, Integer> finishedSessionTtl = new ConcurrentHashMap<>();
     private final List<RoundEventListener> roundListeners = new CopyOnWriteArrayList<>();
     private final List<EconomyEventListener> economyListeners = new CopyOnWriteArrayList<>();
 
@@ -182,7 +187,16 @@ public final class SessionRegistry {
             playerSessions.remove(playerId, sessionId);
         }
         sessionMaps.remove(sessionId);
+        finishedSessionTtl.remove(sessionId);
         sessionManager.removeSession(sessionId);
+    }
+
+    public void tickSessions() {
+        List<GameSession> snapshot = new ArrayList<>(sessionManager.allSessions());
+        for (GameSession session : snapshot) {
+            session.tickRound();
+            handleFinishedLifecycle(session);
+        }
     }
 
     public void addRoundListener(RoundEventListener listener) {
@@ -219,5 +233,41 @@ public final class SessionRegistry {
             return null;
         }
         return mapRegistry.find(mapId).orElseGet(this::resolveDefaultMap);
+    }
+
+    private void handleFinishedLifecycle(GameSession session) {
+        if (session == null) {
+            return;
+        }
+        UUID sessionId = session.id();
+        if (session.state() != SessionState.FINISHED) {
+            finishedSessionTtl.remove(sessionId);
+            return;
+        }
+        int remaining = finishedSessionTtl.compute(
+            sessionId,
+            (id, ttl) -> ttl == null ? FINISHED_SESSION_TTL_SECONDS : ttl - 1
+        );
+        if (remaining > 0) {
+            return;
+        }
+        closeFinishedSession(session);
+    }
+
+    private void closeFinishedSession(GameSession session) {
+        UUID sessionId = session.id();
+        for (UUID playerId : session.players()) {
+            playerSessions.remove(playerId, sessionId);
+            Player player = Bukkit.getPlayer(playerId);
+            if (player != null && player.isOnline()) {
+                player.setSpectatorTarget(null);
+                player.setGameMode(org.bukkit.GameMode.ADVENTURE);
+                player.sendMessage("Match finished. Session closed.");
+            }
+            session.removePlayer(playerId);
+        }
+        sessionMaps.remove(sessionId);
+        finishedSessionTtl.remove(sessionId);
+        sessionManager.removeSession(sessionId);
     }
 }
