@@ -95,6 +95,17 @@ public final class MapEditorService {
         return size;
     }
 
+    public boolean removeSpawn(EditableMap map, TeamSide side, int index) {
+        List<MapSpawn> spawns = side == TeamSide.TERRORIST
+            ? map.terroristSpawns()
+            : map.counterTerroristSpawns();
+        if (index < 0 || index >= spawns.size()) {
+            return false;
+        }
+        spawns.remove(index);
+        return true;
+    }
+
     public void addBuyZone(EditableMap map, TeamSide side, BuyZone zone) {
         List<BuyZone> zones = side == TeamSide.TERRORIST
             ? map.terroristBuyZones()
@@ -109,6 +120,17 @@ public final class MapEditorService {
         int size = zones.size();
         zones.clear();
         return size;
+    }
+
+    public boolean removeBuyZone(EditableMap map, TeamSide side, int index) {
+        List<BuyZone> zones = side == TeamSide.TERRORIST
+            ? map.terroristBuyZones()
+            : map.counterTerroristBuyZones();
+        if (index < 0 || index >= zones.size()) {
+            return false;
+        }
+        zones.remove(index);
+        return true;
     }
 
     public void setBombSite(EditableMap map, String siteId, BombSite bombSite) {

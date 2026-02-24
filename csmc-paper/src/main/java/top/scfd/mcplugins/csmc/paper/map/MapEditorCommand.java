@@ -26,9 +26,9 @@ public final class MapEditorCommand implements CommandExecutor {
         }
         if (args.length == 0) {
             sender.sendMessage("Usage: /csmcmap list | /csmcmap create <id> [name] | /csmcmap info <id> | /csmcmap setname <id> <name>");
-            sender.sendMessage("       /csmcmap setworld <id> [world] | /csmcmap addspawn <id> <t|ct> | /csmcmap clearspawns <id> <t|ct>");
+            sender.sendMessage("       /csmcmap setworld <id> [world] | /csmcmap listpoints <id> | /csmcmap addspawn <id> <t|ct> | /csmcmap removespawn <id> <t|ct> <index> | /csmcmap clearspawns <id> <t|ct>");
             sender.sendMessage("       /csmcmap setbomb <id> <A|B> <radius> | /csmcmap removebomb <id> <A|B>");
-            sender.sendMessage("       /csmcmap addbuy <id> <t|ct> <radius> | /csmcmap clearbuy <id> <t|ct> | /csmcmap save <id> | /csmcmap reload");
+            sender.sendMessage("       /csmcmap addbuy <id> <t|ct> <radius> | /csmcmap removebuy <id> <t|ct> <index> | /csmcmap clearbuy <id> <t|ct> | /csmcmap save <id> | /csmcmap reload");
             return true;
         }
         return switch (args[0].toLowerCase(Locale.ROOT)) {
@@ -37,11 +37,14 @@ public final class MapEditorCommand implements CommandExecutor {
             case "info" -> handleInfo(sender, args);
             case "setname" -> handleSetName(sender, args);
             case "setworld" -> handleSetWorld(sender, args);
+            case "listpoints" -> handleListPoints(sender, args);
             case "addspawn" -> handleAddSpawn(sender, args);
+            case "removespawn" -> handleRemoveSpawn(sender, args);
             case "clearspawns" -> handleClearSpawns(sender, args);
             case "setbomb" -> handleSetBomb(sender, args);
             case "removebomb" -> handleRemoveBomb(sender, args);
             case "addbuy" -> handleAddBuy(sender, args);
+            case "removebuy" -> handleRemoveBuy(sender, args);
             case "clearbuy" -> handleClearBuy(sender, args);
             case "save" -> handleSave(sender, args);
             case "reload" -> handleReload(sender);
@@ -94,6 +97,35 @@ public final class MapEditorCommand implements CommandExecutor {
                 + " | buyzones T/CT=" + map.terroristBuyZones().size() + "/" + map.counterTerroristBuyZones().size()
                 + " | bombSites=" + map.bombSites().keySet()
         );
+        return true;
+    }
+
+    private boolean handleListPoints(CommandSender sender, String[] args) {
+        if (args.length < 2) {
+            sender.sendMessage("Usage: /csmcmap listpoints <id>");
+            return true;
+        }
+        EditableMap map = maps.get(args[1]);
+        if (map == null) {
+            sender.sendMessage("Map not found.");
+            return true;
+        }
+        sender.sendMessage("Map points for " + map.id() + " (" + map.world() + "):");
+        printSpawns(sender, "T spawns", map.terroristSpawns());
+        printSpawns(sender, "CT spawns", map.counterTerroristSpawns());
+        printBuyZones(sender, "T buy zones", map.terroristBuyZones());
+        printBuyZones(sender, "CT buy zones", map.counterTerroristBuyZones());
+        if (map.bombSites().isEmpty()) {
+            sender.sendMessage("Bomb sites: none");
+        } else {
+            sender.sendMessage("Bomb sites:");
+            for (var entry : map.bombSites().entrySet()) {
+                BombSite site = entry.getValue();
+                sender.sendMessage(" - " + entry.getKey().toUpperCase(Locale.ROOT)
+                    + " @ " + format(site.x(), site.y(), site.z())
+                    + " r=" + trim(site.radius()));
+            }
+        }
         return true;
     }
 
@@ -172,6 +204,33 @@ public final class MapEditorCommand implements CommandExecutor {
         }
         int removed = maps.clearSpawns(map, side);
         sender.sendMessage("Removed " + removed + " " + side.name() + " spawns.");
+        return true;
+    }
+
+    private boolean handleRemoveSpawn(CommandSender sender, String[] args) {
+        if (args.length < 4) {
+            sender.sendMessage("Usage: /csmcmap removespawn <id> <t|ct> <index>");
+            return true;
+        }
+        EditableMap map = maps.get(args[1]);
+        if (map == null) {
+            sender.sendMessage("Map not found.");
+            return true;
+        }
+        TeamSide side = parseSide(args[2]);
+        if (side == null) {
+            sender.sendMessage("Side must be t or ct.");
+            return true;
+        }
+        int inputIndex = parsePositiveInt(args[3]);
+        if (inputIndex <= 0) {
+            sender.sendMessage("Index must be >= 1.");
+            return true;
+        }
+        boolean removed = maps.removeSpawn(map, side, inputIndex - 1);
+        sender.sendMessage(removed
+            ? "Removed " + side.name() + " spawn #" + inputIndex + "."
+            : "Spawn index out of range.");
         return true;
     }
 
@@ -268,6 +327,33 @@ public final class MapEditorCommand implements CommandExecutor {
         return true;
     }
 
+    private boolean handleRemoveBuy(CommandSender sender, String[] args) {
+        if (args.length < 4) {
+            sender.sendMessage("Usage: /csmcmap removebuy <id> <t|ct> <index>");
+            return true;
+        }
+        EditableMap map = maps.get(args[1]);
+        if (map == null) {
+            sender.sendMessage("Map not found.");
+            return true;
+        }
+        TeamSide side = parseSide(args[2]);
+        if (side == null) {
+            sender.sendMessage("Side must be t or ct.");
+            return true;
+        }
+        int inputIndex = parsePositiveInt(args[3]);
+        if (inputIndex <= 0) {
+            sender.sendMessage("Index must be >= 1.");
+            return true;
+        }
+        boolean removed = maps.removeBuyZone(map, side, inputIndex - 1);
+        sender.sendMessage(removed
+            ? "Removed " + side.name() + " buy zone #" + inputIndex + "."
+            : "Buy zone index out of range.");
+        return true;
+    }
+
     private boolean handleSave(CommandSender sender, String[] args) {
         if (args.length < 2) {
             sender.sendMessage("Usage: /csmcmap save <id>");
@@ -329,5 +415,47 @@ public final class MapEditorCommand implements CommandExecutor {
         } catch (NumberFormatException ignored) {
             return -1.0;
         }
+    }
+
+    private int parsePositiveInt(String value) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException ignored) {
+            return -1;
+        }
+    }
+
+    private void printSpawns(CommandSender sender, String label, java.util.List<MapSpawn> spawns) {
+        if (spawns.isEmpty()) {
+            sender.sendMessage(label + ": none");
+            return;
+        }
+        sender.sendMessage(label + ":");
+        for (int index = 0; index < spawns.size(); index++) {
+            MapSpawn spawn = spawns.get(index);
+            sender.sendMessage(" - #" + (index + 1) + " " + format(spawn.x(), spawn.y(), spawn.z())
+                + " yaw/pitch=" + trim(spawn.yaw()) + "/" + trim(spawn.pitch()));
+        }
+    }
+
+    private void printBuyZones(CommandSender sender, String label, java.util.List<BuyZone> zones) {
+        if (zones.isEmpty()) {
+            sender.sendMessage(label + ": none");
+            return;
+        }
+        sender.sendMessage(label + ":");
+        for (int index = 0; index < zones.size(); index++) {
+            BuyZone zone = zones.get(index);
+            sender.sendMessage(" - #" + (index + 1) + " " + format(zone.x(), zone.y(), zone.z())
+                + " r=" + trim(zone.radius()));
+        }
+    }
+
+    private String format(double x, double y, double z) {
+        return "(" + trim(x) + ", " + trim(y) + ", " + trim(z) + ")";
+    }
+
+    private String trim(double value) {
+        return String.format(Locale.ROOT, "%.2f", value);
     }
 }
