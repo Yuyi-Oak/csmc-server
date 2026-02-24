@@ -16,7 +16,7 @@ public final class MapEditorTabCompleter implements TabCompleter {
         "addspawn", "removespawn", "clearspawns",
         "setbomb", "removebomb",
         "addbuy", "removebuy", "clearbuy",
-        "save", "reload"
+        "save", "saveall", "reload"
     );
     private static final List<String> SIDES = List.of("t", "ct");
     private static final List<String> BOMB_SITES = List.of("A", "B");

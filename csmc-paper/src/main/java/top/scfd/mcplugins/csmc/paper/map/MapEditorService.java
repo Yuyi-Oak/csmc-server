@@ -176,6 +176,26 @@ public final class MapEditorService {
     }
 
     public boolean save(EditableMap map) {
+        return save(map, true);
+    }
+
+    public SaveAllResult saveAll() {
+        int saved = 0;
+        int failed = 0;
+        for (EditableMap map : cache.values()) {
+            if (save(map, false)) {
+                saved++;
+            } else {
+                failed++;
+            }
+        }
+        if (saved > 0) {
+            mapLoader.loadInto(mapRegistry);
+        }
+        return new SaveAllResult(saved, failed);
+    }
+
+    private boolean save(EditableMap map, boolean reloadAfterSave) {
         YamlConfiguration config = new YamlConfiguration();
         config.set("map.id", map.id());
         config.set("map.name", map.name());
@@ -196,7 +216,9 @@ public final class MapEditorService {
         try {
             config.save(target);
             cache.put(map.id(), map);
-            mapLoader.loadInto(mapRegistry);
+            if (reloadAfterSave) {
+                mapLoader.loadInto(mapRegistry);
+            }
             return true;
         } catch (IOException error) {
             plugin.getLogger().warning("Failed to save map " + map.id() + ": " + error.getMessage());
@@ -327,5 +349,8 @@ public final class MapEditorService {
             return null;
         }
         return normalized;
+    }
+
+    public record SaveAllResult(int saved, int failed) {
     }
 }

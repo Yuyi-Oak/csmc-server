@@ -28,7 +28,7 @@ public final class MapEditorCommand implements CommandExecutor {
             sender.sendMessage("Usage: /csmcmap list | /csmcmap create <id> [name] | /csmcmap clone <sourceId> <targetId> [name] | /csmcmap info <id> | /csmcmap setname <id> <name>");
             sender.sendMessage("       /csmcmap setworld <id> [world] | /csmcmap listpoints <id> | /csmcmap addspawn <id> <t|ct> | /csmcmap removespawn <id> <t|ct> <index> | /csmcmap clearspawns <id> <t|ct>");
             sender.sendMessage("       /csmcmap setbomb <id> <A|B> <radius> | /csmcmap removebomb <id> <A|B>");
-            sender.sendMessage("       /csmcmap addbuy <id> <t|ct> <radius> | /csmcmap removebuy <id> <t|ct> <index> | /csmcmap clearbuy <id> <t|ct> | /csmcmap save <id> | /csmcmap reload");
+            sender.sendMessage("       /csmcmap addbuy <id> <t|ct> <radius> | /csmcmap removebuy <id> <t|ct> <index> | /csmcmap clearbuy <id> <t|ct> | /csmcmap save <id> | /csmcmap saveall | /csmcmap reload");
             return true;
         }
         return switch (args[0].toLowerCase(Locale.ROOT)) {
@@ -48,6 +48,7 @@ public final class MapEditorCommand implements CommandExecutor {
             case "removebuy" -> handleRemoveBuy(sender, args);
             case "clearbuy" -> handleClearBuy(sender, args);
             case "save" -> handleSave(sender, args);
+            case "saveall" -> handleSaveAll(sender);
             case "reload" -> handleReload(sender);
             default -> {
                 sender.sendMessage("Unknown subcommand.");
@@ -390,6 +391,12 @@ public final class MapEditorCommand implements CommandExecutor {
     private boolean handleReload(CommandSender sender) {
         maps.reload();
         sender.sendMessage("Map registry reloaded from disk.");
+        return true;
+    }
+
+    private boolean handleSaveAll(CommandSender sender) {
+        MapEditorService.SaveAllResult result = maps.saveAll();
+        sender.sendMessage("Saved drafts: " + result.saved() + ", failed: " + result.failed() + ".");
         return true;
     }
 
