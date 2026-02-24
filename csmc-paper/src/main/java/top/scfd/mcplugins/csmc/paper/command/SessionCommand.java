@@ -67,12 +67,13 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc info | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list> [mode] [mapId]");
+            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc info | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list> [mode] [mapId]");
             return true;
         }
         return switch (args[0].toLowerCase()) {
             case "create" -> handleCreate(player, args);
             case "maps" -> handleMaps(player);
+            case "sessions" -> handleSessions(player);
             case "info" -> handleInfo(player);
             case "join" -> handleJoin(player, args);
             case "leave" -> handleLeave(player);
@@ -136,6 +137,39 @@ public final class SessionCommand implements CommandExecutor {
             builder.append(maps.get(index).id());
         }
         player.sendMessage(builder.toString());
+        return true;
+    }
+
+    private boolean handleSessions(Player player) {
+        List<GameSession> active = sessions.allSessions();
+        if (active.isEmpty()) {
+            player.sendMessage("No active sessions.");
+            return true;
+        }
+        player.sendMessage("Active sessions: " + active.size());
+        for (GameSession session : active) {
+            int t = 0;
+            int ct = 0;
+            int spec = 0;
+            for (UUID playerId : session.players()) {
+                TeamSide side = session.getSide(playerId);
+                if (side == TeamSide.TERRORIST) {
+                    t++;
+                } else if (side == TeamSide.COUNTER_TERRORIST) {
+                    ct++;
+                } else {
+                    spec++;
+                }
+            }
+            var map = sessions.mapForSession(session);
+            player.sendMessage(
+                session.id() + " | "
+                    + session.mode() + " | "
+                    + session.state() + " | "
+                    + (map == null ? "none" : map.id()) + " | "
+                    + "T/CT/S=" + t + "/" + ct + "/" + spec
+            );
+        }
         return true;
     }
 

@@ -2,6 +2,7 @@ package top.scfd.mcplugins.csmc.paper;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -205,6 +206,12 @@ public final class SessionRegistry {
 
     public int sessionCount() {
         return sessionManager.allSessions().size();
+    }
+
+    public List<GameSession> allSessions() {
+        return sessionManager.allSessions().stream()
+            .sorted(Comparator.comparing(session -> session.id().toString()))
+            .toList();
     }
 
     public void removeSession(GameSession session) {
