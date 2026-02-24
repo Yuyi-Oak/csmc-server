@@ -17,10 +17,11 @@ import top.scfd.mcplugins.csmc.paper.SessionRegistry;
 public final class SessionTabCompleter implements TabCompleter {
     private static final List<String> ROOT = List.of(
         "create", "maps", "sessions", "rules", "info", "scoreboard", "join", "leave", "start",
-        "buy", "view", "stats", "history", "top", "queue"
+        "buy", "view", "stats", "history", "top", "queue", "ac"
     );
     private static final List<String> QUEUE = List.of("join", "leave", "status", "list", "votes");
     private static final List<String> VIEW = List.of("free", "next", "prev");
+    private static final List<String> AC = List.of("status", "reset");
 
     private final SessionRegistry sessions;
 
@@ -43,6 +44,7 @@ public final class SessionTabCompleter implements TabCompleter {
             case "history" -> completeHistory(args);
             case "scoreboard", "board" -> completeScoreboard(args);
             case "queue" -> completeQueue(args);
+            case "ac", "anticheat" -> completeAntiCheat(args);
             default -> List.of();
         };
     }
@@ -140,6 +142,20 @@ public final class SessionTabCompleter implements TabCompleter {
         }
         if (args.length == 4) {
             return match(args[3], mapNames(true));
+        }
+        return List.of();
+    }
+
+    private List<String> completeAntiCheat(String[] args) {
+        if (args.length == 2) {
+            return match(args[1], AC);
+        }
+        if (args.length == 3) {
+            List<String> names = new ArrayList<>();
+            for (Player online : Bukkit.getOnlinePlayers()) {
+                names.add(online.getName());
+            }
+            return match(args[2], names);
         }
         return List.of();
     }

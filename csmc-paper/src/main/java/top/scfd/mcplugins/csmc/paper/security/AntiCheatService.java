@@ -58,6 +58,22 @@ public final class AntiCheatService {
         }
     }
 
+    public int violationLevel(UUID playerId) {
+        if (playerId == null) {
+            return 0;
+        }
+        return violationLevels.getOrDefault(playerId, 0);
+    }
+
+    public void reset(UUID playerId) {
+        if (playerId == null) {
+            return;
+        }
+        violationLevels.remove(playerId);
+        lastAlertAt.remove(playerId);
+        lastKickAt.remove(playerId);
+    }
+
     private void maybeKick(Player player, String reason, int level) {
         if (player.isOp() || player.hasPermission("csmc.anticheat.bypass")) {
             return;

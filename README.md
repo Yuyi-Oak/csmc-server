@@ -16,7 +16,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Configuration templates and language files are under `csmc-paper/src/main/resources/`.
 - Asset handoff checklist is in `docs/ASSET_CHECKLIST.md`.
 - Storage backends currently available: YAML, SQLite, MySQL, PostgreSQL, MongoDB, Redis.
-- Command highlights: `/csmc create <mode> [mapId]`, `/csmc maps`, `/csmc sessions`, `/csmc rules [mode]`, `/csmc scoreboard [limit]`, `/csmc view <free|next|prev|player>`, `/csmc queue join [mode] [mapId]`, `/csmc queue status`, `/csmc stats [player]`, `/csmc history [player|uuid] [limit]`, `/csmc top`.
+- Command highlights: `/csmc create <mode> [mapId]`, `/csmc maps`, `/csmc sessions`, `/csmc rules [mode]`, `/csmc scoreboard [limit]`, `/csmc view <free|next|prev|player>`, `/csmc queue join [mode] [mapId]`, `/csmc queue status`, `/csmc queue votes [mode]`, `/csmc stats [player]`, `/csmc history [player|uuid] [limit]`, `/csmc top`, `/csmc ac <status|reset> [player]`.
 - Queue monitoring command: `/csmc queue list` (all mode queue sizes + needed players).
 - Queue map preference insight command: `/csmc queue votes [mode]`.
 - Queue status/actionbar now includes `need N` (players still needed before next match assignment).
@@ -38,6 +38,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Weapon-system headshot kills are now tracked into persistent player stats.
 - Baseline anti-cheat also flags abnormal movement bursts (`speed`/`fly`) during combat phases.
 - Anti-cheat now escalates severe repeated violations into automatic kicks (bypass permission: `csmc.anticheat.bypass`).
+- Ops can inspect/reset anti-cheat VL using `/csmc ac` (`csmc.anticheat.manage`).
 - Match history is persisted to `plugins/CSMC/data/match-history.yml` and queryable via `/csmc history`.
 - Stats persistence is now buffered and flushed asynchronously in batches for smoother tick performance.
 - Per-match live scoreboard is available via `/csmc scoreboard`.

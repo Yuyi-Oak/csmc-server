@@ -31,6 +31,7 @@ import top.scfd.mcplugins.csmc.paper.SessionRegistry;
 import top.scfd.mcplugins.csmc.paper.StatsService;
 import top.scfd.mcplugins.csmc.paper.history.MatchHistoryEntry;
 import top.scfd.mcplugins.csmc.paper.history.MatchHistoryService;
+import top.scfd.mcplugins.csmc.paper.security.AntiCheatService;
 import top.scfd.mcplugins.csmc.storage.LeaderboardEntry;
 import top.scfd.mcplugins.csmc.storage.PlayerStats;
 
@@ -47,6 +48,7 @@ public final class SessionCommand implements CommandExecutor {
     private final MatchCombatTrackerService combatTracker;
     private final MatchQueueService queue;
     private final MatchHistoryService history;
+    private final AntiCheatService antiCheat;
 
     public SessionCommand(
         SessionRegistry sessions,
@@ -55,7 +57,8 @@ public final class SessionCommand implements CommandExecutor {
         StatsService stats,
         MatchCombatTrackerService combatTracker,
         MatchQueueService queue,
-        MatchHistoryService history
+        MatchHistoryService history,
+        AntiCheatService antiCheat
     ) {
         this.sessions = sessions;
         this.shopService = shopService;
@@ -64,6 +67,7 @@ public final class SessionCommand implements CommandExecutor {
         this.combatTracker = combatTracker;
         this.queue = queue;
         this.history = history;
+        this.antiCheat = antiCheat;
     }
 
     @Override
@@ -73,7 +77,7 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list|votes> [mode] [mapId]");
+            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list|votes> [mode] [mapId] | /csmc ac <status|reset> [player]");
             return true;
         }
         return switch (args[0].toLowerCase()) {
@@ -92,6 +96,7 @@ public final class SessionCommand implements CommandExecutor {
             case "history" -> handleHistory(player, args);
             case "top" -> handleTop(player);
             case "queue" -> handleQueue(player, args);
+            case "ac", "anticheat" -> handleAntiCheat(player, args);
             default -> {
                 sender.sendMessage("Unknown subcommand.");
                 yield true;
@@ -729,6 +734,43 @@ public final class SessionCommand implements CommandExecutor {
             })
             .forEach(entry -> player.sendMessage(" - " + entry.getKey() + ": " + entry.getValue()));
         return true;
+    }
+
+    private boolean handleAntiCheat(Player sender, String[] args) {
+        if (antiCheat == null) {
+            sender.sendMessage("Anti-cheat is unavailable.");
+            return true;
+        }
+        if (!sender.isOp() && !sender.hasPermission("csmc.anticheat.manage")) {
+            sender.sendMessage("No permission.");
+            return true;
+        }
+        if (args.length < 2) {
+            sender.sendMessage("Usage: /csmc ac <status|reset> [player]");
+            return true;
+        }
+        String action = args[1].toLowerCase(Locale.ROOT);
+        Player target = args.length >= 3 ? Bukkit.getPlayerExact(args[2]) : sender;
+        if (target == null) {
+            sender.sendMessage("Player not found.");
+            return true;
+        }
+        return switch (action) {
+            case "status" -> {
+                int vl = antiCheat.violationLevel(target.getUniqueId());
+                sender.sendMessage("Anti-cheat VL for " + target.getName() + ": " + vl);
+                yield true;
+            }
+            case "reset" -> {
+                antiCheat.reset(target.getUniqueId());
+                sender.sendMessage("Anti-cheat VL reset for " + target.getName() + ".");
+                yield true;
+            }
+            default -> {
+                sender.sendMessage("Usage: /csmc ac <status|reset> [player]");
+                yield true;
+            }
+        };
     }
 
     private UUID parseUuid(String value) {

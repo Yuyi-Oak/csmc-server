@@ -8,13 +8,16 @@ load: POSTWORLD
 commands:
   csmc:
     description: CSMC session command
-    usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list|votes> [mode] [mapId]
+    usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list|votes> [mode] [mapId] | /csmc ac <status|reset> [player]
   csmcmap:
     description: CSMC map editor command
     usage: /csmcmap list | /csmcmap create/clone/info <id> | /csmcmap listpoints <id> | /csmcmap addspawn/removespawn | /csmcmap addbuy/removebuy | /csmcmap validate <id> | /csmcmap save <id> [force] | /csmcmap saveall [force]
 permissions:
   csmc.anticheat.alert:
     description: Receive CSMC anti-cheat alerts.
+    default: op
+  csmc.anticheat.manage:
+    description: Manage anti-cheat violation states.
     default: op
   csmc.anticheat.bypass:
     description: Exempt from anti-cheat punitive actions.
