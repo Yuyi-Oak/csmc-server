@@ -78,7 +78,7 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list|votes|global> [mode|detail] [mapId] | /csmc ac <status|reset|top> [player|limit]");
+            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list|votes|global> [mode|detail [limit]] [mapId] | /csmc ac <status|reset|top> [player|limit]");
             return true;
         }
         return switch (args[0].toLowerCase()) {
@@ -623,7 +623,7 @@ public final class SessionCommand implements CommandExecutor {
 
     private boolean handleQueue(Player player, String[] args) {
         if (args.length < 2) {
-            player.sendMessage("Usage: /csmc queue <join|leave|status|list|votes|global> [mode|detail] [mapId]");
+            player.sendMessage("Usage: /csmc queue <join|leave|status|list|votes|global> [mode|detail [limit]] [mapId]");
             return true;
         }
         return switch (args[1].toLowerCase(Locale.ROOT)) {
@@ -659,7 +659,7 @@ public final class SessionCommand implements CommandExecutor {
                 yield true;
             }
             default -> {
-                player.sendMessage("Usage: /csmc queue <join|leave|status|list|votes|global> [mode|detail] [mapId]");
+                player.sendMessage("Usage: /csmc queue <join|leave|status|list|votes|global> [mode|detail [limit]] [mapId]");
                 yield true;
             }
         };
