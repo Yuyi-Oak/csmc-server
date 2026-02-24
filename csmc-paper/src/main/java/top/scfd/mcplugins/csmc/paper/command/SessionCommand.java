@@ -51,7 +51,7 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|player> | /csmc stats [player] | /csmc top | /csmc queue <join|leave|status> [mode]");
+            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|player> | /csmc stats [player] | /csmc top | /csmc queue <join|leave|status> [mode] [mapId]");
             return true;
         }
         return switch (args[0].toLowerCase()) {
@@ -313,7 +313,7 @@ public final class SessionCommand implements CommandExecutor {
 
     private boolean handleQueue(Player player, String[] args) {
         if (args.length < 2) {
-            player.sendMessage("Usage: /csmc queue <join|leave|status> [mode]");
+            player.sendMessage("Usage: /csmc queue <join|leave|status> [mode] [mapId]");
             return true;
         }
         return switch (args[1].toLowerCase(Locale.ROOT)) {
@@ -330,12 +330,14 @@ public final class SessionCommand implements CommandExecutor {
                 } else {
                     int size = queue.queueSize(mode);
                     int position = queue.queuePosition(player.getUniqueId());
-                    player.sendMessage("Queue " + mode + " | position " + position + " / " + size);
+                    String map = queue.queuedMap(player.getUniqueId());
+                    String mapText = map == null ? "auto" : map;
+                    player.sendMessage("Queue " + mode + " (" + mapText + ") | position " + position + " / " + size);
                 }
                 yield true;
             }
             default -> {
-                player.sendMessage("Usage: /csmc queue <join|leave|status> [mode]");
+                player.sendMessage("Usage: /csmc queue <join|leave|status> [mode] [mapId]");
                 yield true;
             }
         };
@@ -343,6 +345,7 @@ public final class SessionCommand implements CommandExecutor {
 
     private boolean handleQueueJoin(Player player, String[] args) {
         GameMode mode = GameMode.COMPETITIVE;
+        String mapId = null;
         if (args.length >= 3) {
             try {
                 mode = GameMode.valueOf(args[2].toUpperCase(Locale.ROOT));
@@ -351,17 +354,21 @@ public final class SessionCommand implements CommandExecutor {
                 return true;
             }
         }
-        MatchQueueService.JoinResult result = queue.join(player.getUniqueId(), mode);
+        if (args.length >= 4) {
+            mapId = args[3];
+        }
+        MatchQueueService.JoinResult result = queue.join(player.getUniqueId(), mode, mapId);
+        String mapText = mapId == null || mapId.isBlank() ? "auto" : mapId.toLowerCase(Locale.ROOT);
         switch (result) {
-            case QUEUED -> player.sendMessage("Queued for " + mode + ".");
-            case MOVED -> player.sendMessage("Queue switched to " + mode + ".");
-            case ALREADY_IN_QUEUE -> player.sendMessage("Already queued for " + mode + ".");
+            case QUEUED -> player.sendMessage("Queued for " + mode + " (" + mapText + ").");
+            case MOVED -> player.sendMessage("Queue switched to " + mode + " (" + mapText + ").");
+            case ALREADY_IN_QUEUE -> player.sendMessage("Already queued for " + mode + " (" + mapText + ").");
             case ALREADY_IN_SESSION -> player.sendMessage("You are already in a session.");
         }
         if (result == MatchQueueService.JoinResult.QUEUED || result == MatchQueueService.JoinResult.MOVED) {
             int size = queue.queueSize(mode);
             int position = queue.queuePosition(player.getUniqueId());
-            player.sendMessage("Queue " + mode + " | position " + position + " / " + size);
+            player.sendMessage("Queue " + mode + " (" + mapText + ") | position " + position + " / " + size);
         }
         return true;
     }

@@ -2,6 +2,7 @@ package top.scfd.mcplugins.csmc.paper;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ public final class MatchQueueService {
     private final int maxSessions;
     private final Map<GameMode, LinkedHashSet<UUID>> queues = new EnumMap<>(GameMode.class);
     private final Map<UUID, GameMode> queuedModes = new ConcurrentHashMap<>();
+    private final Map<UUID, String> queuedMaps = new ConcurrentHashMap<>();
 
     public MatchQueueService(SessionRegistry sessions, int maxSessions) {
         this.sessions = sessions;
@@ -35,11 +37,16 @@ public final class MatchQueueService {
     }
 
     public synchronized JoinResult join(UUID playerId, GameMode mode) {
+        return join(playerId, mode, null);
+    }
+
+    public synchronized JoinResult join(UUID playerId, GameMode mode, String mapId) {
         if (sessions.getSessionForPlayer(playerId) != null) {
             return JoinResult.ALREADY_IN_SESSION;
         }
         GameMode oldMode = queuedModes.get(playerId);
-        if (oldMode == mode) {
+        String normalizedMap = normalizeMapId(mapId);
+        if (oldMode == mode && java.util.Objects.equals(queuedMaps.get(playerId), normalizedMap)) {
             return JoinResult.ALREADY_IN_QUEUE;
         }
         if (oldMode != null) {
@@ -47,6 +54,11 @@ public final class MatchQueueService {
         }
         queues.get(mode).add(playerId);
         queuedModes.put(playerId, mode);
+        if (normalizedMap == null) {
+            queuedMaps.remove(playerId);
+        } else {
+            queuedMaps.put(playerId, normalizedMap);
+        }
         return oldMode == null ? JoinResult.QUEUED : JoinResult.MOVED;
     }
 
@@ -55,6 +67,7 @@ public final class MatchQueueService {
         if (mode == null) {
             return false;
         }
+        queuedMaps.remove(playerId);
         return queues.get(mode).remove(playerId);
     }
 
@@ -64,6 +77,10 @@ public final class MatchQueueService {
 
     public synchronized int queueSize(GameMode mode) {
         return queues.get(mode).size();
+    }
+
+    public synchronized String queuedMap(UUID playerId) {
+        return queuedMaps.get(playerId);
     }
 
     public synchronized int queuePosition(UUID playerId) {
@@ -88,33 +105,66 @@ public final class MatchQueueService {
         for (GameMode mode : GameMode.values()) {
             sanitize(mode);
             while (sessions.sessionCount() < maxSessions && queues.get(mode).size() >= 2) {
-                GameSession session = sessions.createSession(mode);
-                List<Player> matched = fillSession(mode, session);
+                String selectedMap = pickMapPreference(mode);
+                GameSession session = sessions.createSession(mode, selectedMap);
+                List<QueuedPlayer> matched = fillSession(mode, selectedMap, session);
                 if (matched.size() < 2) {
-                    for (Player player : matched) {
-                        sessions.leaveSession(player);
-                        join(player.getUniqueId(), mode);
-                        player.sendMessage("Matchmaking paused: not enough online players.");
+                    for (QueuedPlayer queued : matched) {
+                        sessions.leaveSession(queued.player);
+                        join(queued.player.getUniqueId(), mode, queued.mapId);
+                        queued.player.sendMessage("Matchmaking paused: not enough online players.");
                     }
                     sessions.removeSession(session);
                     break;
                 }
-                for (Player player : matched) {
-                    TeamSide side = session.getSide(player.getUniqueId());
-                    player.sendMessage("Matched to " + mode + " session " + session.id() + " as " + side + ".");
+                String mapLabel = selectedMap == null ? "auto" : selectedMap;
+                for (QueuedPlayer queued : matched) {
+                    TeamSide side = session.getSide(queued.player.getUniqueId());
+                    queued.player.sendMessage("Matched to " + mode + " (" + mapLabel + ") session " + session.id() + " as " + side + ".");
                 }
             }
         }
     }
 
-    private List<Player> fillSession(GameMode mode, GameSession session) {
-        List<Player> matched = new ArrayList<>();
+    private List<QueuedPlayer> fillSession(GameMode mode, String selectedMap, GameSession session) {
+        List<QueuedPlayer> matched = new ArrayList<>();
         int maxPlayers = Math.max(2, session.maxPlayers());
+        boolean requireExactMap = selectedMap != null;
+        fillByRule(mode, session, matched, maxPlayers, selectedMap, requireExactMap, false);
+        if (selectedMap != null && matched.size() < maxPlayers) {
+            fillByRule(mode, session, matched, maxPlayers, selectedMap, false, true);
+        }
+        return matched;
+    }
+
+    private void fillByRule(
+        GameMode mode,
+        GameSession session,
+        List<QueuedPlayer> matched,
+        int maxPlayers,
+        String selectedMap,
+        boolean requireExactMap,
+        boolean allowAutoMap
+    ) {
         var iterator = queues.get(mode).iterator();
         while (iterator.hasNext() && matched.size() < maxPlayers) {
             UUID playerId = iterator.next();
+            String queuedMap = queuedMaps.get(playerId);
+            boolean exactMatch = selectedMap != null && selectedMap.equalsIgnoreCase(queuedMap);
+            boolean autoMap = queuedMap == null || queuedMap.isBlank();
+            if (requireExactMap && !exactMatch) {
+                continue;
+            }
+            if (allowAutoMap && !autoMap) {
+                continue;
+            }
+            if (!requireExactMap && !allowAutoMap && selectedMap != null && !exactMatch && !autoMap) {
+                continue;
+            }
+
             iterator.remove();
             queuedModes.remove(playerId);
+            queuedMaps.remove(playerId);
 
             Player player = Bukkit.getPlayer(playerId);
             if (player == null || !player.isOnline()) {
@@ -127,9 +177,8 @@ public final class MatchQueueService {
             if (side == TeamSide.SPECTATOR) {
                 continue;
             }
-            matched.add(player);
+            matched.add(new QueuedPlayer(player, queuedMap));
         }
-        return matched;
     }
 
     private void sanitize(GameMode mode) {
@@ -141,7 +190,51 @@ public final class MatchQueueService {
             if (player == null || !player.isOnline() || sessions.getSessionForPlayer(playerId) != null) {
                 iterator.remove();
                 queuedModes.remove(playerId);
+                queuedMaps.remove(playerId);
             }
+        }
+    }
+
+    private String pickMapPreference(GameMode mode) {
+        Map<String, Integer> votes = new HashMap<>();
+        for (UUID playerId : queues.get(mode)) {
+            String map = queuedMaps.get(playerId);
+            if (map == null || map.isBlank()) {
+                continue;
+            }
+            votes.merge(map, 1, Integer::sum);
+        }
+        String best = null;
+        int bestVotes = 0;
+        for (Map.Entry<String, Integer> entry : votes.entrySet()) {
+            String map = entry.getKey();
+            int value = entry.getValue();
+            if (value > bestVotes || (value == bestVotes && best != null && map.compareToIgnoreCase(best) < 0)) {
+                best = map;
+                bestVotes = value;
+            } else if (value > bestVotes) {
+                best = map;
+                bestVotes = value;
+            }
+        }
+        return best;
+    }
+
+    private String normalizeMapId(String mapId) {
+        if (mapId == null) {
+            return null;
+        }
+        String normalized = mapId.trim().toLowerCase(java.util.Locale.ROOT);
+        return normalized.isEmpty() ? null : normalized;
+    }
+
+    private static final class QueuedPlayer {
+        private final Player player;
+        private final String mapId;
+
+        private QueuedPlayer(Player player, String mapId) {
+            this.player = player;
+            this.mapId = mapId;
         }
     }
 }
