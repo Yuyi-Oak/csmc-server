@@ -757,7 +757,16 @@ public final class SessionCommand implements CommandExecutor {
 
     private boolean handleQueueGlobal(Player player, String[] args) {
         if (args.length >= 3 && "detail".equalsIgnoreCase(args[2])) {
-            return handleQueueGlobalDetail(player);
+            int limit = 10;
+            if (args.length >= 4) {
+                Integer parsed = parsePositiveInt(args[3]);
+                if (parsed == null) {
+                    player.sendMessage("Invalid detail limit. Use a positive integer.");
+                    return true;
+                }
+                limit = Math.min(50, parsed);
+            }
+            return handleQueueGlobalDetail(player, limit);
         }
         GameMode mode = null;
         if (args.length >= 3) {
@@ -806,7 +815,7 @@ public final class SessionCommand implements CommandExecutor {
         return true;
     }
 
-    private boolean handleQueueGlobalDetail(Player player) {
+    private boolean handleQueueGlobalDetail(Player player, int limit) {
         List<RemoteQueueSourceStatus> sources = queue.remoteSourceStatuses();
         if (sources.isEmpty()) {
             player.sendMessage("Queue global detail: no remote queue sources.");
@@ -816,8 +825,14 @@ public final class SessionCommand implements CommandExecutor {
         for (RemoteQueueSourceStatus source : sources) {
             remoteTotal += source.totalQueued();
         }
-        player.sendMessage("Queue global detail (remote sources " + sources.size() + ", total remote queued " + remoteTotal + "):");
-        for (RemoteQueueSourceStatus source : sources) {
+        int shown = Math.max(1, Math.min(limit, sources.size()));
+        player.sendMessage(
+            "Queue global detail (remote sources " + sources.size()
+                + ", showing " + shown
+                + ", total remote queued " + remoteTotal + "):"
+        );
+        for (int i = 0; i < shown; i++) {
+            RemoteQueueSourceStatus source = sources.get(i);
             StringBuilder line = new StringBuilder(" - ")
                 .append(source.serverId())
                 .append(" | age ")
