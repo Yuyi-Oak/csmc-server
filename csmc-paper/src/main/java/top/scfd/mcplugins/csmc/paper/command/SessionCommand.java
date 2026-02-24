@@ -78,7 +78,7 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list|votes|global|clear> [mode|detail [limit]] [mapId] | /csmc ac <status|reset|top> [player|limit]");
+            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top [limit] | /csmc queue <join|leave|status|list|votes|global|clear> [mode|detail [limit]] [mapId] | /csmc ac <status|reset|top> [player|limit]");
             return true;
         }
         return switch (args[0].toLowerCase()) {
@@ -95,7 +95,7 @@ public final class SessionCommand implements CommandExecutor {
             case "view" -> handleView(player, args);
             case "stats" -> handleStats(player, args);
             case "history" -> handleHistory(player, args);
-            case "top" -> handleTop(player);
+            case "top" -> handleTop(player, args);
             case "queue" -> handleQueue(player, args);
             case "ac", "anticheat" -> handleAntiCheat(player, args);
             default -> {
@@ -539,13 +539,22 @@ public final class SessionCommand implements CommandExecutor {
         return true;
     }
 
-    private boolean handleTop(Player sender) {
-        List<LeaderboardEntry> ranking = stats.topByKills(10);
+    private boolean handleTop(Player sender, String[] args) {
+        int limit = 10;
+        if (args.length >= 2) {
+            Integer parsed = parsePositiveInt(args[1]);
+            if (parsed == null) {
+                sender.sendMessage("Invalid limit. Use a positive integer.");
+                return true;
+            }
+            limit = Math.min(50, parsed);
+        }
+        List<LeaderboardEntry> ranking = stats.topByKills(limit);
         if (ranking.isEmpty()) {
             sender.sendMessage("No leaderboard data found.");
             return true;
         }
-        sender.sendMessage("Top 10 (storage, by kills):");
+        sender.sendMessage("Top " + ranking.size() + " (storage, by kills):");
         int position = 1;
         for (LeaderboardEntry entry : ranking) {
             String name = Bukkit.getOfflinePlayer(entry.playerId()).getName();
