@@ -1,5 +1,8 @@
 package top.scfd.mcplugins.csmc.paper.command;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -21,28 +24,38 @@ import top.scfd.mcplugins.csmc.paper.MatchQueueService;
 import top.scfd.mcplugins.csmc.paper.PaperShopService;
 import top.scfd.mcplugins.csmc.paper.SessionRegistry;
 import top.scfd.mcplugins.csmc.paper.StatsService;
+import top.scfd.mcplugins.csmc.paper.history.MatchHistoryEntry;
+import top.scfd.mcplugins.csmc.paper.history.MatchHistoryService;
 import top.scfd.mcplugins.csmc.storage.LeaderboardEntry;
 import top.scfd.mcplugins.csmc.storage.PlayerStats;
 
 public final class SessionCommand implements CommandExecutor {
+    private static final int DEFAULT_HISTORY_LIMIT = 5;
+    private static final int MAX_HISTORY_LIMIT = 20;
+    private static final DateTimeFormatter HISTORY_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+        .withZone(ZoneId.systemDefault());
+
     private final SessionRegistry sessions;
     private final PaperShopService shopService;
     private final LoadoutInventoryService loadoutInventory;
     private final StatsService stats;
     private final MatchQueueService queue;
+    private final MatchHistoryService history;
 
     public SessionCommand(
         SessionRegistry sessions,
         PaperShopService shopService,
         LoadoutInventoryService loadoutInventory,
         StatsService stats,
-        MatchQueueService queue
+        MatchQueueService queue,
+        MatchHistoryService history
     ) {
         this.sessions = sessions;
         this.shopService = shopService;
         this.loadoutInventory = loadoutInventory;
         this.stats = stats;
         this.queue = queue;
+        this.history = history;
     }
 
     @Override
@@ -52,7 +65,7 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc info | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|player> | /csmc stats [player] | /csmc top | /csmc queue <join|leave|status|list> [mode] [mapId]");
+            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc info | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list> [mode] [mapId]");
             return true;
         }
         return switch (args[0].toLowerCase()) {
@@ -65,6 +78,7 @@ public final class SessionCommand implements CommandExecutor {
             case "buy" -> handleBuy(player, args);
             case "view" -> handleView(player, args);
             case "stats" -> handleStats(player, args);
+            case "history" -> handleHistory(player, args);
             case "top" -> handleTop(player);
             case "queue" -> handleQueue(player, args);
             default -> {
@@ -362,6 +376,63 @@ public final class SessionCommand implements CommandExecutor {
         return true;
     }
 
+    private boolean handleHistory(Player sender, String[] args) {
+        if (history == null) {
+            sender.sendMessage("Match history is unavailable.");
+            return true;
+        }
+        UUID targetId = sender.getUniqueId();
+        String targetName = sender.getName();
+        int limit = DEFAULT_HISTORY_LIMIT;
+        if (args.length >= 2) {
+            UUID parsedId = parseUuid(args[1]);
+            if (parsedId != null) {
+                targetId = parsedId;
+                OfflinePlayer offline = Bukkit.getOfflinePlayer(parsedId);
+                targetName = resolveName(offline, parsedId);
+            } else {
+                OfflinePlayer offline = Bukkit.getOfflinePlayer(args[1]);
+                if (offline.getUniqueId() == null) {
+                    sender.sendMessage("Player not found.");
+                    return true;
+                }
+                if (!offline.isOnline() && !offline.hasPlayedBefore()) {
+                    sender.sendMessage("Player not found.");
+                    return true;
+                }
+                targetId = offline.getUniqueId();
+                targetName = resolveName(offline, targetId);
+            }
+        }
+        if (args.length >= 3) {
+            Integer parsed = parsePositiveInt(args[2]);
+            if (parsed == null) {
+                sender.sendMessage("Invalid limit. Use an integer between 1 and " + MAX_HISTORY_LIMIT + ".");
+                return true;
+            }
+            limit = Math.min(MAX_HISTORY_LIMIT, parsed);
+        }
+        List<MatchHistoryEntry> matches = history.findByPlayer(targetId, limit);
+        if (matches.isEmpty()) {
+            sender.sendMessage("No match history found for " + targetName + ".");
+            return true;
+        }
+        sender.sendMessage("Recent matches - " + targetName + " (showing " + matches.size() + "):");
+        int index = 1;
+        for (MatchHistoryEntry entry : matches) {
+            String endedAt = HISTORY_TIME_FORMAT.format(Instant.ofEpochSecond(Math.max(0L, entry.endedAtEpochSeconds())));
+            sender.sendMessage(
+                index + ". " + endedAt
+                    + " | " + entry.mode()
+                    + " | " + entry.mapId()
+                    + " | W:" + winnerLabel(entry.winner())
+                    + " | T/CT " + entry.terroristScore() + "/" + entry.counterTerroristScore()
+            );
+            index++;
+        }
+        return true;
+    }
+
     private boolean handleQueue(Player player, String[] args) {
         if (args.length < 2) {
             player.sendMessage("Usage: /csmc queue <join|leave|status|list> [mode] [mapId]");
@@ -454,11 +525,31 @@ public final class SessionCommand implements CommandExecutor {
         }
     }
 
+    private Integer parsePositiveInt(String value) {
+        try {
+            int parsed = Integer.parseInt(value);
+            return parsed > 0 ? parsed : null;
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
     private String resolveName(OfflinePlayer offline, UUID fallbackId) {
         if (offline != null && offline.getName() != null && !offline.getName().isBlank()) {
             return offline.getName();
         }
         return fallbackId.toString();
+    }
+
+    private String winnerLabel(String winner) {
+        if (winner == null) {
+            return "NONE";
+        }
+        return switch (winner.toUpperCase(Locale.ROOT)) {
+            case "TERRORIST" -> "T";
+            case "COUNTER_TERRORIST" -> "CT";
+            default -> winner.toUpperCase(Locale.ROOT);
+        };
     }
 
     private String normalizeAutoMap(String mapId) {

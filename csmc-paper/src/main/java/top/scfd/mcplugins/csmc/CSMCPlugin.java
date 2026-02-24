@@ -36,6 +36,7 @@ import top.scfd.mcplugins.csmc.paper.WeaponItemService;
 import top.scfd.mcplugins.csmc.paper.WeaponReloadListener;
 import top.scfd.mcplugins.csmc.paper.WeaponSelectionListener;
 import top.scfd.mcplugins.csmc.paper.command.SessionCommand;
+import top.scfd.mcplugins.csmc.paper.history.MatchHistoryService;
 import top.scfd.mcplugins.csmc.paper.map.MapEditorCommand;
 import top.scfd.mcplugins.csmc.paper.map.MapEditorService;
 import top.scfd.mcplugins.csmc.paper.security.AntiCheatService;
@@ -83,7 +84,16 @@ public final class CSMCPlugin extends JavaPlugin {
         HeadshotTrackerService headshots = new HeadshotTrackerService();
         GrenadeItemService grenadeItems = new GrenadeItemService(this);
         TeamEliminationResolver eliminationResolver = new TeamEliminationResolver();
-        sessionRegistry = new SessionRegistry(core.sessions(), core.mapRegistry(), shopLoader.load(), statsService, bombService, loadoutInventory);
+        MatchHistoryService matchHistory = new MatchHistoryService(this);
+        sessionRegistry = new SessionRegistry(
+            core.sessions(),
+            core.mapRegistry(),
+            shopLoader.load(),
+            statsService,
+            bombService,
+            loadoutInventory,
+            matchHistory
+        );
         MatchQueueService queueService = new MatchQueueService(sessionRegistry, config.server().maxSessions());
         PlayerRoundStateService roundStateService = new PlayerRoundStateService(this, sessionRegistry);
         sessionRegistry.setPlayerRoundState(roundStateService);
@@ -107,7 +117,9 @@ public final class CSMCPlugin extends JavaPlugin {
         antiCheatTicker.runTaskTimer(this, 20L, 20L);
 
         PaperShopService shopService = new PaperShopService(grenadeItems);
-        getCommand("csmc").setExecutor(new SessionCommand(sessionRegistry, shopService, loadoutInventory, statsService, queueService));
+        getCommand("csmc").setExecutor(
+            new SessionCommand(sessionRegistry, shopService, loadoutInventory, statsService, queueService, matchHistory)
+        );
         MapEditorService mapEditor = new MapEditorService(this, mapLoader, core.mapRegistry());
         getCommand("csmcmap").setExecutor(new MapEditorCommand(mapEditor));
         getServer().getPluginManager().registerEvents(roundStateService, this);

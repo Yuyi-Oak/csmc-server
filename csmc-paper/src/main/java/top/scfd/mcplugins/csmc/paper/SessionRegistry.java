@@ -1,5 +1,6 @@
 package top.scfd.mcplugins.csmc.paper;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,8 @@ import top.scfd.mcplugins.csmc.core.match.RoundEventListener;
 import top.scfd.mcplugins.csmc.core.session.GameSession;
 import top.scfd.mcplugins.csmc.core.session.GameSessionManager;
 import top.scfd.mcplugins.csmc.core.shop.ShopCatalog;
+import top.scfd.mcplugins.csmc.paper.history.MatchHistoryService;
+import top.scfd.mcplugins.csmc.paper.history.SessionHistoryRoundListener;
 
 public final class SessionRegistry {
     private static final int FINISHED_SESSION_TTL_SECONDS = 15;
@@ -29,6 +32,7 @@ public final class SessionRegistry {
     private final StatsService statsService;
     private final BombService bombs;
     private final LoadoutInventoryService loadoutInventory;
+    private final MatchHistoryService matchHistory;
     private volatile PlayerRoundStateService playerRoundState;
     private final Map<UUID, UUID> playerSessions = new ConcurrentHashMap<>();
     private final Map<UUID, MapDefinition> sessionMaps = new ConcurrentHashMap<>();
@@ -36,13 +40,22 @@ public final class SessionRegistry {
     private final List<RoundEventListener> roundListeners = new CopyOnWriteArrayList<>();
     private final List<EconomyEventListener> economyListeners = new CopyOnWriteArrayList<>();
 
-    public SessionRegistry(GameSessionManager sessionManager, MapRegistry mapRegistry, ShopCatalog catalog, StatsService statsService, BombService bombs, LoadoutInventoryService loadoutInventory) {
+    public SessionRegistry(
+        GameSessionManager sessionManager,
+        MapRegistry mapRegistry,
+        ShopCatalog catalog,
+        StatsService statsService,
+        BombService bombs,
+        LoadoutInventoryService loadoutInventory,
+        MatchHistoryService matchHistory
+    ) {
         this.sessionManager = sessionManager;
         this.mapRegistry = mapRegistry;
         this.catalog = catalog;
         this.statsService = statsService;
         this.bombs = bombs;
         this.loadoutInventory = loadoutInventory;
+        this.matchHistory = matchHistory;
     }
 
     public GameSession createSession(GameMode mode) {
@@ -69,6 +82,15 @@ public final class SessionRegistry {
         }
         if (loadoutInventory != null) {
             session.addRoundListener(new LoadoutRoundListener(session, loadoutInventory));
+        }
+        if (matchHistory != null) {
+            String resolvedMapId = map == null ? "unknown" : map.id();
+            session.addRoundListener(new SessionHistoryRoundListener(
+                session,
+                matchHistory,
+                resolvedMapId,
+                Instant.now().getEpochSecond()
+            ));
         }
         return session;
     }
