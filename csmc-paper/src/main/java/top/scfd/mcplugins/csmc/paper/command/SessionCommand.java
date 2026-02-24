@@ -812,13 +812,19 @@ public final class SessionCommand implements CommandExecutor {
             player.sendMessage("Queue global detail: no remote queue sources.");
             return true;
         }
-        player.sendMessage("Queue global detail (remote sources " + sources.size() + "):");
+        int remoteTotal = 0;
+        for (RemoteQueueSourceStatus source : sources) {
+            remoteTotal += source.totalQueued();
+        }
+        player.sendMessage("Queue global detail (remote sources " + sources.size() + ", total remote queued " + remoteTotal + "):");
         for (RemoteQueueSourceStatus source : sources) {
             StringBuilder line = new StringBuilder(" - ")
                 .append(source.serverId())
                 .append(" | age ")
                 .append(source.ageSeconds())
-                .append("s | ");
+                .append("s | total ")
+                .append(source.totalQueued())
+                .append(" | ");
             int index = 0;
             for (GameMode mode : GameMode.values()) {
                 if (index > 0) {
