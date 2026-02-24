@@ -77,7 +77,7 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list|votes> [mode] [mapId] | /csmc ac <status|reset> [player]");
+            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list|votes> [mode] [mapId] | /csmc ac <status|reset|top> [player]");
             return true;
         }
         return switch (args[0].toLowerCase()) {
@@ -787,10 +787,29 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length < 2) {
-            sender.sendMessage("Usage: /csmc ac <status|reset> [player]");
+            sender.sendMessage("Usage: /csmc ac <status|reset|top> [player]");
             return true;
         }
         String action = args[1].toLowerCase(Locale.ROOT);
+        if ("top".equals(action)) {
+            var snapshot = antiCheat.violationSnapshot();
+            if (snapshot.isEmpty()) {
+                sender.sendMessage("No anti-cheat violations recorded.");
+                return true;
+            }
+            sender.sendMessage("Top anti-cheat VL:");
+            snapshot.entrySet().stream()
+                .sorted((left, right) -> Integer.compare(right.getValue(), left.getValue()))
+                .limit(10)
+                .forEach(entry -> {
+                    String name = Bukkit.getOfflinePlayer(entry.getKey()).getName();
+                    if (name == null || name.isBlank()) {
+                        name = entry.getKey().toString();
+                    }
+                    sender.sendMessage(" - " + name + ": " + entry.getValue());
+                });
+            return true;
+        }
         Player target = args.length >= 3 ? Bukkit.getPlayerExact(args[2]) : sender;
         if (target == null) {
             sender.sendMessage("Player not found.");
@@ -808,7 +827,7 @@ public final class SessionCommand implements CommandExecutor {
                 yield true;
             }
             default -> {
-                sender.sendMessage("Usage: /csmc ac <status|reset> [player]");
+                sender.sendMessage("Usage: /csmc ac <status|reset|top> [player]");
                 yield true;
             }
         };

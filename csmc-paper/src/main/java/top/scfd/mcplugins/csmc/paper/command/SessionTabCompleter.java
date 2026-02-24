@@ -21,7 +21,7 @@ public final class SessionTabCompleter implements TabCompleter {
     );
     private static final List<String> QUEUE = List.of("join", "leave", "status", "list", "votes");
     private static final List<String> VIEW = List.of("free", "next", "prev");
-    private static final List<String> AC = List.of("status", "reset");
+    private static final List<String> AC = List.of("status", "reset", "top");
 
     private final SessionRegistry sessions;
 
@@ -149,6 +149,9 @@ public final class SessionTabCompleter implements TabCompleter {
     private List<String> completeAntiCheat(String[] args) {
         if (args.length == 2) {
             return match(args[1], AC);
+        }
+        if (args.length >= 3 && "top".equalsIgnoreCase(args[1])) {
+            return List.of();
         }
         if (args.length == 3) {
             List<String> names = new ArrayList<>();

@@ -42,6 +42,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Baseline anti-cheat also flags abnormal movement bursts (`speed`/`fly`) during combat phases.
 - Anti-cheat now escalates severe repeated violations into automatic kicks (bypass permission: `csmc.anticheat.bypass`).
 - Ops can inspect/reset anti-cheat VL using `/csmc ac` (`csmc.anticheat.manage`).
+- `/csmc ac top` shows highest current violation levels across tracked players.
 - Match history is persisted to `plugins/CSMC/data/match-history.yml` and queryable via `/csmc history`.
 - Stats persistence is now buffered and flushed asynchronously in batches for smoother tick performance.
 - Per-match live scoreboard is available via `/csmc scoreboard`.

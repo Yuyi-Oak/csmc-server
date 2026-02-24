@@ -74,6 +74,10 @@ public final class AntiCheatService {
         lastKickAt.remove(playerId);
     }
 
+    public Map<UUID, Integer> violationSnapshot() {
+        return Map.copyOf(violationLevels);
+    }
+
     private void maybeKick(Player player, String reason, int level) {
         if (player.isOp() || player.hasPermission("csmc.anticheat.bypass")) {
             return;
