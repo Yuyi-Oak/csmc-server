@@ -230,6 +230,17 @@ public final class MatchQueueService {
         updateQueueActionBar();
     }
 
+    public synchronized void publishShutdownSnapshot() {
+        EnumMap<GameMode, Integer> zero = new EnumMap<>(GameMode.class);
+        for (GameMode mode : GameMode.values()) {
+            zero.put(mode, 0);
+        }
+        clusterSync.publishQueueSnapshot(zero);
+        remoteQueueSnapshots.clear();
+        lastSnapshotPublishEpochSecond = System.currentTimeMillis() / 1000L;
+        localSnapshotDirty = false;
+    }
+
     private void fillExistingSessions(GameMode mode) {
         for (GameSession session : sessions.allSessions()) {
             if (session.mode() != mode) {

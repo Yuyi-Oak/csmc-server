@@ -23,6 +23,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Queue vote output includes per-map share percentages.
 - Queue join/status output now includes your selected map's current vote share.
 - With Redis cluster sync enabled, queue join/status also shows global queued players for the mode.
+- On server shutdown, queue snapshot is pushed as zero so global queue display converges quickly.
 - Queue list/actionbar now also surfaces top-voted map share for quicker matchmaking visibility.
 - Queue status/actionbar now includes `need N` (players still needed before next match assignment).
 - Matchmaking now prioritizes filling existing waiting sessions before creating new sessions.

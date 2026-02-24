@@ -63,6 +63,7 @@ public final class CSMCPlugin extends JavaPlugin {
     private StatsFlushTicker statsFlushTicker;
     private SessionRegistry sessionRegistry;
     private StatsService statsService;
+    private MatchQueueService queueService;
     private ClusterSyncService clusterSync = new NoopClusterSyncService();
 
     @Override
@@ -102,7 +103,7 @@ public final class CSMCPlugin extends JavaPlugin {
             matchHistory,
             combatTracker
         );
-        MatchQueueService queueService = new MatchQueueService(sessionRegistry, config.server().maxSessions(), clusterSync);
+        queueService = new MatchQueueService(sessionRegistry, config.server().maxSessions(), clusterSync);
         PlayerRoundStateService roundStateService = new PlayerRoundStateService(this, sessionRegistry);
         sessionRegistry.setPlayerRoundState(roundStateService);
 
@@ -180,6 +181,9 @@ public final class CSMCPlugin extends JavaPlugin {
         }
         if (statsService != null) {
             statsService.flushAll();
+        }
+        if (queueService != null) {
+            queueService.publishShutdownSnapshot();
         }
         if (core != null) {
             core.stop();
