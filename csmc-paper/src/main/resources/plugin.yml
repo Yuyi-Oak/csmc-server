@@ -12,3 +12,7 @@ commands:
   csmcmap:
     description: CSMC map editor command
     usage: /csmcmap list | /csmcmap create <id> [name] | /csmcmap info <id> | /csmcmap save <id>
+permissions:
+  csmc.anticheat.alert:
+    description: Receive CSMC anti-cheat alerts.
+    default: op
