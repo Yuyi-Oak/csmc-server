@@ -16,3 +16,6 @@ permissions:
   csmc.anticheat.alert:
     description: Receive CSMC anti-cheat alerts.
     default: op
+  csmc.anticheat.bypass:
+    description: Exempt from anti-cheat punitive actions.
+    default: op
