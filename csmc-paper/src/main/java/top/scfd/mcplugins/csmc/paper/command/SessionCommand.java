@@ -78,7 +78,7 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list|votes|global> [mode|detail] [mapId] | /csmc ac <status|reset|top> [player]");
+            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list|votes|global> [mode|detail] [mapId] | /csmc ac <status|reset|top> [player|limit]");
             return true;
         }
         return switch (args[0].toLowerCase()) {
@@ -876,20 +876,29 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length < 2) {
-            sender.sendMessage("Usage: /csmc ac <status|reset|top> [player]");
+            sender.sendMessage("Usage: /csmc ac <status|reset|top> [player|limit]");
             return true;
         }
         String action = args[1].toLowerCase(Locale.ROOT);
         if ("top".equals(action)) {
+            int limit = 10;
+            if (args.length >= 3) {
+                Integer parsed = parsePositiveInt(args[2]);
+                if (parsed == null) {
+                    sender.sendMessage("Invalid limit. Use a positive integer.");
+                    return true;
+                }
+                limit = Math.min(50, parsed);
+            }
             var snapshot = antiCheat.violationSnapshot();
             if (snapshot.isEmpty()) {
                 sender.sendMessage("No anti-cheat violations recorded.");
                 return true;
             }
-            sender.sendMessage("Top anti-cheat VL:");
+            sender.sendMessage("Top anti-cheat VL (top " + limit + "):");
             snapshot.entrySet().stream()
                 .sorted((left, right) -> Integer.compare(right.getValue(), left.getValue()))
-                .limit(10)
+                .limit(limit)
                 .forEach(entry -> {
                     String name = Bukkit.getOfflinePlayer(entry.getKey()).getName();
                     if (name == null || name.isBlank()) {
@@ -916,7 +925,7 @@ public final class SessionCommand implements CommandExecutor {
                 yield true;
             }
             default -> {
-                sender.sendMessage("Usage: /csmc ac <status|reset|top> [player]");
+                sender.sendMessage("Usage: /csmc ac <status|reset|top> [player|limit]");
                 yield true;
             }
         };

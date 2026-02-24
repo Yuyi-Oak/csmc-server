@@ -158,7 +158,10 @@ public final class SessionTabCompleter implements TabCompleter {
         if (args.length == 2) {
             return match(args[1], AC);
         }
-        if (args.length >= 3 && "top".equalsIgnoreCase(args[1])) {
+        if ("top".equalsIgnoreCase(args[1])) {
+            if (args.length == 3) {
+                return match(args[2], List.of("5", "10", "20", "50"));
+            }
             return List.of();
         }
         if (args.length == 3) {
