@@ -32,4 +32,16 @@ final class QueueSnapshotTest {
         QueueSnapshot snapshot = new QueueSnapshot("server-b", -99L, Map.of());
         assertEquals(0L, snapshot.epochSecond());
     }
+
+    @Test
+    void computesTotalQueuedAcrossAllModes() {
+        EnumMap<GameMode, Integer> provided = new EnumMap<>(GameMode.class);
+        provided.put(GameMode.COMPETITIVE, 4);
+        provided.put(GameMode.CASUAL, 9);
+        provided.put(GameMode.WINGMAN, 2);
+
+        QueueSnapshot snapshot = new QueueSnapshot("server-c", 10L, provided);
+
+        assertEquals(15, snapshot.totalQueued());
+    }
 }
