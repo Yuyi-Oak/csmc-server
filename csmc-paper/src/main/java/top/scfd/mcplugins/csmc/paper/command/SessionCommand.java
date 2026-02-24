@@ -644,7 +644,13 @@ public final class SessionCommand implements CommandExecutor {
                     int position = queue.queuePosition(player.getUniqueId());
                     String map = queue.queuedMap(player.getUniqueId());
                     String mapText = map == null ? "auto" : map;
-                    player.sendMessage("Queue " + mode + " (" + mapText + ") | position " + position + " / " + size + " | need " + needed);
+                    int mapVotes = queue.mapVoteCount(mode, map);
+                    double mapShare = size == 0 ? 0.0 : (mapVotes * 100.0) / size;
+                    player.sendMessage(
+                        "Queue " + mode + " (" + mapText + ") | position " + position + " / " + size
+                            + " | need " + needed
+                            + " | map votes " + mapVotes + " (" + String.format(Locale.ROOT, "%.1f", mapShare) + "%)"
+                    );
                 }
                 yield true;
             }
@@ -686,7 +692,13 @@ public final class SessionCommand implements CommandExecutor {
             int size = queue.queueSize(mode);
             int needed = queue.playersNeeded(mode);
             int position = queue.queuePosition(player.getUniqueId());
-            player.sendMessage("Queue " + mode + " (" + mapText + ") | position " + position + " / " + size + " | need " + needed);
+            int mapVotes = queue.mapVoteCount(mode, mapId);
+            double mapShare = size == 0 ? 0.0 : (mapVotes * 100.0) / size;
+            player.sendMessage(
+                "Queue " + mode + " (" + mapText + ") | position " + position + " / " + size
+                    + " | need " + needed
+                    + " | map votes " + mapVotes + " (" + String.format(Locale.ROOT, "%.1f", mapShare) + "%)"
+            );
         }
         return true;
     }

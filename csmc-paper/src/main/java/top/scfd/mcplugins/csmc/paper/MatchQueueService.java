@@ -126,6 +126,23 @@ public final class MatchQueueService {
         return votes;
     }
 
+    public synchronized int mapVoteCount(GameMode mode, String mapId) {
+        if (mode == null) {
+            return 0;
+        }
+        String target = normalizeMapId(mapId);
+        int count = 0;
+        for (UUID playerId : queues.get(mode)) {
+            String queued = normalizeMapId(queuedMaps.get(playerId));
+            if (target == null && queued == null) {
+                count++;
+            } else if (target != null && target.equals(queued)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     public synchronized String queuedMap(UUID playerId) {
         return queuedMaps.get(playerId);
     }
