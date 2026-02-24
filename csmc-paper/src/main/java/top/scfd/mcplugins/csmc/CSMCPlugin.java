@@ -37,6 +37,8 @@ import top.scfd.mcplugins.csmc.paper.WeaponSelectionListener;
 import top.scfd.mcplugins.csmc.paper.command.SessionCommand;
 import top.scfd.mcplugins.csmc.paper.map.MapEditorCommand;
 import top.scfd.mcplugins.csmc.paper.map.MapEditorService;
+import top.scfd.mcplugins.csmc.paper.security.AntiCheatService;
+import top.scfd.mcplugins.csmc.paper.security.AntiCheatTicker;
 import top.scfd.mcplugins.csmc.paper.sync.ClusterSyncService;
 import top.scfd.mcplugins.csmc.paper.sync.NoopClusterSyncService;
 import top.scfd.mcplugins.csmc.paper.sync.RedisClusterSyncService;
@@ -50,6 +52,7 @@ public final class CSMCPlugin extends JavaPlugin {
     private PaperSessionTicker ticker;
     private HudTicker hudTicker;
     private MatchQueueTicker queueTicker;
+    private AntiCheatTicker antiCheatTicker;
     private SessionRegistry sessionRegistry;
     private ClusterSyncService clusterSync = new NoopClusterSyncService();
 
@@ -74,6 +77,7 @@ public final class CSMCPlugin extends JavaPlugin {
         BombService bombService = new BombService();
         WeaponItemService weaponItems = new WeaponItemService(this);
         LoadoutInventoryService loadoutInventory = new LoadoutInventoryService(weaponItems);
+        AntiCheatService antiCheat = new AntiCheatService(this);
         GrenadeItemService grenadeItems = new GrenadeItemService(this);
         TeamEliminationResolver eliminationResolver = new TeamEliminationResolver();
         sessionRegistry = new SessionRegistry(core.sessions(), core.mapRegistry(), shopLoader.load(), statsService, bombService, loadoutInventory);
@@ -96,6 +100,9 @@ public final class CSMCPlugin extends JavaPlugin {
         queueTicker = new MatchQueueTicker(queueService);
         queueTicker.runTaskTimer(this, 20L, 20L);
 
+        antiCheatTicker = new AntiCheatTicker(antiCheat);
+        antiCheatTicker.runTaskTimer(this, 20L, 20L);
+
         PaperShopService shopService = new PaperShopService(grenadeItems);
         getCommand("csmc").setExecutor(new SessionCommand(sessionRegistry, shopService, loadoutInventory, statsService, queueService));
         MapEditorService mapEditor = new MapEditorService(this, mapLoader, core.mapRegistry());
@@ -106,7 +113,7 @@ public final class CSMCPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new CombatStatsListener(sessionRegistry, statsService, eliminationResolver), this);
         getServer().getPluginManager().registerEvents(new BombInteractListener(sessionRegistry, bombService), this);
         getServer().getPluginManager().registerEvents(new WeaponSelectionListener(sessionRegistry), this);
-        getServer().getPluginManager().registerEvents(new WeaponFireListener(sessionRegistry, weaponItems, loadoutInventory), this);
+        getServer().getPluginManager().registerEvents(new WeaponFireListener(sessionRegistry, weaponItems, loadoutInventory, antiCheat), this);
         getServer().getPluginManager().registerEvents(new WeaponReloadListener(sessionRegistry, weaponItems, loadoutInventory, this), this);
         getServer().getPluginManager().registerEvents(new GrenadeThrowListener(sessionRegistry, grenadeItems, this), this);
         getServer().getPluginManager().registerEvents(new MapProtectionListener(sessionRegistry), this);
@@ -126,6 +133,9 @@ public final class CSMCPlugin extends JavaPlugin {
         }
         if (queueTicker != null) {
             queueTicker.cancel();
+        }
+        if (antiCheatTicker != null) {
+            antiCheatTicker.cancel();
         }
         if (clusterSync != null) {
             clusterSync.close();

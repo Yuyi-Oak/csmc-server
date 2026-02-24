@@ -21,17 +21,25 @@ import top.scfd.mcplugins.csmc.core.weapon.DamageResult;
 import top.scfd.mcplugins.csmc.core.weapon.Hitbox;
 import top.scfd.mcplugins.csmc.core.weapon.WeaponSimulator;
 import top.scfd.mcplugins.csmc.core.weapon.WeaponSpec;
+import top.scfd.mcplugins.csmc.paper.security.AntiCheatService;
 
 public final class WeaponFireListener implements Listener {
     private final SessionRegistry sessions;
     private final WeaponSimulator simulator = new WeaponSimulator();
     private final WeaponItemService weaponItems;
     private final LoadoutInventoryService loadoutInventory;
+    private final AntiCheatService antiCheat;
 
-    public WeaponFireListener(SessionRegistry sessions, WeaponItemService weaponItems, LoadoutInventoryService loadoutInventory) {
+    public WeaponFireListener(
+        SessionRegistry sessions,
+        WeaponItemService weaponItems,
+        LoadoutInventoryService loadoutInventory,
+        AntiCheatService antiCheat
+    ) {
         this.sessions = sessions;
         this.weaponItems = weaponItems;
         this.loadoutInventory = loadoutInventory;
+        this.antiCheat = antiCheat;
     }
 
     @EventHandler
@@ -63,6 +71,7 @@ public final class WeaponFireListener implements Listener {
         }
         double minTicks = Math.max(1.0, 20.0 / Math.max(0.1, spec.fireRate()));
         if (tick - weapon.state().lastShotTick() < minTicks) {
+            antiCheat.flag(player, "rapid_fire", 1);
             return;
         }
         if (!weapon.consumeRound()) {
