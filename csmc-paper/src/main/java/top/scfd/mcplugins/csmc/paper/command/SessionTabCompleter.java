@@ -21,7 +21,7 @@ public final class SessionTabCompleter implements TabCompleter {
     );
     private static final List<String> QUEUE = List.of("join", "leave", "status", "list", "votes", "global", "clear");
     private static final List<String> VIEW = List.of("free", "next", "prev");
-    private static final List<String> AC = List.of("status", "reset", "top");
+    private static final List<String> AC = List.of("status", "reset", "top", "reasons", "reasonsreset");
 
     private final SessionRegistry sessions;
 
@@ -179,6 +179,15 @@ public final class SessionTabCompleter implements TabCompleter {
             if (args.length == 3) {
                 return match(args[2], List.of("5", "10", "20", "50"));
             }
+            return List.of();
+        }
+        if ("reasons".equalsIgnoreCase(args[1])) {
+            if (args.length == 3) {
+                return match(args[2], List.of("5", "10", "15", "20"));
+            }
+            return List.of();
+        }
+        if ("reasonsreset".equalsIgnoreCase(args[1])) {
             return List.of();
         }
         if (args.length == 3) {

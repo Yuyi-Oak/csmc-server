@@ -78,7 +78,7 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top [limit] | /csmc queue <join|leave|status|list|votes|global|clear> [mode|detail [limit]] [mapId] | /csmc ac <status|reset|top> [player|limit]");
+            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top [limit] | /csmc queue <join|leave|status|list|votes|global|clear> [mode|detail [limit]] [mapId] | /csmc ac <status|reset|top|reasons|reasonsreset> [player|limit]");
             return true;
         }
         return switch (args[0].toLowerCase()) {
@@ -929,7 +929,7 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length < 2) {
-            sender.sendMessage("Usage: /csmc ac <status|reset|top> [player|limit]");
+            sender.sendMessage("Usage: /csmc ac <status|reset|top|reasons|reasonsreset> [player|limit]");
             return true;
         }
         String action = args[1].toLowerCase(Locale.ROOT);
@@ -961,6 +961,39 @@ public final class SessionCommand implements CommandExecutor {
                 });
             return true;
         }
+        if ("reasons".equals(action)) {
+            int limit = 10;
+            if (args.length >= 3) {
+                Integer parsed = parsePositiveInt(args[2]);
+                if (parsed == null) {
+                    sender.sendMessage("Invalid limit. Use a positive integer.");
+                    return true;
+                }
+                limit = Math.min(20, parsed);
+            }
+            var reasons = antiCheat.reasonSnapshot();
+            if (reasons.isEmpty()) {
+                sender.sendMessage("No anti-cheat reason data recorded.");
+                return true;
+            }
+            sender.sendMessage("Top anti-cheat reasons (top " + limit + "):");
+            reasons.entrySet().stream()
+                .sorted((left, right) -> {
+                    int byCount = Integer.compare(right.getValue(), left.getValue());
+                    if (byCount != 0) {
+                        return byCount;
+                    }
+                    return left.getKey().compareToIgnoreCase(right.getKey());
+                })
+                .limit(limit)
+                .forEach(entry -> sender.sendMessage(" - " + entry.getKey() + ": " + entry.getValue()));
+            return true;
+        }
+        if ("reasonsreset".equals(action)) {
+            antiCheat.clearReasonStats();
+            sender.sendMessage("Anti-cheat reason counters reset.");
+            return true;
+        }
         Player target = args.length >= 3 ? Bukkit.getPlayerExact(args[2]) : sender;
         if (target == null) {
             sender.sendMessage("Player not found.");
@@ -978,7 +1011,7 @@ public final class SessionCommand implements CommandExecutor {
                 yield true;
             }
             default -> {
-                sender.sendMessage("Usage: /csmc ac <status|reset|top> [player|limit]");
+                sender.sendMessage("Usage: /csmc ac <status|reset|top|reasons|reasonsreset> [player|limit]");
                 yield true;
             }
         };
