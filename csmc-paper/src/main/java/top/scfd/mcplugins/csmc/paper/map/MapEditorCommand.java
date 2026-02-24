@@ -25,7 +25,7 @@ public final class MapEditorCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmcmap list | /csmcmap create <id> [name] | /csmcmap info <id> | /csmcmap setname <id> <name>");
+            sender.sendMessage("Usage: /csmcmap list | /csmcmap create <id> [name] | /csmcmap clone <sourceId> <targetId> [name] | /csmcmap info <id> | /csmcmap setname <id> <name>");
             sender.sendMessage("       /csmcmap setworld <id> [world] | /csmcmap listpoints <id> | /csmcmap addspawn <id> <t|ct> | /csmcmap removespawn <id> <t|ct> <index> | /csmcmap clearspawns <id> <t|ct>");
             sender.sendMessage("       /csmcmap setbomb <id> <A|B> <radius> | /csmcmap removebomb <id> <A|B>");
             sender.sendMessage("       /csmcmap addbuy <id> <t|ct> <radius> | /csmcmap removebuy <id> <t|ct> <index> | /csmcmap clearbuy <id> <t|ct> | /csmcmap save <id> | /csmcmap reload");
@@ -34,6 +34,7 @@ public final class MapEditorCommand implements CommandExecutor {
         return switch (args[0].toLowerCase(Locale.ROOT)) {
             case "list" -> handleList(sender);
             case "create" -> handleCreate(sender, args);
+            case "clone" -> handleClone(sender, args);
             case "info" -> handleInfo(sender, args);
             case "setname" -> handleSetName(sender, args);
             case "setworld" -> handleSetWorld(sender, args);
@@ -78,6 +79,21 @@ public final class MapEditorCommand implements CommandExecutor {
             return true;
         }
         sender.sendMessage("Created map draft " + map.id() + " in world " + map.world() + ".");
+        return true;
+    }
+
+    private boolean handleClone(CommandSender sender, String[] args) {
+        if (args.length < 3) {
+            sender.sendMessage("Usage: /csmcmap clone <sourceId> <targetId> [name]");
+            return true;
+        }
+        String name = args.length >= 4 ? joinTail(args, 3) : null;
+        EditableMap copy = maps.cloneMap(args[1], args[2], name);
+        if (copy == null) {
+            sender.sendMessage("Failed to clone map (source missing, invalid target id, or target already exists).");
+            return true;
+        }
+        sender.sendMessage("Cloned map " + args[1] + " -> " + copy.id() + " (" + copy.name() + ").");
         return true;
     }
 

@@ -12,7 +12,7 @@ import top.scfd.mcplugins.csmc.api.TeamSide;
 
 public final class MapEditorTabCompleter implements TabCompleter {
     private static final List<String> ROOT = List.of(
-        "list", "create", "info", "setname", "setworld", "listpoints",
+        "list", "create", "clone", "info", "setname", "setworld", "listpoints",
         "addspawn", "removespawn", "clearspawns",
         "setbomb", "removebomb",
         "addbuy", "removebuy", "clearbuy",
@@ -33,6 +33,12 @@ public final class MapEditorTabCompleter implements TabCompleter {
             return match(args[0], ROOT);
         }
         String sub = args[0].toLowerCase(Locale.ROOT);
+        if ("clone".equals(sub)) {
+            if (args.length == 2) {
+                return match(args[1], maps.listMaps());
+            }
+            return List.of();
+        }
         return switch (sub) {
             case "info", "setname", "setworld", "listpoints", "addspawn", "removespawn", "clearspawns",
                 "setbomb", "removebomb", "addbuy", "removebuy", "clearbuy", "save" -> completeMapScoped(sub, args);

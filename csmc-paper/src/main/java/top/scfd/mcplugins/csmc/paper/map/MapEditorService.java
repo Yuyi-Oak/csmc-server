@@ -79,6 +79,40 @@ public final class MapEditorService {
         return map;
     }
 
+    public EditableMap cloneMap(String sourceId, String targetId, String targetName) {
+        EditableMap source = get(sourceId);
+        if (source == null) {
+            return null;
+        }
+        String targetKey = normalizeId(targetId);
+        if (targetKey == null || cache.containsKey(targetKey) || fileFor(targetKey).exists()) {
+            return null;
+        }
+        EditableMap copy = new EditableMap(
+            targetKey,
+            (targetName == null || targetName.isBlank()) ? source.name() + " Copy" : targetName,
+            source.world()
+        );
+        for (MapSpawn spawn : source.terroristSpawns()) {
+            copy.terroristSpawns().add(new MapSpawn(spawn.x(), spawn.y(), spawn.z(), spawn.yaw(), spawn.pitch()));
+        }
+        for (MapSpawn spawn : source.counterTerroristSpawns()) {
+            copy.counterTerroristSpawns().add(new MapSpawn(spawn.x(), spawn.y(), spawn.z(), spawn.yaw(), spawn.pitch()));
+        }
+        for (BuyZone zone : source.terroristBuyZones()) {
+            copy.terroristBuyZones().add(new BuyZone(zone.x(), zone.y(), zone.z(), zone.radius()));
+        }
+        for (BuyZone zone : source.counterTerroristBuyZones()) {
+            copy.counterTerroristBuyZones().add(new BuyZone(zone.x(), zone.y(), zone.z(), zone.radius()));
+        }
+        for (Map.Entry<String, BombSite> entry : source.bombSites().entrySet()) {
+            BombSite site = entry.getValue();
+            copy.bombSites().put(entry.getKey(), new BombSite(site.id(), site.x(), site.y(), site.z(), site.radius()));
+        }
+        cache.put(targetKey, copy);
+        return copy;
+    }
+
     public void addSpawn(EditableMap map, TeamSide side, MapSpawn spawn) {
         List<MapSpawn> spawns = side == TeamSide.TERRORIST
             ? map.terroristSpawns()
