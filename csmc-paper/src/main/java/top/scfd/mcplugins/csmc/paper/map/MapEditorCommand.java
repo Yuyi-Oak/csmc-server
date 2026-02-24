@@ -28,7 +28,7 @@ public final class MapEditorCommand implements CommandExecutor {
             sender.sendMessage("Usage: /csmcmap list | /csmcmap create <id> [name] | /csmcmap clone <sourceId> <targetId> [name] | /csmcmap info <id> | /csmcmap setname <id> <name>");
             sender.sendMessage("       /csmcmap setworld <id> [world] | /csmcmap listpoints <id> | /csmcmap addspawn <id> <t|ct> | /csmcmap removespawn <id> <t|ct> <index> | /csmcmap clearspawns <id> <t|ct>");
             sender.sendMessage("       /csmcmap setbomb <id> <A|B> <radius> | /csmcmap removebomb <id> <A|B>");
-            sender.sendMessage("       /csmcmap addbuy <id> <t|ct> <radius> | /csmcmap removebuy <id> <t|ct> <index> | /csmcmap clearbuy <id> <t|ct> | /csmcmap save <id> | /csmcmap saveall | /csmcmap reload");
+            sender.sendMessage("       /csmcmap addbuy <id> <t|ct> <radius> | /csmcmap removebuy <id> <t|ct> <index> | /csmcmap clearbuy <id> <t|ct> | /csmcmap validate <id> | /csmcmap save <id> | /csmcmap saveall | /csmcmap reload");
             return true;
         }
         return switch (args[0].toLowerCase(Locale.ROOT)) {
@@ -47,6 +47,7 @@ public final class MapEditorCommand implements CommandExecutor {
             case "addbuy" -> handleAddBuy(sender, args);
             case "removebuy" -> handleRemoveBuy(sender, args);
             case "clearbuy" -> handleClearBuy(sender, args);
+            case "validate" -> handleValidate(sender, args);
             case "save" -> handleSave(sender, args);
             case "saveall" -> handleSaveAll(sender);
             case "reload" -> handleReload(sender);
@@ -385,6 +386,36 @@ public final class MapEditorCommand implements CommandExecutor {
         sender.sendMessage(success
             ? "Saved " + map.id() + " and reloaded map registry."
             : "Failed to save map " + map.id() + ".");
+        return true;
+    }
+
+    private boolean handleValidate(CommandSender sender, String[] args) {
+        if (args.length < 2) {
+            sender.sendMessage("Usage: /csmcmap validate <id>");
+            return true;
+        }
+        EditableMap map = maps.get(args[1]);
+        if (map == null) {
+            sender.sendMessage("Map not found.");
+            return true;
+        }
+        MapEditorService.ValidationResult validation = maps.validate(map);
+        if (validation.errors().isEmpty() && validation.warnings().isEmpty()) {
+            sender.sendMessage("Validation OK: no errors or warnings.");
+            return true;
+        }
+        if (!validation.errors().isEmpty()) {
+            sender.sendMessage("Validation errors:");
+            for (String error : validation.errors()) {
+                sender.sendMessage(" - " + error);
+            }
+        }
+        if (!validation.warnings().isEmpty()) {
+            sender.sendMessage("Validation warnings:");
+            for (String warning : validation.warnings()) {
+                sender.sendMessage(" - " + warning);
+            }
+        }
         return true;
     }
 

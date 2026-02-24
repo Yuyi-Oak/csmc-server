@@ -8,12 +8,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import top.scfd.mcplugins.csmc.core.map.BombSite;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import top.scfd.mcplugins.csmc.api.TeamSide;
 import top.scfd.mcplugins.csmc.config.PaperMapLoader;
-import top.scfd.mcplugins.csmc.core.map.BombSite;
 import top.scfd.mcplugins.csmc.core.map.BuyZone;
 import top.scfd.mcplugins.csmc.core.map.MapRegistry;
 import top.scfd.mcplugins.csmc.core.map.MapSpawn;
@@ -177,6 +177,37 @@ public final class MapEditorService {
 
     public boolean save(EditableMap map) {
         return save(map, true);
+    }
+
+    public ValidationResult validate(EditableMap map) {
+        List<String> errors = new ArrayList<>();
+        List<String> warnings = new ArrayList<>();
+        if (map == null) {
+            errors.add("Map draft not found.");
+            return new ValidationResult(List.copyOf(errors), List.copyOf(warnings));
+        }
+        if (map.world() == null || map.world().isBlank()) {
+            errors.add("World is empty.");
+        }
+        if (map.terroristSpawns().isEmpty()) {
+            errors.add("No T spawns.");
+        }
+        if (map.counterTerroristSpawns().isEmpty()) {
+            errors.add("No CT spawns.");
+        }
+        if (map.bombSites().isEmpty()) {
+            warnings.add("No bomb sites.");
+        } else {
+            validateBombSite("A", map.bombSites().get("A"), warnings);
+            validateBombSite("B", map.bombSites().get("B"), warnings);
+        }
+        if (map.terroristBuyZones().isEmpty()) {
+            warnings.add("No T buy zones.");
+        }
+        if (map.counterTerroristBuyZones().isEmpty()) {
+            warnings.add("No CT buy zones.");
+        }
+        return new ValidationResult(List.copyOf(errors), List.copyOf(warnings));
     }
 
     public SaveAllResult saveAll() {
@@ -351,6 +382,19 @@ public final class MapEditorService {
         return normalized;
     }
 
+    private void validateBombSite(String id, BombSite site, List<String> warnings) {
+        if (site == null) {
+            warnings.add("Bomb site " + id + " missing.");
+            return;
+        }
+        if (site.radius() <= 0.0) {
+            warnings.add("Bomb site " + id + " radius <= 0.");
+        }
+    }
+
     public record SaveAllResult(int saved, int failed) {
+    }
+
+    public record ValidationResult(List<String> errors, List<String> warnings) {
     }
 }

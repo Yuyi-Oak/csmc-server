@@ -11,7 +11,7 @@ commands:
     usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top | /csmc queue <join|leave|status|list> [mode] [mapId]
   csmcmap:
     description: CSMC map editor command
-    usage: /csmcmap list | /csmcmap create/clone/info <id> | /csmcmap listpoints <id> | /csmcmap addspawn/removespawn | /csmcmap addbuy/removebuy | /csmcmap save <id> | /csmcmap saveall
+    usage: /csmcmap list | /csmcmap create/clone/info <id> | /csmcmap listpoints <id> | /csmcmap addspawn/removespawn | /csmcmap addbuy/removebuy | /csmcmap validate <id> | /csmcmap save <id> | /csmcmap saveall
 permissions:
   csmc.anticheat.alert:
     description: Receive CSMC anti-cheat alerts.

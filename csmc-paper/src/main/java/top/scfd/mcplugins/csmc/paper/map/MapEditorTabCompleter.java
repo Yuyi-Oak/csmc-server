@@ -16,7 +16,7 @@ public final class MapEditorTabCompleter implements TabCompleter {
         "addspawn", "removespawn", "clearspawns",
         "setbomb", "removebomb",
         "addbuy", "removebuy", "clearbuy",
-        "save", "saveall", "reload"
+        "validate", "save", "saveall", "reload"
     );
     private static final List<String> SIDES = List.of("t", "ct");
     private static final List<String> BOMB_SITES = List.of("A", "B");
@@ -41,7 +41,7 @@ public final class MapEditorTabCompleter implements TabCompleter {
         }
         return switch (sub) {
             case "info", "setname", "setworld", "listpoints", "addspawn", "removespawn", "clearspawns",
-                "setbomb", "removebomb", "addbuy", "removebuy", "clearbuy", "save" -> completeMapScoped(sub, args);
+                "setbomb", "removebomb", "addbuy", "removebuy", "clearbuy", "validate", "save" -> completeMapScoped(sub, args);
             default -> List.of();
         };
     }
