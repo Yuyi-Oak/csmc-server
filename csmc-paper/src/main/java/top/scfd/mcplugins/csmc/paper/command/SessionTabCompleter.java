@@ -42,6 +42,7 @@ public final class SessionTabCompleter implements TabCompleter {
             case "view" -> completeView(sender, args);
             case "stats" -> completePlayerName(args);
             case "history" -> completeHistory(args);
+            case "top" -> completeTop(args);
             case "scoreboard", "board" -> completeScoreboard(args);
             case "queue" -> completeQueue(args);
             case "ac", "anticheat" -> completeAntiCheat(args);
@@ -120,6 +121,13 @@ public final class SessionTabCompleter implements TabCompleter {
     private List<String> completeScoreboard(String[] args) {
         if (args.length == 2) {
             return match(args[1], List.of("5", "10", "20"));
+        }
+        return List.of();
+    }
+
+    private List<String> completeTop(String[] args) {
+        if (args.length == 2) {
+            return match(args[1], List.of("5", "10", "20", "50"));
         }
         return List.of();
     }
