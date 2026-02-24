@@ -8,6 +8,7 @@ dependencies {
 
     implementation project(':csmc-core')
     implementation project(':csmc-storage')
+    implementation 'io.lettuce:lettuce-core:6.8.1.RELEASE'
 }
 
 def pluginResourceProps = [

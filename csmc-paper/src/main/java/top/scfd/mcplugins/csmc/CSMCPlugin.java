@@ -37,9 +37,13 @@ import top.scfd.mcplugins.csmc.paper.WeaponSelectionListener;
 import top.scfd.mcplugins.csmc.paper.command.SessionCommand;
 import top.scfd.mcplugins.csmc.paper.map.MapEditorCommand;
 import top.scfd.mcplugins.csmc.paper.map.MapEditorService;
+import top.scfd.mcplugins.csmc.paper.sync.ClusterSyncService;
+import top.scfd.mcplugins.csmc.paper.sync.NoopClusterSyncService;
+import top.scfd.mcplugins.csmc.paper.sync.RedisClusterSyncService;
 import top.scfd.mcplugins.csmc.storage.PaperStorageProviderFactory;
 import top.scfd.mcplugins.csmc.storage.StorageManager;
 import top.scfd.mcplugins.csmc.storage.StorageProvider;
+import top.scfd.mcplugins.csmc.storage.StorageType;
 
 public final class CSMCPlugin extends JavaPlugin {
     private CSMCCore core;
@@ -47,6 +51,7 @@ public final class CSMCPlugin extends JavaPlugin {
     private HudTicker hudTicker;
     private MatchQueueTicker queueTicker;
     private SessionRegistry sessionRegistry;
+    private ClusterSyncService clusterSync = new NoopClusterSyncService();
 
     @Override
     public void onEnable() {
@@ -56,6 +61,8 @@ public final class CSMCPlugin extends JavaPlugin {
         MessageService messages = new PaperMessageService(this, config.general().language());
         StorageProvider provider = new PaperStorageProviderFactory(this).create(config.storage());
         StorageManager storageManager = new StorageManager(provider);
+        clusterSync = createClusterSync(config);
+        clusterSync.start();
         core = new CSMCCore(platform, config, messages, storageManager);
         core.start();
 
@@ -63,7 +70,7 @@ public final class CSMCPlugin extends JavaPlugin {
         mapLoader.loadInto(core.mapRegistry());
 
         PaperShopCatalogLoader shopLoader = new PaperShopCatalogLoader(this);
-        StatsService statsService = new StatsService(storageManager);
+        StatsService statsService = new StatsService(storageManager, clusterSync);
         BombService bombService = new BombService();
         WeaponItemService weaponItems = new WeaponItemService(this);
         LoadoutInventoryService loadoutInventory = new LoadoutInventoryService(weaponItems);
@@ -119,6 +126,24 @@ public final class CSMCPlugin extends JavaPlugin {
         }
         if (queueTicker != null) {
             queueTicker.cancel();
+        }
+        if (clusterSync != null) {
+            clusterSync.close();
+        }
+    }
+
+    private ClusterSyncService createClusterSync(CSMCConfig config) {
+        if (config.storage().type() != StorageType.REDIS) {
+            return new NoopClusterSyncService();
+        }
+        try {
+            return new RedisClusterSyncService(
+                config.storage().redis().uri(),
+                config.storage().redis().namespace()
+            );
+        } catch (RuntimeException error) {
+            getLogger().warning("Redis cluster sync disabled: " + error.getMessage());
+            return new NoopClusterSyncService();
         }
     }
 }

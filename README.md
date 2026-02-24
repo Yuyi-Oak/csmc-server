@@ -17,3 +17,4 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Storage backends currently available: YAML, SQLite, MySQL, PostgreSQL, MongoDB, Redis.
 - Command highlights: `/csmc queue join [mode]`, `/csmc queue status`, `/csmc stats [player]`, `/csmc top`.
 - Map editor tool: `/csmcmap create`, `/csmcmap addspawn`, `/csmcmap setbomb`, `/csmcmap addbuy`, `/csmcmap save`, `/csmcmap reload`.
+- Cross-server stats cache invalidation is enabled automatically when `storage.type` is `REDIS`.
