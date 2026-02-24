@@ -135,6 +135,33 @@ public final class MatchQueueService {
         return snapshot;
     }
 
+    public synchronized int clearMode(GameMode mode) {
+        if (mode == null) {
+            return 0;
+        }
+        int removed = 0;
+        var iterator = queues.get(mode).iterator();
+        while (iterator.hasNext()) {
+            UUID playerId = iterator.next();
+            iterator.remove();
+            queuedModes.remove(playerId);
+            queuedMaps.remove(playerId);
+            removed++;
+        }
+        if (removed > 0) {
+            markLocalSnapshotDirty();
+        }
+        return removed;
+    }
+
+    public synchronized int clearAll() {
+        int removed = 0;
+        for (GameMode mode : GameMode.values()) {
+            removed += clearMode(mode);
+        }
+        return removed;
+    }
+
     public synchronized Map<GameMode, Integer> queueSizesGlobal() {
         Map<GameMode, Integer> aggregate = queueSizes();
         Map<GameMode, Integer> remote = remoteQueueSizesInternal();
