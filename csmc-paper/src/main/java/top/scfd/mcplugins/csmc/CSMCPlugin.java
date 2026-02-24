@@ -42,6 +42,7 @@ import top.scfd.mcplugins.csmc.paper.command.SessionTabCompleter;
 import top.scfd.mcplugins.csmc.paper.history.MatchHistoryService;
 import top.scfd.mcplugins.csmc.paper.map.MapEditorCommand;
 import top.scfd.mcplugins.csmc.paper.map.MapEditorService;
+import top.scfd.mcplugins.csmc.paper.map.MapEditorTabCompleter;
 import top.scfd.mcplugins.csmc.paper.security.AntiCheatService;
 import top.scfd.mcplugins.csmc.paper.security.AntiCheatTicker;
 import top.scfd.mcplugins.csmc.paper.security.MovementAntiCheatListener;
@@ -141,6 +142,7 @@ public final class CSMCPlugin extends JavaPlugin {
         getCommand("csmc").setTabCompleter(new SessionTabCompleter(sessionRegistry));
         MapEditorService mapEditor = new MapEditorService(this, mapLoader, core.mapRegistry());
         getCommand("csmcmap").setExecutor(new MapEditorCommand(mapEditor));
+        getCommand("csmcmap").setTabCompleter(new MapEditorTabCompleter(mapEditor));
         getServer().getPluginManager().registerEvents(roundStateService, this);
         getServer().getPluginManager().registerEvents(new PlayerSessionListener(sessionRegistry, eliminationResolver), this);
         getServer().getPluginManager().registerEvents(new QueuePlayerListener(queueService), this);
