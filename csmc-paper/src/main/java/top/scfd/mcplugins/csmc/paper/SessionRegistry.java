@@ -298,13 +298,25 @@ public final class SessionRegistry {
 
     private void closeFinishedSession(GameSession session) {
         UUID sessionId = session.id();
+        var matchState = session.roundEngine().matchState();
+        int tScore = matchState.score().terrorist();
+        int ctScore = matchState.score().counterTerrorist();
+        String winner = matchState.winner()
+            .map(side -> side == TeamSide.COUNTER_TERRORIST ? "CT" : "T")
+            .orElse("NONE");
+        MapDefinition map = sessionMaps.get(sessionId);
+        String mapId = map == null ? "unknown" : map.id();
+        String summary = "Match finished on " + mapId
+            + " | winner=" + winner
+            + " | final score T/CT=" + tScore + "/" + ctScore
+            + ". Session closed.";
         for (UUID playerId : session.players()) {
             playerSessions.remove(playerId, sessionId);
             Player player = Bukkit.getPlayer(playerId);
             if (player != null && player.isOnline()) {
                 player.setSpectatorTarget(null);
                 player.setGameMode(org.bukkit.GameMode.ADVENTURE);
-                player.sendMessage("Match finished. Session closed.");
+                player.sendMessage(summary);
             }
             session.removePlayer(playerId);
         }
