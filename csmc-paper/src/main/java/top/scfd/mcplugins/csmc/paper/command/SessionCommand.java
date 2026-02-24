@@ -51,7 +51,7 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc stats [player] | /csmc top | /csmc queue <join|leave|status> [mode]");
+            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|player> | /csmc stats [player] | /csmc top | /csmc queue <join|leave|status> [mode]");
             return true;
         }
         return switch (args[0].toLowerCase()) {
@@ -61,6 +61,7 @@ public final class SessionCommand implements CommandExecutor {
             case "leave" -> handleLeave(player);
             case "start" -> handleStart(player);
             case "buy" -> handleBuy(player, args);
+            case "view" -> handleView(player, args);
             case "stats" -> handleStats(player, args);
             case "top" -> handleTop(player);
             case "queue" -> handleQueue(player, args);
@@ -216,6 +217,49 @@ public final class SessionCommand implements CommandExecutor {
             case NOT_IN_SESSION -> player.sendMessage("You are not in a session.");
             case INVENTORY_FULL -> player.sendMessage("Inventory full.");
         }
+        return true;
+    }
+
+    private boolean handleView(Player viewer, String[] args) {
+        GameSession session = sessions.findSession(viewer);
+        if (session == null) {
+            viewer.sendMessage("You are not in a session.");
+            return true;
+        }
+        if (viewer.getGameMode() != org.bukkit.GameMode.SPECTATOR) {
+            viewer.sendMessage("You must be in spectator mode.");
+            return true;
+        }
+        if (args.length < 2) {
+            viewer.sendMessage("Usage: /csmc view <free|player>");
+            return true;
+        }
+        String targetText = args[1];
+        if ("free".equalsIgnoreCase(targetText) || "self".equalsIgnoreCase(targetText)) {
+            viewer.setSpectatorTarget(null);
+            viewer.sendMessage("Now in free spectator camera.");
+            return true;
+        }
+        Player target = Bukkit.getPlayerExact(targetText);
+        if (target == null || !target.isOnline()) {
+            viewer.sendMessage("Player not found.");
+            return true;
+        }
+        if (target.getUniqueId().equals(viewer.getUniqueId())) {
+            viewer.sendMessage("Use /csmc view free to leave player camera.");
+            return true;
+        }
+        GameSession targetSession = sessions.findSession(target);
+        if (targetSession == null || !targetSession.id().equals(session.id())) {
+            viewer.sendMessage("Target is not in your session.");
+            return true;
+        }
+        if (target.getGameMode() == org.bukkit.GameMode.SPECTATOR || target.isDead()) {
+            viewer.sendMessage("Target is not currently alive.");
+            return true;
+        }
+        viewer.setSpectatorTarget(target);
+        viewer.sendMessage("Now spectating " + target.getName() + ".");
         return true;
     }
 
