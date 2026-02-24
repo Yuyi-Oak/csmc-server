@@ -691,10 +691,11 @@ public final class SessionCommand implements CommandExecutor {
         int shown = 0;
         for (GameMode mode : GameMode.values()) {
             int size = sizes.getOrDefault(mode, 0);
+            int needed = queue.playersNeeded(mode);
             if (shown > 0) {
                 builder.append(" | ");
             }
-            builder.append(mode.name()).append("=").append(size);
+            builder.append(mode.name()).append("=").append(size).append("(need ").append(needed).append(")");
             shown++;
         }
         player.sendMessage(builder.toString());
