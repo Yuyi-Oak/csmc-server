@@ -3,6 +3,7 @@ package top.scfd.mcplugins.csmc.paper.security;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.Locale;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -17,6 +18,7 @@ public final class AntiCheatService {
 
     private final JavaPlugin plugin;
     private final Map<UUID, Integer> violationLevels = new ConcurrentHashMap<>();
+    private final Map<String, Integer> reasonCounts = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastAlertAt = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastKickAt = new ConcurrentHashMap<>();
 
@@ -29,9 +31,11 @@ public final class AntiCheatService {
             return;
         }
         UUID playerId = player.getUniqueId();
+        String normalizedReason = normalizeReason(reason);
+        reasonCounts.merge(normalizedReason, 1, Integer::sum);
         int level = violationLevels.merge(playerId, points, Integer::sum);
         if (level >= KICK_THRESHOLD) {
-            maybeKick(player, reason, level);
+            maybeKick(player, normalizedReason, level);
         }
         if (level < ALERT_THRESHOLD) {
             return;
@@ -42,7 +46,7 @@ public final class AntiCheatService {
             return;
         }
         lastAlertAt.put(playerId, now);
-        alertOps(player.getName(), reason, level);
+        alertOps(player.getName(), normalizedReason, level);
     }
 
     public void decay() {
@@ -76,6 +80,22 @@ public final class AntiCheatService {
 
     public Map<UUID, Integer> violationSnapshot() {
         return Map.copyOf(violationLevels);
+    }
+
+    public Map<String, Integer> reasonSnapshot() {
+        return Map.copyOf(reasonCounts);
+    }
+
+    public void clearReasonStats() {
+        reasonCounts.clear();
+    }
+
+    private String normalizeReason(String reason) {
+        if (reason == null) {
+            return "unknown";
+        }
+        String normalized = reason.trim().toLowerCase(Locale.ROOT);
+        return normalized.isEmpty() ? "unknown" : normalized;
     }
 
     private void maybeKick(Player player, String reason, int level) {
