@@ -62,6 +62,17 @@ public final class StatsService {
         ));
     }
 
+    public void recordHeadshot(UUID playerId) {
+        update(playerId, stats -> new PlayerStats(
+            stats.kills(),
+            stats.deaths(),
+            stats.assists(),
+            stats.headshots() + 1,
+            stats.roundsPlayed(),
+            stats.roundsWon()
+        ));
+    }
+
     public void recordRoundPlayed(UUID playerId) {
         update(playerId, stats -> new PlayerStats(
             stats.kills(),

@@ -16,12 +16,19 @@ public final class CombatStatsListener implements Listener {
     private final SessionRegistry sessions;
     private final StatsService statsService;
     private final TeamEliminationResolver eliminations;
+    private final HeadshotTrackerService headshots;
     private final java.util.Map<java.util.UUID, java.util.UUID> lastHit = new java.util.concurrent.ConcurrentHashMap<>();
 
-    public CombatStatsListener(SessionRegistry sessions, StatsService statsService, TeamEliminationResolver eliminations) {
+    public CombatStatsListener(
+        SessionRegistry sessions,
+        StatsService statsService,
+        TeamEliminationResolver eliminations,
+        HeadshotTrackerService headshots
+    ) {
         this.sessions = sessions;
         this.statsService = statsService;
         this.eliminations = eliminations;
+        this.headshots = headshots;
     }
 
     @EventHandler
@@ -79,6 +86,9 @@ public final class CombatStatsListener implements Listener {
             if (killerSession != null && killerSession == victimSession && !killerId.equals(victim.getUniqueId())) {
                 killerSession.onKill(killerId);
                 statsService.recordKill(killerId);
+                if (headshots.consumeIfMatching(victim.getUniqueId(), killerId, victim.getWorld().getFullTime())) {
+                    statsService.recordHeadshot(killerId);
+                }
                 if (assisterId != null && !assisterId.equals(killerId)) {
                     killerSession.onAssist(assisterId);
                     statsService.recordAssist(assisterId);

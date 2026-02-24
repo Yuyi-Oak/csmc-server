@@ -29,17 +29,20 @@ public final class WeaponFireListener implements Listener {
     private final WeaponItemService weaponItems;
     private final LoadoutInventoryService loadoutInventory;
     private final AntiCheatService antiCheat;
+    private final HeadshotTrackerService headshots;
 
     public WeaponFireListener(
         SessionRegistry sessions,
         WeaponItemService weaponItems,
         LoadoutInventoryService loadoutInventory,
-        AntiCheatService antiCheat
+        AntiCheatService antiCheat,
+        HeadshotTrackerService headshots
     ) {
         this.sessions = sessions;
         this.weaponItems = weaponItems;
         this.loadoutInventory = loadoutInventory;
         this.antiCheat = antiCheat;
+        this.headshots = headshots;
     }
 
     @EventHandler
@@ -80,11 +83,17 @@ public final class WeaponFireListener implements Listener {
         }
         simulator.nextRecoil(spec, weaponPattern(spec), weapon.state(), tick);
         double[] spread = simulator.sampleSpread(spec, movementFactor(player), jumpFactor(player));
-        shoot(player, session, spec, spread);
+        shoot(player, session, spec, spread, tick);
         loadoutInventory.updateActiveWeaponItem(player, loadout);
     }
 
-    private void shoot(Player player, top.scfd.mcplugins.csmc.core.session.GameSession session, WeaponSpec spec, double[] spread) {
+    private void shoot(
+        Player player,
+        top.scfd.mcplugins.csmc.core.session.GameSession session,
+        WeaponSpec spec,
+        double[] spread,
+        long tick
+    ) {
         Location eye = player.getEyeLocation();
         Vector direction = eye.getDirection().normalize();
         Vector adjusted = applySpread(direction, spread[0], spread[1]);
@@ -114,6 +123,9 @@ public final class WeaponFireListener implements Listener {
         if (victimLoadout != null) {
             ArmorState armor = victimLoadout.armor();
             armor.applyArmorDamage(damage.armorDamage());
+        }
+        if (hitbox == Hitbox.HEAD && damage.healthDamage() > 0) {
+            headshots.markHeadshot(victim.getUniqueId(), player.getUniqueId(), tick + 20L);
         }
         if (damage.healthDamage() > 0) {
             victim.damage(damage.healthDamage(), player);
