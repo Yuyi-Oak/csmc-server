@@ -32,7 +32,11 @@ public final class SessionTabCompleter implements TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            return match(args[0], ROOT);
+            List<String> root = new ArrayList<>(ROOT);
+            if (!hasAntiCheatManage(sender)) {
+                root.remove("ac");
+            }
+            return match(args[0], root);
         }
         String sub = args[0].toLowerCase(Locale.ROOT);
         return switch (sub) {
@@ -44,8 +48,8 @@ public final class SessionTabCompleter implements TabCompleter {
             case "history" -> completeHistory(args);
             case "top" -> completeTop(args);
             case "scoreboard", "board" -> completeScoreboard(args);
-            case "queue" -> completeQueue(args);
-            case "ac", "anticheat" -> completeAntiCheat(args);
+            case "queue" -> completeQueue(sender, args);
+            case "ac", "anticheat" -> hasAntiCheatManage(sender) ? completeAntiCheat(args) : List.of();
             default -> List.of();
         };
     }
@@ -132,9 +136,13 @@ public final class SessionTabCompleter implements TabCompleter {
         return List.of();
     }
 
-    private List<String> completeQueue(String[] args) {
+    private List<String> completeQueue(CommandSender sender, String[] args) {
         if (args.length == 2) {
-            return match(args[1], QUEUE);
+            List<String> queue = new ArrayList<>(QUEUE);
+            if (!hasQueueManage(sender)) {
+                queue.remove("clear");
+            }
+            return match(args[1], queue);
         }
         if ("votes".equalsIgnoreCase(args[1])) {
             if (args.length == 3) {
@@ -169,6 +177,14 @@ public final class SessionTabCompleter implements TabCompleter {
             return match(args[3], mapNames(true));
         }
         return List.of();
+    }
+
+    private boolean hasAntiCheatManage(CommandSender sender) {
+        return sender.isOp() || sender.hasPermission("csmc.anticheat.manage");
+    }
+
+    private boolean hasQueueManage(CommandSender sender) {
+        return sender.isOp() || sender.hasPermission("csmc.queue.manage");
     }
 
     private List<String> completeAntiCheat(String[] args) {
