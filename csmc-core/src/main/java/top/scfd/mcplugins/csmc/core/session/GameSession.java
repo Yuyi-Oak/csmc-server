@@ -190,6 +190,14 @@ public final class GameSession {
         return catalog.find(itemKey).orElse(null);
     }
 
+    public WeaponSpec findWeapon(String weaponKey) {
+        return weaponRegistry.find(weaponKey).orElse(null);
+    }
+
+    public Map<String, WeaponSpec> weapons() {
+        return weaponRegistry.all();
+    }
+
     public void startRound() {
         if (state != SessionState.WAITING && state != SessionState.WARMUP) {
             return;
