@@ -42,12 +42,16 @@ public final class MapEditorTabCompleter implements TabCompleter {
         }
         return switch (sub) {
             case "info", "setname", "setworld", "listpoints", "addspawn", "removespawn", "clearspawns",
-                "setbomb", "removebomb", "addbuy", "removebuy", "clearbuy", "validate", "save", "tp" -> completeMapScoped(sub, args);
+                "setbomb", "removebomb", "addbuy", "removebuy", "clearbuy", "validate", "save", "saveall", "tp" ->
+                completeMapScoped(sub, args);
             default -> List.of();
         };
     }
 
     private List<String> completeMapScoped(String sub, String[] args) {
+        if (args.length == 2 && "saveall".equals(sub)) {
+            return match(args[1], List.of("force"));
+        }
         if (args.length == 2) {
             return match(args[1], maps.listMaps());
         }
@@ -79,9 +83,6 @@ public final class MapEditorTabCompleter implements TabCompleter {
         }
         if (args.length == 3 && "save".equals(sub)) {
             return match(args[2], List.of("force"));
-        }
-        if (args.length == 2 && "saveall".equals(sub)) {
-            return match(args[1], List.of("force"));
         }
         return List.of();
     }
