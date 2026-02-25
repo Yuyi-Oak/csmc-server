@@ -39,6 +39,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Defuse ownership is now strict: active defuser cannot be overwritten mid-defuse by another player interaction.
 - Map editor tool: `/csmcmap create`, `/csmcmap addspawn`, `/csmcmap setbomb`, `/csmcmap addbuy`, `/csmcmap save`, `/csmcmap reload`.
 - Map editor now supports indexed point removal and inspection: `/csmcmap listpoints`, `/csmcmap removespawn`, `/csmcmap removebuy`.
+- Map editor now supports point teleport helpers: `/csmcmap tp <id> spawn <t|ct> <index>`, `/csmcmap tp <id> buy <t|ct> <index>`, `/csmcmap tp <id> bomb <A|B>`.
 - Map editor now supports draft cloning: `/csmcmap clone <sourceId> <targetId> [name]`.
 - Map editor supports bulk draft persistence: `/csmcmap saveall`.
 - Map editor supports structural checks before save: `/csmcmap validate <id>`.

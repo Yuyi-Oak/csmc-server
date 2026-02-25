@@ -12,7 +12,7 @@ import top.scfd.mcplugins.csmc.api.TeamSide;
 
 public final class MapEditorTabCompleter implements TabCompleter {
     private static final List<String> ROOT = List.of(
-        "list", "create", "clone", "info", "setname", "setworld", "listpoints",
+        "list", "create", "clone", "info", "setname", "setworld", "listpoints", "tp",
         "addspawn", "removespawn", "clearspawns",
         "setbomb", "removebomb",
         "addbuy", "removebuy", "clearbuy",
@@ -20,6 +20,7 @@ public final class MapEditorTabCompleter implements TabCompleter {
     );
     private static final List<String> SIDES = List.of("t", "ct");
     private static final List<String> BOMB_SITES = List.of("A", "B");
+    private static final List<String> TP_TARGETS = List.of("spawn", "buy", "bomb");
 
     private final MapEditorService maps;
 
@@ -41,7 +42,7 @@ public final class MapEditorTabCompleter implements TabCompleter {
         }
         return switch (sub) {
             case "info", "setname", "setworld", "listpoints", "addspawn", "removespawn", "clearspawns",
-                "setbomb", "removebomb", "addbuy", "removebuy", "clearbuy", "validate", "save" -> completeMapScoped(sub, args);
+                "setbomb", "removebomb", "addbuy", "removebuy", "clearbuy", "validate", "save", "tp" -> completeMapScoped(sub, args);
             default -> List.of();
         };
     }
@@ -54,6 +55,7 @@ public final class MapEditorTabCompleter implements TabCompleter {
             return switch (sub) {
                 case "addspawn", "removespawn", "clearspawns", "addbuy", "removebuy", "clearbuy" -> match(args[2], SIDES);
                 case "setbomb", "removebomb" -> match(args[2], BOMB_SITES);
+                case "tp" -> match(args[2], TP_TARGETS);
                 case "setworld" -> {
                     List<String> worlds = new ArrayList<>();
                     Bukkit.getWorlds().forEach(world -> worlds.add(world.getName()));
@@ -68,8 +70,12 @@ public final class MapEditorTabCompleter implements TabCompleter {
                 case "removebuy" -> completeBuyIndex(args);
                 case "setbomb" -> match(args[3], List.of("3.0", "4.5", "5.0"));
                 case "addbuy" -> match(args[3], List.of("4.0", "6.0", "8.0"));
+                case "tp" -> completeTeleportType(args);
                 default -> List.of();
             };
+        }
+        if (args.length == 5 && "tp".equals(sub)) {
+            return completeTeleportIndex(args);
         }
         if (args.length == 3 && "save".equals(sub)) {
             return match(args[2], List.of("force"));
@@ -102,6 +108,38 @@ public final class MapEditorTabCompleter implements TabCompleter {
             ? map.terroristBuyZones().size()
             : map.counterTerroristBuyZones().size();
         return match(args[3], indexes(size));
+    }
+
+    private List<String> completeTeleportType(String[] args) {
+        String target = args[2].toLowerCase(Locale.ROOT);
+        return switch (target) {
+            case "spawn", "buy" -> match(args[3], SIDES);
+            case "bomb" -> match(args[3], BOMB_SITES);
+            default -> List.of();
+        };
+    }
+
+    private List<String> completeTeleportIndex(String[] args) {
+        String target = args[2].toLowerCase(Locale.ROOT);
+        if (!"spawn".equals(target) && !"buy".equals(target)) {
+            return List.of();
+        }
+        EditableMap map = maps.get(args[1]);
+        TeamSide side = parseSide(args[3]);
+        if (map == null || side == null) {
+            return List.of();
+        }
+        int size;
+        if ("spawn".equals(target)) {
+            size = side == TeamSide.TERRORIST
+                ? map.terroristSpawns().size()
+                : map.counterTerroristSpawns().size();
+        } else {
+            size = side == TeamSide.TERRORIST
+                ? map.terroristBuyZones().size()
+                : map.counterTerroristBuyZones().size();
+        }
+        return match(args[4], indexes(size));
     }
 
     private List<String> indexes(int size) {

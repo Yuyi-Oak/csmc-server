@@ -26,7 +26,7 @@ public final class MapEditorCommand implements CommandExecutor {
         }
         if (args.length == 0) {
             sender.sendMessage("Usage: /csmcmap list | /csmcmap create <id> [name] | /csmcmap clone <sourceId> <targetId> [name] | /csmcmap info <id> | /csmcmap setname <id> <name>");
-            sender.sendMessage("       /csmcmap setworld <id> [world] | /csmcmap listpoints <id> | /csmcmap addspawn <id> <t|ct> | /csmcmap removespawn <id> <t|ct> <index> | /csmcmap clearspawns <id> <t|ct>");
+            sender.sendMessage("       /csmcmap setworld <id> [world] | /csmcmap listpoints <id> | /csmcmap tp <id> <spawn|buy|bomb> ... | /csmcmap addspawn <id> <t|ct> | /csmcmap removespawn <id> <t|ct> <index> | /csmcmap clearspawns <id> <t|ct>");
             sender.sendMessage("       /csmcmap setbomb <id> <A|B> <radius> | /csmcmap removebomb <id> <A|B>");
             sender.sendMessage("       /csmcmap addbuy <id> <t|ct> <radius> | /csmcmap removebuy <id> <t|ct> <index> | /csmcmap clearbuy <id> <t|ct> | /csmcmap validate <id> | /csmcmap save <id> [force] | /csmcmap saveall [force] | /csmcmap reload");
             return true;
@@ -39,6 +39,7 @@ public final class MapEditorCommand implements CommandExecutor {
             case "setname" -> handleSetName(sender, args);
             case "setworld" -> handleSetWorld(sender, args);
             case "listpoints" -> handleListPoints(sender, args);
+            case "tp" -> handleTeleport(sender, args);
             case "addspawn" -> handleAddSpawn(sender, args);
             case "removespawn" -> handleRemoveSpawn(sender, args);
             case "clearspawns" -> handleClearSpawns(sender, args);
@@ -65,6 +66,120 @@ public final class MapEditorCommand implements CommandExecutor {
             return true;
         }
         sender.sendMessage("Maps: " + String.join(", ", ids));
+        return true;
+    }
+
+    private boolean handleTeleport(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage("Player only command.");
+            return true;
+        }
+        if (args.length < 4) {
+            sender.sendMessage("Usage: /csmcmap tp <id> <spawn|buy|bomb> ...");
+            sender.sendMessage(" - /csmcmap tp <id> spawn <t|ct> <index>");
+            sender.sendMessage(" - /csmcmap tp <id> buy <t|ct> <index>");
+            sender.sendMessage(" - /csmcmap tp <id> bomb <A|B>");
+            return true;
+        }
+        EditableMap map = maps.get(args[1]);
+        if (map == null) {
+            sender.sendMessage("Map not found.");
+            return true;
+        }
+        String targetType = args[2].toLowerCase(Locale.ROOT);
+        return switch (targetType) {
+            case "spawn" -> teleportSpawn(player, map, args);
+            case "buy" -> teleportBuyZone(player, map, args);
+            case "bomb" -> teleportBombSite(player, map, args);
+            default -> {
+                sender.sendMessage("Target must be spawn, buy, or bomb.");
+                yield true;
+            }
+        };
+    }
+
+    private boolean teleportSpawn(Player player, EditableMap map, String[] args) {
+        if (args.length < 5) {
+            player.sendMessage("Usage: /csmcmap tp <id> spawn <t|ct> <index>");
+            return true;
+        }
+        TeamSide side = parseSide(args[3]);
+        if (side == null) {
+            player.sendMessage("Side must be t or ct.");
+            return true;
+        }
+        int index = parsePositiveInt(args[4]);
+        if (index <= 0) {
+            player.sendMessage("Index must be >= 1.");
+            return true;
+        }
+        var list = side == TeamSide.TERRORIST ? map.terroristSpawns() : map.counterTerroristSpawns();
+        if (index > list.size()) {
+            player.sendMessage("Spawn index out of range.");
+            return true;
+        }
+        MapSpawn spawn = list.get(index - 1);
+        player.teleport(new Location(
+            player.getWorld(),
+            spawn.x(),
+            spawn.y(),
+            spawn.z(),
+            spawn.yaw(),
+            spawn.pitch()
+        ));
+        player.sendMessage("Teleported to " + side.name() + " spawn #" + index + ".");
+        return true;
+    }
+
+    private boolean teleportBuyZone(Player player, EditableMap map, String[] args) {
+        if (args.length < 5) {
+            player.sendMessage("Usage: /csmcmap tp <id> buy <t|ct> <index>");
+            return true;
+        }
+        TeamSide side = parseSide(args[3]);
+        if (side == null) {
+            player.sendMessage("Side must be t or ct.");
+            return true;
+        }
+        int index = parsePositiveInt(args[4]);
+        if (index <= 0) {
+            player.sendMessage("Index must be >= 1.");
+            return true;
+        }
+        var list = side == TeamSide.TERRORIST ? map.terroristBuyZones() : map.counterTerroristBuyZones();
+        if (index > list.size()) {
+            player.sendMessage("Buy zone index out of range.");
+            return true;
+        }
+        BuyZone zone = list.get(index - 1);
+        player.teleport(new Location(
+            player.getWorld(),
+            zone.x(),
+            zone.y(),
+            zone.z(),
+            player.getLocation().getYaw(),
+            player.getLocation().getPitch()
+        ));
+        player.sendMessage("Teleported to " + side.name() + " buy zone #" + index + ".");
+        return true;
+    }
+
+    private boolean teleportBombSite(Player player, EditableMap map, String[] args) {
+        String siteId = args[3].toUpperCase(Locale.ROOT);
+        BombSite site = map.bombSites().get(siteId);
+        if (site == null) {
+            player.sendMessage("Bomb site " + siteId + " not found.");
+            return true;
+        }
+        player.teleport(new Location(
+            player.getWorld(),
+            site.x(),
+            site.y(),
+            site.z(),
+            player.getLocation().getYaw(),
+            player.getLocation().getPitch()
+        ));
+        player.sendMessage("Teleported to bomb site " + siteId + ".");
         return true;
     }
 
