@@ -36,6 +36,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Queue map preference supports `auto` (default) or explicit map IDs from `/csmc maps`.
 - Queued players now get real-time action-bar status (mode/map/position).
 - C4 planting now follows rules-driven plant time (`plantTimeSeconds`) and can be cancelled by movement/sneak release before completion.
+- Plant cancel validation is now event-driven on movement for faster interruption feedback (not only 1s tick checks).
 - Round start now normalizes bomb ownership first, then assigns exactly one fresh C4 holder on T side.
 - Defuse ownership is now strict: active defuser cannot be overwritten mid-defuse by another player interaction.
 - Map editor tool: `/csmcmap create`, `/csmcmap addspawn`, `/csmcmap setbomb`, `/csmcmap addbuy`, `/csmcmap save`, `/csmcmap reload`.

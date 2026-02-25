@@ -133,6 +133,23 @@ public final class BombService {
         return state != null && state.planterId().equals(playerId);
     }
 
+    public void validatePlanting(GameSession session, Player player) {
+        if (session == null || player == null) {
+            return;
+        }
+        PlantState state = plants.get(session.id());
+        if (state == null) {
+            return;
+        }
+        UUID playerId = player.getUniqueId();
+        if (!state.planterId().equals(playerId)) {
+            return;
+        }
+        if (!canContinuePlanting(session, player, state.location())) {
+            cancelPlant(session, playerId);
+        }
+    }
+
     public void tick(GameSession session) {
         if (session == null) {
             return;

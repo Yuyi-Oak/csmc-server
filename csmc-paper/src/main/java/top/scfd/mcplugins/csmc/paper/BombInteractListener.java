@@ -89,9 +89,7 @@ public final class BombInteractListener implements Listener {
             return;
         }
         UUID playerId = player.getUniqueId();
-        if (bombs.isPlantingBy(session, playerId) && !player.isSneaking()) {
-            bombs.cancelPlant(session, playerId);
-        }
+        bombs.validatePlanting(session, player);
         BombState state = bombs.state(session);
         if (state == null || state.defuserId() == null) {
             return;
