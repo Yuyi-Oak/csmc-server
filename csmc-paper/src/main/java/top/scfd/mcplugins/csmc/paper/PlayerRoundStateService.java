@@ -42,7 +42,10 @@ public final class PlayerRoundStateService implements Listener {
         event.setDroppedExp(0);
         event.getDrops().clear();
         if (hadBomb && bombs != null) {
-            Bukkit.getScheduler().runTask(plugin, () -> bombs.assignBomb(session));
+            bombs.stripBombItems(player);
+            if (!bombs.dropBombAt(session, player.getLocation())) {
+                Bukkit.getScheduler().runTask(plugin, () -> bombs.assignBomb(session));
+            }
         }
     }
 

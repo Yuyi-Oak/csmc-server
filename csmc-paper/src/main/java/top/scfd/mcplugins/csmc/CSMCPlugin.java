@@ -138,7 +138,8 @@ public final class CSMCPlugin extends JavaPlugin {
                 combatTracker,
                 queueService,
                 matchHistory,
-                antiCheat
+                antiCheat,
+                bombService
             )
         );
         getCommand("csmc").setTabCompleter(new SessionTabCompleter(sessionRegistry));

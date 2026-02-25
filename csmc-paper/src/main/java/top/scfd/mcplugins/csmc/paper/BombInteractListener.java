@@ -8,11 +8,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
+import top.scfd.mcplugins.csmc.api.SessionState;
 import top.scfd.mcplugins.csmc.api.TeamSide;
 import top.scfd.mcplugins.csmc.core.map.BombSite;
 import top.scfd.mcplugins.csmc.core.map.MapDefinition;
@@ -112,6 +114,7 @@ public final class BombInteractListener implements Listener {
         Player player = event.getPlayer();
         GameSession session = sessions.findSession(player);
         if (session != null) {
+            bombs.stripBombItems(player);
             bombs.cancelPlant(session, player.getUniqueId());
             bombs.cancelDefuse(session, player.getUniqueId());
         }
@@ -124,6 +127,36 @@ public final class BombInteractListener implements Listener {
         if (session != null) {
             bombs.cancelPlant(session, player.getUniqueId());
             bombs.cancelDefuse(session, player.getUniqueId());
+        }
+    }
+
+    @EventHandler
+    public void onPickupBomb(EntityPickupItemEvent event) {
+        if (!(event.getEntity() instanceof Player player)) {
+            return;
+        }
+        ItemStack stack = event.getItem().getItemStack();
+        if (!bombs.isBombItem(stack)) {
+            return;
+        }
+        GameSession session = sessions.findSession(player);
+        if (session == null) {
+            event.setCancelled(true);
+            event.getItem().remove();
+            return;
+        }
+        if (session.state() == SessionState.FINISHED) {
+            event.setCancelled(true);
+            event.getItem().remove();
+            return;
+        }
+        TeamSide side = session.getSide(player.getUniqueId());
+        if (side != TeamSide.TERRORIST) {
+            event.setCancelled(true);
+            return;
+        }
+        if (bombs.hasBombItem(player)) {
+            event.setCancelled(true);
         }
     }
 

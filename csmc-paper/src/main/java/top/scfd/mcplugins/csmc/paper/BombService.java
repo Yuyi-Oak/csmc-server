@@ -251,6 +251,18 @@ public final class BombService {
         player.getInventory().addItem(bomb);
     }
 
+    public boolean dropBombAt(GameSession session, Location location) {
+        if (session == null || location == null || location.getWorld() == null) {
+            return false;
+        }
+        if (isBombPlanted(session)) {
+            return false;
+        }
+        var dropped = location.getWorld().dropItemNaturally(location, createBombItem());
+        dropped.setPickupDelay(10);
+        return true;
+    }
+
     public boolean hasBombItem(Player player) {
         if (player == null) {
             return false;
@@ -351,6 +363,19 @@ public final class BombService {
         return false;
     }
 
+    public void stripBombItems(Player player) {
+        if (player == null) {
+            return;
+        }
+        ItemStack[] contents = player.getInventory().getContents();
+        for (int slot = 0; slot < contents.length; slot++) {
+            ItemStack item = contents[slot];
+            if (isBombItem(item)) {
+                player.getInventory().setItem(slot, null);
+            }
+        }
+    }
+
     private void stripBombItems(GameSession session) {
         if (session == null) {
             return;
@@ -360,13 +385,7 @@ public final class BombService {
             if (player == null || !player.isOnline()) {
                 continue;
             }
-            ItemStack[] contents = player.getInventory().getContents();
-            for (int slot = 0; slot < contents.length; slot++) {
-                ItemStack item = contents[slot];
-                if (isBombItem(item)) {
-                    player.getInventory().setItem(slot, null);
-                }
-            }
+            stripBombItems(player);
         }
     }
 

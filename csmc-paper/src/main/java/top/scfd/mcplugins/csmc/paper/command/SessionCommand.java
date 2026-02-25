@@ -36,6 +36,7 @@ import top.scfd.mcplugins.csmc.paper.MatchCombatTrackerService;
 import top.scfd.mcplugins.csmc.paper.MatchQueueService;
 import top.scfd.mcplugins.csmc.paper.PaperShopService;
 import top.scfd.mcplugins.csmc.paper.PlayerCombatSnapshot;
+import top.scfd.mcplugins.csmc.paper.BombService;
 import top.scfd.mcplugins.csmc.paper.RemoteQueueSourceStatus;
 import top.scfd.mcplugins.csmc.paper.SessionRegistry;
 import top.scfd.mcplugins.csmc.paper.StatsService;
@@ -60,6 +61,7 @@ public final class SessionCommand implements CommandExecutor {
     private final MatchQueueService queue;
     private final MatchHistoryService history;
     private final AntiCheatService antiCheat;
+    private final BombService bombs;
     private final WeaponSimulator weaponSimulator = new WeaponSimulator();
     private final WeaponInaccuracyModel inaccuracyModel = new WeaponInaccuracyModel();
 
@@ -71,7 +73,8 @@ public final class SessionCommand implements CommandExecutor {
         MatchCombatTrackerService combatTracker,
         MatchQueueService queue,
         MatchHistoryService history,
-        AntiCheatService antiCheat
+        AntiCheatService antiCheat,
+        BombService bombs
     ) {
         this.sessions = sessions;
         this.shopService = shopService;
@@ -81,6 +84,7 @@ public final class SessionCommand implements CommandExecutor {
         this.queue = queue;
         this.history = history;
         this.antiCheat = antiCheat;
+        this.bombs = bombs;
     }
 
     @Override
@@ -384,6 +388,9 @@ public final class SessionCommand implements CommandExecutor {
         }
         if (session != null) {
             sessions.leaveSession(player);
+            if (bombs != null) {
+                bombs.stripBombItems(player);
+            }
             player.sendMessage("You left the session.");
         }
         if (leftQueue) {
