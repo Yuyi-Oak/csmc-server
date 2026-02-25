@@ -296,6 +296,12 @@ public final class MatchQueueService {
         updateQueueActionBar();
     }
 
+    public synchronized void publishSnapshotNow() {
+        clusterSync.publishQueueSnapshot(queueSizes());
+        lastSnapshotPublishEpochSecond = System.currentTimeMillis() / 1000L;
+        localSnapshotDirty = false;
+    }
+
     public synchronized void publishShutdownSnapshot() {
         EnumMap<GameMode, Integer> zero = new EnumMap<>(GameMode.class);
         for (GameMode mode : GameMode.values()) {

@@ -689,10 +689,12 @@ public final class SessionCommand implements CommandExecutor {
                 return true;
             }
             int cleared = queue.clearMode(mode);
+            queue.publishSnapshotNow();
             player.sendMessage("Cleared queue for " + mode + ": " + cleared + " player(s).");
             return true;
         }
         int cleared = queue.clearAll();
+        queue.publishSnapshotNow();
         player.sendMessage("Cleared all queue modes: " + cleared + " player(s).");
         return true;
     }
