@@ -194,21 +194,29 @@ public final class MapEditorService {
         }
         if (map.terroristSpawns().isEmpty()) {
             errors.add("No T spawns.");
+        } else {
+            validateSpawns("T", map.terroristSpawns(), warnings);
         }
         if (map.counterTerroristSpawns().isEmpty()) {
             errors.add("No CT spawns.");
+        } else {
+            validateSpawns("CT", map.counterTerroristSpawns(), warnings);
         }
         if (map.bombSites().isEmpty()) {
             errors.add("No bomb sites.");
         } else {
-            validateBombSite("A", map.bombSites().get("A"), warnings);
-            validateBombSite("B", map.bombSites().get("B"), warnings);
+            validateBombSite("A", map.bombSites().get("A"), errors, warnings);
+            validateBombSite("B", map.bombSites().get("B"), errors, warnings);
         }
         if (map.terroristBuyZones().isEmpty()) {
             warnings.add("No T buy zones.");
+        } else {
+            validateBuyZones("T", map.terroristBuyZones(), warnings);
         }
         if (map.counterTerroristBuyZones().isEmpty()) {
             warnings.add("No CT buy zones.");
+        } else {
+            validateBuyZones("CT", map.counterTerroristBuyZones(), warnings);
         }
         return new ValidationResult(List.copyOf(errors), List.copyOf(warnings));
     }
@@ -391,14 +399,42 @@ public final class MapEditorService {
         return normalized;
     }
 
-    private void validateBombSite(String id, BombSite site, List<String> warnings) {
+    private void validateBombSite(String id, BombSite site, List<String> errors, List<String> warnings) {
         if (site == null) {
             warnings.add("Bomb site " + id + " missing.");
             return;
         }
         if (site.radius() <= 0.0) {
-            warnings.add("Bomb site " + id + " radius <= 0.");
+            errors.add("Bomb site " + id + " radius <= 0.");
         }
+        if (!isFinite(site.x()) || !isFinite(site.y()) || !isFinite(site.z())) {
+            errors.add("Bomb site " + id + " has non-finite coordinates.");
+        }
+    }
+
+    private void validateSpawns(String label, List<MapSpawn> spawns, List<String> warnings) {
+        for (int index = 0; index < spawns.size(); index++) {
+            MapSpawn spawn = spawns.get(index);
+            if (!isFinite(spawn.x()) || !isFinite(spawn.y()) || !isFinite(spawn.z())) {
+                warnings.add(label + " spawn #" + (index + 1) + " has non-finite coordinates.");
+            }
+        }
+    }
+
+    private void validateBuyZones(String label, List<BuyZone> zones, List<String> warnings) {
+        for (int index = 0; index < zones.size(); index++) {
+            BuyZone zone = zones.get(index);
+            if (zone.radius() <= 0.0) {
+                warnings.add(label + " buy zone #" + (index + 1) + " radius <= 0.");
+            }
+            if (!isFinite(zone.x()) || !isFinite(zone.y()) || !isFinite(zone.z())) {
+                warnings.add(label + " buy zone #" + (index + 1) + " has non-finite coordinates.");
+            }
+        }
+    }
+
+    private boolean isFinite(double value) {
+        return !Double.isNaN(value) && !Double.isInfinite(value);
     }
 
     public record SaveAllResult(int saved, int failed, int skippedInvalid) {
