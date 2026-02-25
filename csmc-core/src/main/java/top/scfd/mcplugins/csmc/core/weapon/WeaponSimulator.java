@@ -1,6 +1,7 @@
 package top.scfd.mcplugins.csmc.core.weapon;
 
 import java.util.random.RandomGenerator;
+import java.util.Locale;
 
 public final class WeaponSimulator {
     private final DamageModel damageModel = new DamageModel();
@@ -24,7 +25,29 @@ public final class WeaponSimulator {
     }
 
     public double[] sampleSpread(WeaponSpec spec, double movementFactor, double jumpFactor, RandomGenerator random) {
-        double baseSpread = spec.type() == WeaponType.SNIPER ? 0.2 : 0.1;
+        double baseSpread = baseSpread(spec);
         return spreadModel.sampleSpread(baseSpread, movementFactor, jumpFactor, random);
+    }
+
+    public double baseSpread(WeaponSpec spec) {
+        if (spec == null) {
+            return 0.1;
+        }
+        String key = spec.key() == null ? "" : spec.key().toLowerCase(Locale.ROOT);
+        if ("awp".equals(key)) {
+            return 0.008;
+        }
+        if ("ssg08".equals(key)) {
+            return 0.012;
+        }
+        return switch (spec.type()) {
+            case KNIFE, GRENADE -> 0.0;
+            case PISTOL -> 0.045;
+            case SMG -> 0.075;
+            case RIFLE -> 0.060;
+            case SNIPER -> 0.020;
+            case SHOTGUN -> 0.110;
+            case LMG -> 0.090;
+        };
     }
 }

@@ -57,4 +57,17 @@ final class WeaponSimulatorTest {
         double[] second = simulator.sampleSpread(sniper, 0.02, 0.0, new SplittableRandom(88L));
         assertArrayEquals(first, second, 1e-12);
     }
+
+    @Test
+    void resolvesBaseSpreadByWeaponClassAndOverrides() {
+        WeaponSpec awp = new WeaponSpec("awp", "AWP", WeaponType.SNIPER, 0, 100.0, 300.0, 0.97, 1.0, 10, 3.6);
+        WeaponSpec rifle = new WeaponSpec("famas", "FAMAS", WeaponType.RIFLE, 0, 30.0, 90.0, 0.7, 10.0, 25, 2.8);
+        WeaponSpec grenade = new WeaponSpec("hegrenade", "HE", WeaponType.GRENADE, 0, 0.0, 0.0, 0.0, 1.0, 1, 0.0);
+        WeaponSpec unknown = new WeaponSpec("custom", "Custom", WeaponType.PISTOL, 0, 10.0, 30.0, 0.4, 4.0, 12, 1.6);
+
+        assertEquals(0.008, simulator.baseSpread(awp), 1e-12);
+        assertEquals(0.060, simulator.baseSpread(rifle), 1e-12);
+        assertEquals(0.0, simulator.baseSpread(grenade), 1e-12);
+        assertEquals(0.045, simulator.baseSpread(unknown), 1e-12);
+    }
 }
