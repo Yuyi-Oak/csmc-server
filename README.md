@@ -42,7 +42,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - C4 planting now follows rules-driven plant time (`plantTimeSeconds`) and can be cancelled by movement/sneak release before completion.
 - Plant cancel validation is now event-driven on movement for faster interruption feedback (not only 1s tick checks).
 - Round start now normalizes bomb ownership first, then assigns exactly one fresh C4 holder on T side.
-- C4 item is now tagged via persistent metadata to avoid accidental recognition of ordinary TNT as bomb item.
+- C4 item recognition is now strict persistent-metadata only (display-name spoofing no longer counts as valid bomb item).
 - If current bomb carrier dies before planting, C4 is dropped at death location (fallback: reassigned if drop fails).
 - If current bomb carrier disconnects mid-round, C4 is dropped immediately before session leave handling.
 - Only terrorists can pick up dropped C4 during active sessions; leaked C4 items outside sessions are cleaned on pickup.

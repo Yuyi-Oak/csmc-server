@@ -8,7 +8,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -299,14 +298,7 @@ public final class BombService {
         if (meta == null) {
             return false;
         }
-        if (meta.getPersistentDataContainer().has(bombItemKey, PersistentDataType.BYTE)) {
-            return true;
-        }
-        if (meta.displayName() == null) {
-            return false;
-        }
-        String plainName = PlainTextComponentSerializer.plainText().serialize(meta.displayName());
-        return "C4".equalsIgnoreCase(plainName.trim());
+        return meta.getPersistentDataContainer().has(bombItemKey, PersistentDataType.BYTE);
     }
 
     public UUID resolveBombSessionId(ItemStack item) {
