@@ -64,6 +64,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - `/csmc weapon list` shows available weapon keys; `/csmc weapon <key> [recoilPreviewLimit]` shows live profile + spread profile + recoil preview.
 - Default shop catalog now includes expanded CS-style weapon pool and side-restricted purchases (`sides: [t|ct|both]` in `shop.yml`).
 - `/csmc buy` now prints a side-filtered shop list with price/affordability hints; `/csmc buy <item>` performs purchase.
+- Shop lookup now accepts common aliases (e.g., `m4a1`, `he`, `flash`, `incendiary`, `kit`, `vesthelm`).
 - Armor logic is helmet-aware for headshots; added `kevlar_helmet` shop item to equip vest + helmet together.
 - Match history is persisted to `plugins/CSMC/data/match-history.yml` and queryable via `/csmc history`.
 - Stats persistence is now buffered and flushed asynchronously in batches for smoother tick performance.

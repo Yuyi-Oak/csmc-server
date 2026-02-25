@@ -1,5 +1,6 @@
 package top.scfd.mcplugins.csmc.core.shop;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -30,5 +31,17 @@ final class ShopCatalogTest {
         assertFalse(defuseKit.isAllowedFor(TeamSide.TERRORIST));
         assertTrue(kevlarHelmet.isAllowedFor(TeamSide.TERRORIST));
         assertTrue(kevlarHelmet.isAllowedFor(TeamSide.COUNTER_TERRORIST));
+    }
+
+    @Test
+    void supportsCommonAliasKeys() {
+        ShopCatalog catalog = new ShopCatalog();
+
+        assertEquals("m4a1s", catalog.find("m4a1").orElseThrow().key());
+        assertEquals("flashbang", catalog.find("flash").orElseThrow().key());
+        assertEquals("hegrenade", catalog.find("he").orElseThrow().key());
+        assertEquals("incgrenade", catalog.find("incendiary").orElseThrow().key());
+        assertEquals("defuse_kit", catalog.find("kit").orElseThrow().key());
+        assertEquals("kevlar_helmet", catalog.find("vesthelm").orElseThrow().key());
     }
 }

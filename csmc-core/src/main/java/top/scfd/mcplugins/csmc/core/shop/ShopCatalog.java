@@ -3,6 +3,7 @@ package top.scfd.mcplugins.csmc.core.shop;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -52,7 +53,16 @@ public final class ShopCatalog {
         if (key == null) {
             return Optional.empty();
         }
-        return Optional.ofNullable(items.get(key.toLowerCase()));
+        String normalized = key.toLowerCase(Locale.ROOT);
+        ShopItem direct = items.get(normalized);
+        if (direct != null) {
+            return Optional.of(direct);
+        }
+        String alias = aliasKey(normalized);
+        if (alias == null) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(items.get(alias));
     }
 
     public Map<String, ShopItem> items() {
@@ -69,5 +79,25 @@ public final class ShopCatalog {
 
     public void register(ShopItem item) {
         items.put(item.key().toLowerCase(), item);
+    }
+
+    private String aliasKey(String key) {
+        if (key == null || key.isBlank()) {
+            return null;
+        }
+        String compact = key.replace("_", "").replace("-", "");
+        return switch (compact) {
+            case "m4a1", "m4a1s" -> "m4a1s";
+            case "he", "hegrenade", "grenade" -> "hegrenade";
+            case "flash", "flashbang" -> "flashbang";
+            case "smoke", "smokegrenade" -> "smoke";
+            case "molotov" -> "molotov";
+            case "inc", "incgrenade", "incendiary", "incendiarygrenade" -> "incgrenade";
+            case "decoy" -> "decoy";
+            case "kit", "defusekit" -> "defuse_kit";
+            case "vest", "kevlar" -> "kevlar";
+            case "vesthelm", "kevlarhelmet", "helmet" -> "kevlar_helmet";
+            default -> null;
+        };
     }
 }
