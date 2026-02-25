@@ -11,6 +11,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 import top.scfd.mcplugins.csmc.api.GameMode;
+import top.scfd.mcplugins.csmc.api.TeamSide;
 import top.scfd.mcplugins.csmc.core.session.GameSession;
 import top.scfd.mcplugins.csmc.core.shop.ShopCatalog;
 import top.scfd.mcplugins.csmc.core.weapon.WeaponRegistry;
@@ -126,7 +127,12 @@ public final class SessionTabCompleter implements TabCompleter {
         if (sender instanceof Player player) {
             GameSession session = sessions.findSession(player);
             if (session != null) {
-                keys.addAll(session.shopItems().keySet());
+                TeamSide side = session.getSide(player.getUniqueId());
+                session.shopItems().values().stream()
+                    .filter(item -> item.isAllowedFor(side))
+                    .map(item -> item.key())
+                    .sorted(String::compareToIgnoreCase)
+                    .forEach(keys::add);
                 return match(args[1], keys);
             }
         }

@@ -273,6 +273,28 @@ public final class SessionCommand implements CommandExecutor {
             + " | phase=" + round.phase()
             + " | score T/CT=" + score.terrorist() + "/" + score.counterTerrorist()
             + " | players T/CT=" + t + "/" + ct);
+        if (session.state() == SessionState.WAITING) {
+            player.sendMessage("Countdown next round: " + formatSeconds(session.nextRoundCountdownSeconds()));
+        } else if (session.state() == SessionState.LIVE) {
+            StringBuilder line = new StringBuilder("Timers")
+                .append(" | round=").append(formatSeconds(round.roundRemainingSeconds()))
+                .append(" | buy=").append(formatSeconds(round.buyRemainingSeconds()));
+            if (round.phase() == top.scfd.mcplugins.csmc.core.match.RoundPhase.BOMB_PLANTED) {
+                line.append(" | bomb=").append(formatSeconds(round.bombRemainingSeconds()));
+            }
+            if (round.defuseRemainingSeconds() > 0 && round.defuseTotalSeconds() > 0) {
+                int total = round.defuseTotalSeconds();
+                int remaining = round.defuseRemainingSeconds();
+                int percent = Math.max(0, Math.min(100, (int) Math.round(((total - remaining) * 100.0) / total)));
+                line.append(" | defuse=").append(formatSeconds(remaining)).append(" (").append(percent).append("%)");
+            }
+            player.sendMessage(line.toString());
+        } else if (session.state() == SessionState.FINISHED) {
+            String winner = round.matchState().winner()
+                .map(side -> side == TeamSide.TERRORIST ? "T" : "CT")
+                .orElse("NONE");
+            player.sendMessage("Winner: " + winner);
+        }
         return true;
     }
 
@@ -1179,6 +1201,15 @@ public final class SessionCommand implements CommandExecutor {
         } catch (NumberFormatException ignored) {
             return null;
         }
+    }
+
+    private String formatSeconds(int seconds) {
+        if (seconds < 0) {
+            return "--:--";
+        }
+        int m = seconds / 60;
+        int s = seconds % 60;
+        return m + ":" + (s < 10 ? "0" + s : s);
     }
 
     private String resolveName(OfflinePlayer offline, UUID fallbackId) {

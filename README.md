@@ -31,6 +31,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Queue status/actionbar now includes `need N` (players still needed before next match assignment).
 - Matchmaking now prioritizes filling existing waiting sessions before creating new sessions.
 - Session diagnostic command: `/csmc info` (mode/map/state/phase/score/player split).
+- `/csmc info` now includes live timers (round/buy/bomb/defuse) and waiting countdown/winner context.
 - Queue map preference supports `auto` (default) or explicit map IDs from `/csmc maps`.
 - Queued players now get real-time action-bar status (mode/map/position).
 - C4 planting now follows rules-driven plant time (`plantTimeSeconds`) and can be cancelled by movement/sneak release before completion.
@@ -63,5 +64,6 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - End-of-round top players and match MVP are broadcast to session chat automatically.
 - Assist credit is now constrained to hits from the same round/session to avoid stale carryover.
 - `/csmc` now includes tab-completion for modes/maps/session IDs/view targets.
+- `/csmc buy` tab-completion is side-aware and only suggests items available to your current team.
 - `/csmcmap` now includes tab-completion for map IDs, sides, bomb sites, and removable point indexes.
 - Friendly fire is mode-aware: enabled for competitive/wingman/demolition, disabled for casual/deathmatch-style modes.
