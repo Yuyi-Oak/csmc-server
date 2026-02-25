@@ -12,18 +12,26 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.Plugin;
 import top.scfd.mcplugins.csmc.api.TeamSide;
 import top.scfd.mcplugins.csmc.core.match.RoundPhase;
 import top.scfd.mcplugins.csmc.core.player.PlayerLoadout;
 import top.scfd.mcplugins.csmc.core.session.GameSession;
 
 public final class BombService {
+    private final NamespacedKey bombItemKey;
     private final Map<UUID, BombState> bombs = new ConcurrentHashMap<>();
     private final Map<UUID, PlantState> plants = new ConcurrentHashMap<>();
+
+    public BombService(Plugin plugin) {
+        this.bombItemKey = new NamespacedKey(plugin, "csmc_bomb");
+    }
 
     public BombState state(GameSession session) {
         if (session == null) {
@@ -256,8 +264,14 @@ public final class BombService {
             return false;
         }
         ItemMeta meta = item.getItemMeta();
-        if (meta == null || meta.displayName() == null) {
+        if (meta == null) {
+            return false;
+        }
+        if (meta.getPersistentDataContainer().has(bombItemKey, PersistentDataType.BYTE)) {
             return true;
+        }
+        if (meta.displayName() == null) {
+            return false;
         }
         String plainName = PlainTextComponentSerializer.plainText().serialize(meta.displayName());
         return "C4".equalsIgnoreCase(plainName.trim());
@@ -267,6 +281,7 @@ public final class BombService {
         ItemStack stack = new ItemStack(Material.TNT, 1);
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
+            meta.getPersistentDataContainer().set(bombItemKey, PersistentDataType.BYTE, (byte) 1);
             meta.displayName(Component.text("C4").color(NamedTextColor.RED));
             stack.setItemMeta(meta);
         }

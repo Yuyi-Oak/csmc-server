@@ -84,7 +84,7 @@ public final class CSMCPlugin extends JavaPlugin {
 
         PaperShopCatalogLoader shopLoader = new PaperShopCatalogLoader(this);
         statsService = new StatsService(storageManager, clusterSync, getLogger());
-        BombService bombService = new BombService();
+        BombService bombService = new BombService(this);
         WeaponItemService weaponItems = new WeaponItemService(this);
         LoadoutInventoryService loadoutInventory = new LoadoutInventoryService(weaponItems);
         AntiCheatService antiCheat = new AntiCheatService(this);
