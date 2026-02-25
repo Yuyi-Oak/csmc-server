@@ -34,6 +34,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Loss-bonus economy now correctly caps round-loss reward at configured maximum (default sequence: 1400/1900/2400/2900/3400...).
 - Session diagnostic command: `/csmc info` (mode/map/state/phase/score/player split).
 - `/csmc info` now includes live timers (round/buy/bomb/defuse) and waiting countdown/winner context.
+- `/csmc rules` now also prints computed round-loss bonus sequence for quick economy verification.
 - Queue map preference supports `auto` (default) or explicit map IDs from `/csmc maps`.
 - Queued players now get real-time action-bar status (mode/map/position).
 - C4 planting now follows rules-driven plant time (`plantTimeSeconds`) and can be cancelled by movement/sneak release before completion.

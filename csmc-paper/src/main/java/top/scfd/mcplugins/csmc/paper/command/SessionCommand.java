@@ -20,6 +20,7 @@ import top.scfd.mcplugins.csmc.api.GameMode;
 import top.scfd.mcplugins.csmc.api.SessionState;
 import top.scfd.mcplugins.csmc.api.TeamSide;
 import top.scfd.mcplugins.csmc.core.rules.ModeRules;
+import top.scfd.mcplugins.csmc.core.economy.EconomyReason;
 import top.scfd.mcplugins.csmc.core.shop.BuyResult;
 import top.scfd.mcplugins.csmc.core.shop.ShopCategory;
 import top.scfd.mcplugins.csmc.core.shop.ShopItem;
@@ -243,6 +244,14 @@ public final class SessionCommand implements CommandExecutor {
             + economy.roundLossBase() + "/"
             + economy.lossBonusIncrement() + "/"
             + economy.lossBonusMax());
+        StringBuilder lossLine = new StringBuilder("Loss bonus sequence: ");
+        for (int streak = 0; streak <= 5; streak++) {
+            if (streak > 0) {
+                lossLine.append(", ");
+            }
+            lossLine.append(economy.rewardFor(EconomyReason.ROUND_LOSS, streak));
+        }
+        player.sendMessage(lossLine.toString());
         return true;
     }
 
