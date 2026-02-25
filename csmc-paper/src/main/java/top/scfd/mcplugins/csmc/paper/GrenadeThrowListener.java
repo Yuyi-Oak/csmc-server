@@ -24,6 +24,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 import top.scfd.mcplugins.csmc.api.SessionState;
 import top.scfd.mcplugins.csmc.api.TeamSide;
@@ -92,7 +93,7 @@ public final class GrenadeThrowListener implements Listener {
         switch (key) {
             case "hegrenade" -> explodeHE(location, ownerId);
             case "flashbang" -> flash(projectile, location, ownerId);
-            case "smoke" -> smoke(location);
+            case "smoke" -> smoke(location, ownerId);
             case "molotov", "incgrenade" -> molotov(location, ownerId);
             case "decoy" -> decoy(location);
             default -> {
@@ -135,6 +136,9 @@ public final class GrenadeThrowListener implements Listener {
         GameSession ownerSession = ownerId == null ? null : sessions.getSessionForPlayer(ownerId);
         Player owner = ownerId == null ? null : Bukkit.getPlayer(ownerId);
         for (Player target : world.getPlayers()) {
+            if (!isDamageablePlayer(target)) {
+                continue;
+            }
             if (target.getLocation().distanceSquared(location) > 25.0) {
                 continue;
             }
@@ -168,6 +172,9 @@ public final class GrenadeThrowListener implements Listener {
         world.playSound(location, Sound.ENTITY_GENERIC_EXPLODE, 0.6f, 1.8f);
         GameSession ownerSession = ownerId == null ? null : sessions.getSessionForPlayer(ownerId);
         for (Player target : world.getPlayers()) {
+            if (!isDamageablePlayer(target)) {
+                continue;
+            }
             if (target.getLocation().distanceSquared(location) > maxRangeSquared) {
                 continue;
             }
@@ -197,7 +204,7 @@ public final class GrenadeThrowListener implements Listener {
         }
     }
 
-    private void smoke(Location location) {
+    private void smoke(Location location, UUID ownerId) {
         World world = location.getWorld();
         if (world == null) {
             return;
@@ -207,6 +214,36 @@ public final class GrenadeThrowListener implements Listener {
         cloud.setRadius(4.0f);
         cloud.setParticle(Particle.CLOUD);
         world.playSound(location, Sound.BLOCK_FIRE_EXTINGUISH, 0.6f, 1.0f);
+        GameSession ownerSession = ownerId == null ? null : sessions.getSessionForPlayer(ownerId);
+        new BukkitRunnable() {
+            int ticks = 0;
+
+            @Override
+            public void run() {
+                if (ticks >= 200 || !cloud.isValid()) {
+                    cancel();
+                    return;
+                }
+                world.spawnParticle(Particle.CLOUD, location, 20, 2.8, 1.6, 2.8, 0.01);
+                world.spawnParticle(Particle.SMOKE, location, 10, 2.2, 1.2, 2.2, 0.001);
+                for (Player target : world.getPlayers()) {
+                    if (!target.isOnline()) {
+                        continue;
+                    }
+                    if (target.getGameMode() == org.bukkit.GameMode.SPECTATOR || target.isDead()) {
+                        continue;
+                    }
+                    if (ownerSession != null && sessions.findSession(target) != ownerSession) {
+                        continue;
+                    }
+                    if (target.getLocation().distanceSquared(location) > 16.0) {
+                        continue;
+                    }
+                    target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 12, 0, true, false));
+                }
+                ticks += 4;
+            }
+        }.runTaskTimer(plugin, 0L, 4L);
     }
 
     private void molotov(Location location, UUID ownerId) {
@@ -220,20 +257,42 @@ public final class GrenadeThrowListener implements Listener {
         cloud.setParticle(Particle.FLAME);
         world.playSound(location, Sound.ITEM_FIRECHARGE_USE, 0.8f, 1.1f);
         GameSession ownerSession = ownerId == null ? null : sessions.getSessionForPlayer(ownerId);
-        for (Player target : world.getPlayers()) {
-            if (target.getLocation().distanceSquared(location) > 16.0) {
-                continue;
-            }
-            if (ownerSession != null && sessions.findSession(target) != ownerSession) {
-                continue;
-            }
-            if (ownerSession != null && ownerId != null) {
-                if (shouldBlockFriendlyDamage(ownerSession, ownerId, target.getUniqueId())) {
-                    continue;
+        Player owner = ownerId == null ? null : Bukkit.getPlayer(ownerId);
+        new BukkitRunnable() {
+            int ticks = 0;
+
+            @Override
+            public void run() {
+                if (ticks >= 120 || !cloud.isValid()) {
+                    cancel();
+                    return;
                 }
+                world.spawnParticle(Particle.FLAME, location, 12, 2.2, 0.4, 2.2, 0.003);
+                for (Player target : world.getPlayers()) {
+                    if (!isDamageablePlayer(target)) {
+                        continue;
+                    }
+                    if (target.getLocation().distanceSquared(location) > 16.0) {
+                        continue;
+                    }
+                    if (ownerSession != null && sessions.findSession(target) != ownerSession) {
+                        continue;
+                    }
+                    if (ownerSession != null && ownerId != null) {
+                        if (shouldBlockFriendlyDamage(ownerSession, ownerId, target.getUniqueId())) {
+                            continue;
+                        }
+                    }
+                    target.setFireTicks(Math.max(target.getFireTicks(), 60));
+                    if (owner != null) {
+                        target.damage(1.5, owner);
+                    } else {
+                        target.damage(1.5);
+                    }
+                }
+                ticks += 10;
             }
-            target.setFireTicks(80);
-        }
+        }.runTaskTimer(plugin, 0L, 10L);
     }
 
     private void decoy(Location location) {
@@ -267,6 +326,13 @@ public final class GrenadeThrowListener implements Listener {
         return attackerSide == targetSide
             && attackerSide != TeamSide.SPECTATOR
             && !ownerSession.rules().friendlyFireEnabled();
+    }
+
+    private boolean isDamageablePlayer(Player player) {
+        if (player == null || !player.isOnline()) {
+            return false;
+        }
+        return player.getGameMode() != org.bukkit.GameMode.SPECTATOR && !player.isDead() && player.getHealth() > 0.0;
     }
 
     private double clamp01(double value) {
