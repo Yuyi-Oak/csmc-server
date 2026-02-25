@@ -693,7 +693,7 @@ public final class SessionCommand implements CommandExecutor {
             sender.sendMessage("No leaderboard data found.");
             return true;
         }
-        sender.sendMessage("Top " + ranking.size() + " (storage, by kills):");
+        sender.sendMessage("Top " + ranking.size() + " (storage, by kills) | K/D/A HS W/R:");
         int position = 1;
         for (LeaderboardEntry entry : ranking) {
             String name = Bukkit.getOfflinePlayer(entry.playerId()).getName();
@@ -701,11 +701,17 @@ public final class SessionCommand implements CommandExecutor {
                 name = entry.playerId().toString();
             }
             PlayerStats playerStats = entry.stats();
+            double kd = playerStats.deaths() == 0
+                ? playerStats.kills()
+                : (double) playerStats.kills() / playerStats.deaths();
             sender.sendMessage(
                 position + ". " + name
                     + " K:" + playerStats.kills()
-                    + " W:" + playerStats.roundsWon()
-                    + " R:" + playerStats.roundsPlayed()
+                    + " D:" + playerStats.deaths()
+                    + " A:" + playerStats.assists()
+                    + " HS:" + playerStats.headshots()
+                    + " KD:" + String.format(Locale.ROOT, "%.2f", kd)
+                    + " W/R:" + playerStats.roundsWon() + "/" + playerStats.roundsPlayed()
             );
             position++;
         }
