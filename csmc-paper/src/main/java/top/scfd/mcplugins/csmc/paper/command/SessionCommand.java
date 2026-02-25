@@ -4,8 +4,10 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -87,7 +89,7 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc weapon <list|key> [recoilPreviewLimit] | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top [limit] | /csmc queue <join|leave|status|list|votes|global|clear> [mode|detail [limit]] [mapId] | /csmc ac <status|reset|top|reasons|reasonsreset> [player|limit]");
+            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy [item] | /csmc view <free|next|prev|player> | /csmc weapon <list|key> [recoilPreviewLimit] | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top [limit] | /csmc queue <join|leave|status|list|votes|global|clear> [mode|detail [limit]] [mapId] | /csmc ac <status|reset|top|reasons|reasonsreset> [player|limit]");
             return true;
         }
         return switch (args[0].toLowerCase()) {
@@ -378,13 +380,13 @@ public final class SessionCommand implements CommandExecutor {
     }
 
     private boolean handleBuy(Player player, String[] args) {
-        if (args.length < 2) {
-            player.sendMessage("Usage: /csmc buy <item>");
-            return true;
-        }
         GameSession session = sessions.findSession(player);
         if (session == null) {
             player.sendMessage("You are not in a session.");
+            return true;
+        }
+        if (args.length < 2) {
+            showShopList(player, session);
             return true;
         }
         if (!sessions.isInBuyZone(player, session)) {
@@ -417,6 +419,62 @@ public final class SessionCommand implements CommandExecutor {
             case SIDE_RESTRICTED -> player.sendMessage("Your side cannot buy this item.");
         }
         return true;
+    }
+
+    private void showShopList(Player player, GameSession session) {
+        TeamSide side = session.getSide(player.getUniqueId());
+        int balance = session.economy().balance(player.getUniqueId());
+        Map<ShopCategory, List<ShopItem>> grouped = new EnumMap<>(ShopCategory.class);
+        for (ShopItem item : session.shopItems().values()) {
+            if (!item.isAllowedFor(side)) {
+                continue;
+            }
+            ShopCategory category = item.category() == null ? ShopCategory.UNKNOWN : item.category();
+            grouped.computeIfAbsent(category, ignored -> new ArrayList<>()).add(item);
+        }
+        player.sendMessage("Shop list (" + shortSide(side) + ") | balance: $" + balance);
+        for (ShopCategory category : List.of(
+            ShopCategory.PRIMARY,
+            ShopCategory.SECONDARY,
+            ShopCategory.GRENADE,
+            ShopCategory.ARMOR,
+            ShopCategory.UTILITY,
+            ShopCategory.MELEE
+        )) {
+            List<ShopItem> items = grouped.get(category);
+            if (items == null || items.isEmpty()) {
+                continue;
+            }
+            items.sort((left, right) -> {
+                int byPrice = Integer.compare(left.price(), right.price());
+                if (byPrice != 0) {
+                    return byPrice;
+                }
+                return left.key().compareToIgnoreCase(right.key());
+            });
+            StringBuilder line = new StringBuilder(category.name().toLowerCase(Locale.ROOT)).append(": ");
+            for (int index = 0; index < items.size(); index++) {
+                ShopItem item = items.get(index);
+                if (index > 0) {
+                    line.append(", ");
+                }
+                line.append(item.key())
+                    .append("($")
+                    .append(item.price())
+                    .append(item.price() <= balance ? ",ok" : ",need " + Math.max(0, item.price() - balance))
+                    .append(")");
+            }
+            player.sendMessage(line.toString());
+        }
+        player.sendMessage("Use /csmc buy <itemKey> to purchase.");
+    }
+
+    private String shortSide(TeamSide side) {
+        return switch (side) {
+            case TERRORIST -> "T";
+            case COUNTER_TERRORIST -> "CT";
+            case SPECTATOR -> "SPEC";
+        };
     }
 
     private boolean handleView(Player viewer, String[] args) {

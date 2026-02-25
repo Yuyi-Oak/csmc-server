@@ -16,7 +16,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Configuration templates and language files are under `csmc-paper/src/main/resources/`.
 - Asset handoff checklist is in `docs/ASSET_CHECKLIST.md`.
 - Storage backends currently available: YAML, SQLite, MySQL, PostgreSQL, MongoDB, Redis.
-- Command highlights: `/csmc create <mode> [mapId]`, `/csmc maps`, `/csmc sessions`, `/csmc rules [mode]`, `/csmc scoreboard [limit]`, `/csmc view <free|next|prev|player>`, `/csmc weapon <list|key> [recoilPreviewLimit]`, `/csmc queue join [mode] [mapId]`, `/csmc queue status`, `/csmc queue votes [mode]`, `/csmc queue global [mode|detail [limit]]`, `/csmc queue clear [mode]`, `/csmc stats [player]`, `/csmc history [player|uuid] [limit]`, `/csmc top [limit]`, `/csmc ac <status|reset> [player]`, `/csmc ac top [limit]`, `/csmc ac reasons [limit]`, `/csmc ac reasonsreset`.
+- Command highlights: `/csmc create <mode> [mapId]`, `/csmc maps`, `/csmc sessions`, `/csmc rules [mode]`, `/csmc scoreboard [limit]`, `/csmc buy [item]`, `/csmc view <free|next|prev|player>`, `/csmc weapon <list|key> [recoilPreviewLimit]`, `/csmc queue join [mode] [mapId]`, `/csmc queue status`, `/csmc queue votes [mode]`, `/csmc queue global [mode|detail [limit]]`, `/csmc queue clear [mode]`, `/csmc stats [player]`, `/csmc history [player|uuid] [limit]`, `/csmc top [limit]`, `/csmc ac <status|reset> [player]`, `/csmc ac top [limit]`, `/csmc ac reasons [limit]`, `/csmc ac reasonsreset`.
 - Queue monitoring command: `/csmc queue list` (all mode queue sizes + needed players).
 - With Redis cluster sync enabled, `/csmc queue list` shows `local/global` queue totals per mode.
 - `/csmc queue global detail [limit]` shows remote source ages, per-mode counts, and per-source totals.
@@ -55,6 +55,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Weapon inaccuracy now penalizes sprinting/airborne states and rewards sneaking stability.
 - `/csmc weapon list` shows available weapon keys; `/csmc weapon <key> [recoilPreviewLimit]` shows live profile + spread profile + recoil preview.
 - Default shop catalog now includes expanded CS-style weapon pool and side-restricted purchases (`sides: [t|ct|both]` in `shop.yml`).
+- `/csmc buy` now prints a side-filtered shop list with price/affordability hints; `/csmc buy <item>` performs purchase.
 - Armor logic is helmet-aware for headshots; added `kevlar_helmet` shop item to equip vest + helmet together.
 - Match history is persisted to `plugins/CSMC/data/match-history.yml` and queryable via `/csmc history`.
 - Stats persistence is now buffered and flushed asynchronously in batches for smoother tick performance.
