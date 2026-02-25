@@ -24,6 +24,11 @@ public final class WeaponRecoilPatterns {
         new double[] {0.36, 0.45, 0.54},
         new double[] {0.02, -0.03, 0.04}
     );
+    private static final RecoilPattern LMG_FALLBACK = new RecoilPattern(
+        new double[] {0.34, 0.40, 0.47, 0.55, 0.63, 0.71, 0.78, 0.84, 0.89, 0.94, 0.98},
+        new double[] {0.05, -0.07, 0.09, -0.11, 0.13, -0.16, 0.18, -0.20, 0.22, -0.24, 0.25}
+    );
+    private static final RecoilPattern GRENADE_FALLBACK = RecoilPattern.empty();
     private static final RecoilPattern KNIFE_FALLBACK = RecoilPattern.empty();
 
     private static final Map<String, RecoilPattern> BY_KEY = Map.of(
@@ -67,6 +72,8 @@ public final class WeaponRecoilPatterns {
             case SMG -> SMG_FALLBACK;
             case SNIPER -> SNIPER_FALLBACK;
             case SHOTGUN -> SHOTGUN_FALLBACK;
+            case LMG -> LMG_FALLBACK;
+            case GRENADE -> GRENADE_FALLBACK;
             case KNIFE -> KNIFE_FALLBACK;
         };
     }

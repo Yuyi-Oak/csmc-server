@@ -58,4 +58,22 @@ final class WeaponRecoilPatternsTest {
         RecoilPattern pattern = WeaponRecoilPatterns.forWeapon(knife);
         assertTrue(pattern.length() == 0, "knife pattern should stay empty");
     }
+
+    @Test
+    void grenadeFallbackHasNoRecoilPattern() {
+        WeaponSpec grenade = new WeaponSpec(
+            "flashbang",
+            "Flashbang",
+            WeaponType.GRENADE,
+            200,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            1,
+            0.0
+        );
+        RecoilPattern pattern = WeaponRecoilPatterns.forWeapon(grenade);
+        assertTrue(pattern.length() == 0, "grenade pattern should stay empty");
+    }
 }
