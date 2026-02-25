@@ -244,6 +244,9 @@ public final class SessionRegistry {
         }
         sessionMaps.remove(sessionId);
         finishedSessionTtl.remove(sessionId);
+        if (bombs != null) {
+            bombs.clear(session);
+        }
         sessionManager.removeSession(sessionId);
         if (combatTracker != null) {
             combatTracker.clearSession(sessionId);
@@ -348,6 +351,9 @@ public final class SessionRegistry {
         }
         sessionMaps.remove(sessionId);
         finishedSessionTtl.remove(sessionId);
+        if (bombs != null) {
+            bombs.clear(session);
+        }
         sessionManager.removeSession(sessionId);
         if (combatTracker != null) {
             combatTracker.clearSession(sessionId);

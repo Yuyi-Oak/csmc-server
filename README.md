@@ -48,6 +48,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Only terrorists can pick up dropped C4 during active sessions; leaked C4 items outside sessions are cleaned on pickup.
 - C4 items are now tagged with session metadata to block cross-session pickup/use during concurrent matches.
 - Bomb assignment/round reset now proactively removes stale dropped C4 entities to prevent duplicate-bomb edge cases.
+- Session teardown now clears bomb block/drop state to prevent leaked C4/TNT when matches are force-closed or emptied.
 - Defuse ownership is now strict: active defuser cannot be overwritten mid-defuse by another player interaction.
 - Map editor tool: `/csmcmap create`, `/csmcmap addspawn`, `/csmcmap setbomb`, `/csmcmap addbuy`, `/csmcmap save`, `/csmcmap reload`.
 - Map editor now supports indexed point removal and inspection: `/csmcmap listpoints`, `/csmcmap removespawn`, `/csmcmap removebuy`.
