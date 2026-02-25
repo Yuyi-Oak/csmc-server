@@ -46,16 +46,18 @@ public final class MovementAntiCheatListener implements Listener {
         if (isInFluid(from) || isInFluid(to)) {
             return;
         }
+        double horizontalLimit = pingAdjustedHorizontalLimit(player);
+        double verticalLimit = pingAdjustedVerticalLimit(player);
 
         double dx = to.getX() - from.getX();
         double dz = to.getZ() - from.getZ();
         double horizontal = Math.sqrt(dx * dx + dz * dz);
-        if (horizontal > HORIZONTAL_MAX_PER_EVENT) {
+        if (horizontal > horizontalLimit) {
             antiCheat.flag(player, "speed", 2);
         }
 
         double dy = to.getY() - from.getY();
-        if (dy > VERTICAL_MAX_PER_EVENT && !isClimbable(to)) {
+        if (dy > verticalLimit && !isClimbable(to)) {
             antiCheat.flag(player, "fly", 2);
         }
     }
@@ -73,5 +75,17 @@ public final class MovementAntiCheatListener implements Listener {
     private boolean isClimbable(Location location) {
         Material material = location.getBlock().getType();
         return material == Material.LADDER || material == Material.VINE || material == Material.SCAFFOLDING;
+    }
+
+    private double pingAdjustedHorizontalLimit(Player player) {
+        int ping = Math.max(0, player.getPing());
+        double bonus = Math.min(2.0, ping / 160.0);
+        return HORIZONTAL_MAX_PER_EVENT + bonus;
+    }
+
+    private double pingAdjustedVerticalLimit(Player player) {
+        int ping = Math.max(0, player.getPing());
+        double bonus = Math.min(1.2, ping / 220.0);
+        return VERTICAL_MAX_PER_EVENT + bonus;
     }
 }
