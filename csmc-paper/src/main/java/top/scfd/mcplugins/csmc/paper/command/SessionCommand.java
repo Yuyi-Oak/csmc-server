@@ -21,6 +21,11 @@ import top.scfd.mcplugins.csmc.core.rules.ModeRules;
 import top.scfd.mcplugins.csmc.core.shop.BuyResult;
 import top.scfd.mcplugins.csmc.core.shop.ShopCategory;
 import top.scfd.mcplugins.csmc.core.shop.ShopItem;
+import top.scfd.mcplugins.csmc.core.weapon.RecoilPattern;
+import top.scfd.mcplugins.csmc.core.weapon.WeaponRegistry;
+import top.scfd.mcplugins.csmc.core.weapon.WeaponRecoilPatterns;
+import top.scfd.mcplugins.csmc.core.weapon.WeaponSimulator;
+import top.scfd.mcplugins.csmc.core.weapon.WeaponSpec;
 import top.scfd.mcplugins.csmc.core.session.GameSession;
 import top.scfd.mcplugins.csmc.paper.LoadoutInventoryService;
 import top.scfd.mcplugins.csmc.paper.MatchCombatTrackerService;
@@ -39,6 +44,7 @@ import top.scfd.mcplugins.csmc.storage.PlayerStats;
 public final class SessionCommand implements CommandExecutor {
     private static final int DEFAULT_HISTORY_LIMIT = 5;
     private static final int MAX_HISTORY_LIMIT = 20;
+    private static final WeaponRegistry DEFAULT_WEAPON_REGISTRY = new WeaponRegistry();
     private static final DateTimeFormatter HISTORY_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
         .withZone(ZoneId.systemDefault());
 
@@ -50,6 +56,7 @@ public final class SessionCommand implements CommandExecutor {
     private final MatchQueueService queue;
     private final MatchHistoryService history;
     private final AntiCheatService antiCheat;
+    private final WeaponSimulator weaponSimulator = new WeaponSimulator();
 
     public SessionCommand(
         SessionRegistry sessions,
@@ -78,7 +85,7 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top [limit] | /csmc queue <join|leave|status|list|votes|global|clear> [mode|detail [limit]] [mapId] | /csmc ac <status|reset|top|reasons|reasonsreset> [player|limit]");
+            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc weapon <key> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top [limit] | /csmc queue <join|leave|status|list|votes|global|clear> [mode|detail [limit]] [mapId] | /csmc ac <status|reset|top|reasons|reasonsreset> [player|limit]");
             return true;
         }
         return switch (args[0].toLowerCase()) {
@@ -93,6 +100,7 @@ public final class SessionCommand implements CommandExecutor {
             case "start" -> handleStart(player);
             case "buy" -> handleBuy(player, args);
             case "view" -> handleView(player, args);
+            case "weapon" -> handleWeapon(player, args);
             case "stats" -> handleStats(player, args);
             case "history" -> handleHistory(player, args);
             case "top" -> handleTop(player, args);
@@ -536,6 +544,35 @@ public final class SessionCommand implements CommandExecutor {
             + " HS:" + playerStats.headshots()
             + " R:" + playerStats.roundsWon() + "/" + playerStats.roundsPlayed()
             + " KD:" + String.format(Locale.ROOT, "%.2f", kd));
+        return true;
+    }
+
+    private boolean handleWeapon(Player player, String[] args) {
+        if (args.length < 2) {
+            player.sendMessage("Usage: /csmc weapon <key>");
+            return true;
+        }
+        String key = args[1].toLowerCase(Locale.ROOT);
+        WeaponSpec spec = null;
+        GameSession session = sessions.findSession(player);
+        if (session != null) {
+            spec = session.findWeapon(key);
+        }
+        if (spec == null) {
+            spec = DEFAULT_WEAPON_REGISTRY.find(key).orElse(null);
+        }
+        if (spec == null) {
+            player.sendMessage("Unknown weapon: " + key);
+            player.sendMessage("Known keys: " + String.join(", ", DEFAULT_WEAPON_REGISTRY.all().keySet()));
+            return true;
+        }
+        RecoilPattern pattern = WeaponRecoilPatterns.forWeapon(spec);
+        double baseSpread = weaponSimulator.baseSpread(spec);
+        player.sendMessage("Weapon " + spec.key() + " (" + spec.displayName() + ")");
+        player.sendMessage("Type=" + spec.type() + " | price=" + spec.price() + " | fireRate=" + spec.fireRate());
+        player.sendMessage("Damage=" + spec.damage() + " | range=" + spec.range() + " | armorPen=" + spec.armorPenetration());
+        player.sendMessage("Magazine=" + spec.magazineSize() + " | reload=" + spec.reloadTime() + "s");
+        player.sendMessage("Spread base=" + String.format(Locale.ROOT, "%.3f", baseSpread) + " | recoilPatternLen=" + pattern.length());
         return true;
     }
 

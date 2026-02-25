@@ -12,16 +12,18 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 import top.scfd.mcplugins.csmc.api.GameMode;
 import top.scfd.mcplugins.csmc.core.session.GameSession;
+import top.scfd.mcplugins.csmc.core.weapon.WeaponRegistry;
 import top.scfd.mcplugins.csmc.paper.SessionRegistry;
 
 public final class SessionTabCompleter implements TabCompleter {
     private static final List<String> ROOT = List.of(
         "create", "maps", "sessions", "rules", "info", "scoreboard", "join", "leave", "start",
-        "buy", "view", "stats", "history", "top", "queue", "ac"
+        "buy", "view", "weapon", "stats", "history", "top", "queue", "ac"
     );
     private static final List<String> QUEUE = List.of("join", "leave", "status", "list", "votes", "global", "clear");
     private static final List<String> VIEW = List.of("free", "next", "prev");
     private static final List<String> AC = List.of("status", "reset", "top", "reasons", "reasonsreset");
+    private static final WeaponRegistry WEAPON_REGISTRY = new WeaponRegistry();
 
     private final SessionRegistry sessions;
 
@@ -44,6 +46,7 @@ public final class SessionTabCompleter implements TabCompleter {
             case "rules" -> completeRules(args);
             case "join" -> completeJoin(args);
             case "view" -> completeView(sender, args);
+            case "weapon" -> completeWeapon(args);
             case "stats" -> completePlayerName(args);
             case "history" -> completeHistory(args);
             case "top" -> completeTop(args);
@@ -132,6 +135,13 @@ public final class SessionTabCompleter implements TabCompleter {
     private List<String> completeTop(String[] args) {
         if (args.length == 2) {
             return match(args[1], List.of("5", "10", "20", "50"));
+        }
+        return List.of();
+    }
+
+    private List<String> completeWeapon(String[] args) {
+        if (args.length == 2) {
+            return match(args[1], new ArrayList<>(WEAPON_REGISTRY.all().keySet()));
         }
         return List.of();
     }
