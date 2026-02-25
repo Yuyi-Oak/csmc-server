@@ -15,10 +15,13 @@ public final class DamageModel {
     }
 
     private double applyRangeFalloff(double damage, double distance, double range) {
+        double base = Math.max(0.0, damage);
         if (range <= 0) {
-            return damage;
+            return base;
         }
-        double falloff = Math.max(0.0, 1.0 - (distance / range));
-        return damage * falloff;
+        double normalizedDistance = Math.max(0.0, distance);
+        double ratio = Math.min(1.0, normalizedDistance / range);
+        double falloff = 1.0 - ratio;
+        return base * falloff;
     }
 }
