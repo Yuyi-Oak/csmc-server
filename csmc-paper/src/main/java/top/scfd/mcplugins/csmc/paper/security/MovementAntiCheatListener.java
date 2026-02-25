@@ -15,6 +15,7 @@ import top.scfd.mcplugins.csmc.paper.SessionRegistry;
 public final class MovementAntiCheatListener implements Listener {
     private static final double HORIZONTAL_MAX_PER_EVENT = 3.5;
     private static final double VERTICAL_MAX_PER_EVENT = 1.8;
+    private static final double TELEPORT_IGNORE_DISTANCE_SQUARED = 64.0; // >= 8 blocks in one event is likely plugin teleport
 
     private final SessionRegistry sessions;
     private final AntiCheatService antiCheat;
@@ -37,6 +38,9 @@ public final class MovementAntiCheatListener implements Listener {
         Location from = event.getFrom();
         Location to = event.getTo();
         if (to == null || !from.getWorld().equals(to.getWorld())) {
+            return;
+        }
+        if (from.distanceSquared(to) >= TELEPORT_IGNORE_DISTANCE_SQUARED) {
             return;
         }
         if (isInFluid(from) || isInFluid(to)) {

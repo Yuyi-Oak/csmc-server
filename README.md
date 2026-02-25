@@ -50,6 +50,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Baseline anti-cheat now flags repeated rapid-fire abuse and alerts ops (`csmc.anticheat.alert`).
 - Weapon-system headshot kills are now tracked into persistent player stats.
 - Baseline anti-cheat also flags abnormal movement bursts (`speed`/`fly`) during combat phases.
+- Movement anti-cheat now ignores large single-step teleports (>=8 blocks/event) to reduce false positives from plugin-driven teleports.
 - Anti-cheat now escalates severe repeated violations into automatic kicks (bypass permission: `csmc.anticheat.bypass`).
 - Ops can inspect/reset anti-cheat VL using `/csmc ac` (`csmc.anticheat.manage`).
 - `/csmc ac top` shows highest current violation levels across tracked players.
