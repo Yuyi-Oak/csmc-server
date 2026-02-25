@@ -192,23 +192,20 @@ public final class BombService {
         if (session == null) {
             return;
         }
-        List<UUID> terrorists = new ArrayList<>();
+        stripBombItems(session);
+        List<Player> terrorists = new ArrayList<>();
         for (UUID playerId : session.players()) {
             if (session.getSide(playerId) == TeamSide.TERRORIST) {
-                terrorists.add(playerId);
+                Player player = Bukkit.getPlayer(playerId);
+                if (player != null && player.isOnline()) {
+                    terrorists.add(player);
+                }
             }
         }
         if (terrorists.isEmpty()) {
             return;
         }
-        UUID pick = terrorists.get(ThreadLocalRandom.current().nextInt(terrorists.size()));
-        Player player = org.bukkit.Bukkit.getPlayer(pick);
-        if (player == null) {
-            return;
-        }
-        if (hasBombItem(player)) {
-            return;
-        }
+        Player player = terrorists.get(ThreadLocalRandom.current().nextInt(terrorists.size()));
         ItemStack bomb = createBombItem();
         player.getInventory().addItem(bomb);
     }
@@ -304,6 +301,25 @@ public final class BombService {
             return true;
         }
         return false;
+    }
+
+    private void stripBombItems(GameSession session) {
+        if (session == null) {
+            return;
+        }
+        for (UUID playerId : session.players()) {
+            Player player = Bukkit.getPlayer(playerId);
+            if (player == null || !player.isOnline()) {
+                continue;
+            }
+            ItemStack[] contents = player.getInventory().getContents();
+            for (int slot = 0; slot < contents.length; slot++) {
+                ItemStack item = contents[slot];
+                if (isBombItem(item)) {
+                    player.getInventory().setItem(slot, null);
+                }
+            }
+        }
     }
 
     private static final class PlantState {
