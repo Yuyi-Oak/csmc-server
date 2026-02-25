@@ -181,6 +181,7 @@ public final class BombInteractListener implements Listener {
         RoundPhase phase = session.roundEngine().phase();
         if (phase != RoundPhase.LIVE && phase != RoundPhase.BUY && phase != RoundPhase.BOMB_PLANTED) {
             event.setCancelled(true);
+            event.getItem().remove();
             return;
         }
         TeamSide side = session.getSide(player.getUniqueId());
