@@ -50,6 +50,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Ops can inspect/reset anti-cheat VL using `/csmc ac` (`csmc.anticheat.manage`).
 - `/csmc ac top` shows highest current violation levels across tracked players.
 - `/csmc ac reasons [limit]` shows top anti-cheat trigger reasons; `/csmc ac reasonsreset` clears reason counters.
+- Weapon firing now uses per-weapon/fallback recoil patterns and applies recoil offsets together with spread.
 - Match history is persisted to `plugins/CSMC/data/match-history.yml` and queryable via `/csmc history`.
 - Stats persistence is now buffered and flushed asynchronously in batches for smoother tick performance.
 - Per-match live scoreboard is available via `/csmc scoreboard`.
