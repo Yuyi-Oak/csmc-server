@@ -1,5 +1,7 @@
 package top.scfd.mcplugins.csmc.core.weapon;
 
+import java.util.random.RandomGenerator;
+
 public final class WeaponSimulator {
     private final DamageModel damageModel = new DamageModel();
     private final RecoilModel recoilModel = new RecoilModel();
@@ -18,7 +20,11 @@ public final class WeaponSimulator {
     }
 
     public double[] sampleSpread(WeaponSpec spec, double movementFactor, double jumpFactor) {
+        return sampleSpread(spec, movementFactor, jumpFactor, null);
+    }
+
+    public double[] sampleSpread(WeaponSpec spec, double movementFactor, double jumpFactor, RandomGenerator random) {
         double baseSpread = spec.type() == WeaponType.SNIPER ? 0.2 : 0.1;
-        return spreadModel.sampleSpread(baseSpread, movementFactor, jumpFactor);
+        return spreadModel.sampleSpread(baseSpread, movementFactor, jumpFactor, random);
     }
 }
