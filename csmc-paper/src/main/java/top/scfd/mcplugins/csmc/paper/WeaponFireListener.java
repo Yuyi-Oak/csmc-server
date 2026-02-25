@@ -19,8 +19,10 @@ import top.scfd.mcplugins.csmc.core.player.PlayerLoadout;
 import top.scfd.mcplugins.csmc.core.player.WeaponInstance;
 import top.scfd.mcplugins.csmc.core.weapon.DamageResult;
 import top.scfd.mcplugins.csmc.core.weapon.Hitbox;
+import top.scfd.mcplugins.csmc.core.weapon.RecoilPattern;
 import top.scfd.mcplugins.csmc.core.weapon.WeaponSimulator;
 import top.scfd.mcplugins.csmc.core.weapon.WeaponSpec;
+import top.scfd.mcplugins.csmc.core.weapon.WeaponRecoilPatterns;
 import top.scfd.mcplugins.csmc.paper.security.AntiCheatService;
 
 public final class WeaponFireListener implements Listener {
@@ -81,9 +83,9 @@ public final class WeaponFireListener implements Listener {
             player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 0.8f);
             return;
         }
-        simulator.nextRecoil(spec, weaponPattern(spec), weapon.state(), tick);
+        double[] recoil = simulator.nextRecoil(spec, weaponPattern(spec), weapon.state(), tick);
         double[] spread = simulator.sampleSpread(spec, movementFactor(player), jumpFactor(player));
-        shoot(player, session, spec, spread, tick);
+        shoot(player, session, spec, spread, recoil, tick);
         loadoutInventory.updateActiveWeaponItem(player, loadout);
     }
 
@@ -92,11 +94,12 @@ public final class WeaponFireListener implements Listener {
         top.scfd.mcplugins.csmc.core.session.GameSession session,
         WeaponSpec spec,
         double[] spread,
+        double[] recoil,
         long tick
     ) {
         Location eye = player.getEyeLocation();
         Vector direction = eye.getDirection().normalize();
-        Vector adjusted = applySpread(direction, spread[0], spread[1]);
+        Vector adjusted = applySpreadAndRecoil(direction, spread, recoil);
         World world = player.getWorld();
         RayTraceResult result = world.rayTrace(
             eye,
@@ -155,7 +158,13 @@ public final class WeaponFireListener implements Listener {
         return below.getBlock().getType().isSolid();
     }
 
-    private Vector applySpread(Vector direction, double spreadX, double spreadY) {
+    private Vector applySpreadAndRecoil(Vector direction, double[] spread, double[] recoil) {
+        double spreadX = spread != null && spread.length > 0 ? spread[0] : 0.0;
+        double spreadY = spread != null && spread.length > 1 ? spread[1] : 0.0;
+        // Recoil values are in lightweight degrees; convert to directional offsets.
+        double recoilYaw = recoil != null && recoil.length > 1 ? Math.toRadians(recoil[1]) : 0.0;
+        double recoilPitch = recoil != null && recoil.length > 0 ? Math.toRadians(recoil[0]) : 0.0;
+
         Vector up = new Vector(0, 1, 0);
         Vector right = direction.clone().crossProduct(up);
         if (right.lengthSquared() < 1.0E-6) {
@@ -165,8 +174,8 @@ public final class WeaponFireListener implements Listener {
         }
         Vector realUp = right.clone().crossProduct(direction).normalize();
         Vector adjusted = direction.clone()
-            .add(right.multiply(spreadX))
-            .add(realUp.multiply(spreadY));
+            .add(right.multiply(spreadX + recoilYaw))
+            .add(realUp.multiply(spreadY + recoilPitch));
         return adjusted.normalize();
     }
 
@@ -185,7 +194,7 @@ public final class WeaponFireListener implements Listener {
         return Hitbox.LEG;
     }
 
-    private top.scfd.mcplugins.csmc.core.weapon.RecoilPattern weaponPattern(WeaponSpec spec) {
-        return top.scfd.mcplugins.csmc.core.weapon.RecoilPattern.empty();
+    private RecoilPattern weaponPattern(WeaponSpec spec) {
+        return WeaponRecoilPatterns.forWeapon(spec);
     }
 }
