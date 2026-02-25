@@ -25,8 +25,11 @@ public final class WeaponSimulator {
     }
 
     public double[] sampleSpread(WeaponSpec spec, double movementFactor, double jumpFactor, RandomGenerator random) {
-        double baseSpread = baseSpread(spec);
-        return spreadModel.sampleSpread(baseSpread, movementFactor, jumpFactor, random);
+        return spreadModel.sampleSpread(baseSpread(spec), movementFactor, jumpFactor, random);
+    }
+
+    public double spreadRadius(WeaponSpec spec, double movementFactor, double jumpFactor) {
+        return Math.max(0.0, baseSpread(spec) + Math.max(0.0, movementFactor) + Math.max(0.0, jumpFactor));
     }
 
     public double baseSpread(WeaponSpec spec) {

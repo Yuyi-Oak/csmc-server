@@ -70,4 +70,11 @@ final class WeaponSimulatorTest {
         assertEquals(0.0, simulator.baseSpread(grenade), 1e-12);
         assertEquals(0.045, simulator.baseSpread(unknown), 1e-12);
     }
+
+    @Test
+    void spreadRadiusCombinesBaseAndPenalties() {
+        WeaponSpec rifle = new WeaponSpec("m4a1s", "M4A1-S", WeaponType.RIFLE, 0, 33.0, 90.0, 0.7, 11.0, 25, 3.1);
+        assertEquals(0.060, simulator.spreadRadius(rifle, 0.0, 0.0), 1e-12);
+        assertEquals(0.165, simulator.spreadRadius(rifle, 0.08, 0.025), 1e-12);
+    }
 }
