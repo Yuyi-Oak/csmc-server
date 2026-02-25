@@ -1,11 +1,13 @@
 package top.scfd.mcplugins.csmc.paper;
 
 import java.util.UUID;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityPickupItemEvent;
@@ -14,6 +16,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
 import top.scfd.mcplugins.csmc.api.SessionState;
 import top.scfd.mcplugins.csmc.api.TeamSide;
 import top.scfd.mcplugins.csmc.core.map.BombSite;
@@ -22,10 +25,12 @@ import top.scfd.mcplugins.csmc.core.match.RoundPhase;
 import top.scfd.mcplugins.csmc.core.session.GameSession;
 
 public final class BombInteractListener implements Listener {
+    private final Plugin plugin;
     private final SessionRegistry sessions;
     private final BombService bombs;
 
-    public BombInteractListener(SessionRegistry sessions, BombService bombs) {
+    public BombInteractListener(Plugin plugin, SessionRegistry sessions, BombService bombs) {
+        this.plugin = plugin;
         this.sessions = sessions;
         this.bombs = bombs;
     }
@@ -112,14 +117,20 @@ public final class BombInteractListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         GameSession session = sessions.findSession(player);
         if (session != null) {
+            boolean hadBomb = bombs.hasBombItem(player, session);
             bombs.stripBombItems(player);
             bombs.cancelPlant(session, player.getUniqueId());
             bombs.cancelDefuse(session, player.getUniqueId());
+            if (hadBomb && !bombs.isBombPlanted(session)) {
+                if (!bombs.dropBombAt(session, player.getLocation())) {
+                    Bukkit.getScheduler().runTask(plugin, () -> bombs.assignBomb(session));
+                }
+            }
         }
     }
 

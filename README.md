@@ -44,6 +44,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Round start now normalizes bomb ownership first, then assigns exactly one fresh C4 holder on T side.
 - C4 item is now tagged via persistent metadata to avoid accidental recognition of ordinary TNT as bomb item.
 - If current bomb carrier dies before planting, C4 is dropped at death location (fallback: reassigned if drop fails).
+- If current bomb carrier disconnects mid-round, C4 is dropped immediately before session leave handling.
 - Only terrorists can pick up dropped C4 during active sessions; leaked C4 items outside sessions are cleaned on pickup.
 - C4 items are now tagged with session metadata to block cross-session pickup/use during concurrent matches.
 - Bomb assignment/round reset now proactively removes stale dropped C4 entities to prevent duplicate-bomb edge cases.

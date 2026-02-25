@@ -152,7 +152,7 @@ public final class CSMCPlugin extends JavaPlugin {
             new CombatStatsListener(sessionRegistry, statsService, combatTracker, eliminationResolver, headshots),
             this
         );
-        getServer().getPluginManager().registerEvents(new BombInteractListener(sessionRegistry, bombService), this);
+        getServer().getPluginManager().registerEvents(new BombInteractListener(this, sessionRegistry, bombService), this);
         getServer().getPluginManager().registerEvents(new WeaponSelectionListener(sessionRegistry), this);
         getServer().getPluginManager().registerEvents(new WeaponFireListener(sessionRegistry, weaponItems, loadoutInventory, antiCheat, headshots), this);
         getServer().getPluginManager().registerEvents(new WeaponReloadListener(sessionRegistry, weaponItems, loadoutInventory, this), this);
