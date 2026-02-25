@@ -174,7 +174,8 @@ public final class GameSession {
         if (loadout == null) {
             return BuyResult.NOT_IN_SESSION;
         }
-        BuyResult validation = validatePurchase(item, loadout);
+        TeamSide side = players.getOrDefault(playerId, TeamSide.SPECTATOR);
+        BuyResult validation = validatePurchase(item, loadout, side);
         if (validation != BuyResult.SUCCESS) {
             return validation;
         }
@@ -188,6 +189,10 @@ public final class GameSession {
 
     public ShopItem findItem(String itemKey) {
         return catalog.find(itemKey).orElse(null);
+    }
+
+    public Map<String, ShopItem> shopItems() {
+        return catalog.items();
     }
 
     public WeaponSpec findWeapon(String weaponKey) {
@@ -375,7 +380,10 @@ public final class GameSession {
         return loadout;
     }
 
-    private BuyResult validatePurchase(ShopItem item, PlayerLoadout loadout) {
+    private BuyResult validatePurchase(ShopItem item, PlayerLoadout loadout, TeamSide side) {
+        if (!item.isAllowedFor(side)) {
+            return BuyResult.SIDE_RESTRICTED;
+        }
         ShopCategory category = item.category();
         if (category == null) {
             category = ShopCategory.UNKNOWN;

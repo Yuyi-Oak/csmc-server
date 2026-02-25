@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 import top.scfd.mcplugins.csmc.api.GameMode;
 import top.scfd.mcplugins.csmc.core.session.GameSession;
+import top.scfd.mcplugins.csmc.core.shop.ShopCatalog;
 import top.scfd.mcplugins.csmc.core.weapon.WeaponRegistry;
 import top.scfd.mcplugins.csmc.paper.SessionRegistry;
 
@@ -24,6 +25,7 @@ public final class SessionTabCompleter implements TabCompleter {
     private static final List<String> VIEW = List.of("free", "next", "prev");
     private static final List<String> AC = List.of("status", "reset", "top", "reasons", "reasonsreset");
     private static final WeaponRegistry WEAPON_REGISTRY = new WeaponRegistry();
+    private static final ShopCatalog SHOP_CATALOG = new ShopCatalog();
 
     private final SessionRegistry sessions;
 
@@ -45,6 +47,7 @@ public final class SessionTabCompleter implements TabCompleter {
             case "create" -> completeCreate(args);
             case "rules" -> completeRules(args);
             case "join" -> completeJoin(args);
+            case "buy" -> completeBuy(sender, args);
             case "view" -> completeView(sender, args);
             case "weapon" -> completeWeapon(args);
             case "stats" -> completePlayerName(args);
@@ -113,6 +116,22 @@ public final class SessionTabCompleter implements TabCompleter {
             names.add(online.getName());
         }
         return match(args[1], names);
+    }
+
+    private List<String> completeBuy(CommandSender sender, String[] args) {
+        if (args.length != 2) {
+            return List.of();
+        }
+        List<String> keys = new ArrayList<>();
+        if (sender instanceof Player player) {
+            GameSession session = sessions.findSession(player);
+            if (session != null) {
+                keys.addAll(session.shopItems().keySet());
+                return match(args[1], keys);
+            }
+        }
+        keys.addAll(SHOP_CATALOG.items().keySet());
+        return match(args[1], keys);
     }
 
     private List<String> completeHistory(String[] args) {

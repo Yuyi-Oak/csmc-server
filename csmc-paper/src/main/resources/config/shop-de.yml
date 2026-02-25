@@ -1,53 +1,131 @@
 # CSMC-Shop-Konfiguration (Deutsch)
 # Definieren Sie Shop-Artikel. Jeder Schlüssel ist eine interne ID.
 # Kategorien: primary, secondary, melee, grenade, armor, utility
+# Teamlimit sides: [t], [ct], [both]
 shop:
   items:
     glock:
       name: "Glock-18"
       price: 200
       category: secondary
+      sides: [t]
     usp:
       name: "USP-S"
       price: 200
       category: secondary
+      sides: [ct]
+    deagle:
+      name: "Desert Eagle"
+      price: 700
+      category: secondary
+      sides: [both]
+    p250:
+      name: "P250"
+      price: 300
+      category: secondary
+      sides: [both]
+    fiveseven:
+      name: "Five-SeveN"
+      price: 500
+      category: secondary
+      sides: [ct]
+    tec9:
+      name: "Tec-9"
+      price: 500
+      category: secondary
+      sides: [t]
     ak47:
       name: "AK-47"
       price: 2700
       category: primary
+      sides: [t]
     m4a1s:
       name: "M4A1-S"
       price: 2900
       category: primary
+      sides: [ct]
+    famas:
+      name: "FAMAS"
+      price: 2050
+      category: primary
+      sides: [ct]
+    galil:
+      name: "Galil AR"
+      price: 1800
+      category: primary
+      sides: [t]
     awp:
       name: "AWP"
       price: 4750
       category: primary
+      sides: [both]
+    ssg08:
+      name: "SSG 08"
+      price: 1700
+      category: primary
+      sides: [both]
+    mac10:
+      name: "MAC-10"
+      price: 1050
+      category: primary
+      sides: [t]
+    mp9:
+      name: "MP9"
+      price: 1250
+      category: primary
+      sides: [ct]
+    ump45:
+      name: "UMP-45"
+      price: 1200
+      category: primary
+      sides: [both]
+    nova:
+      name: "Nova"
+      price: 1050
+      category: primary
+      sides: [both]
+    xm1014:
+      name: "XM1014"
+      price: 2000
+      category: primary
+      sides: [both]
     kevlar:
       name: "Kevlar"
       price: 650
       category: armor
+      sides: [both]
     hegrenade:
       name: "HE Grenade"
       price: 300
       category: grenade
+      sides: [both]
     flashbang:
       name: "Flashbang"
       price: 200
       category: grenade
+      sides: [both]
     smoke:
       name: "Smoke Grenade"
       price: 300
       category: grenade
+      sides: [both]
     molotov:
       name: "Molotov"
       price: 400
       category: grenade
+      sides: [t]
+    incgrenade:
+      name: "Incendiary Grenade"
+      price: 600
+      category: grenade
+      sides: [ct]
     decoy:
       name: "Decoy"
       price: 50
       category: grenade
+      sides: [both]
     defuse_kit:
       name: "Defuse Kit"
       price: 400
       category: utility
+      sides: [ct]

@@ -25,14 +25,16 @@ public final class PaperShopService {
 
     private ItemStack toItemStack(ShopItem item) {
         Material material = switch (item.key().toLowerCase()) {
-            case "glock", "usp" -> Material.BOW;
-            case "ak47", "m4a1s" -> Material.CROSSBOW;
-            case "awp" -> Material.SPYGLASS;
+            case "glock", "usp", "deagle", "p250", "fiveseven", "tec9" -> Material.BOW;
+            case "ak47", "m4a1s", "m4a1", "famas", "galil" -> Material.CROSSBOW;
+            case "awp", "ssg08" -> Material.SPYGLASS;
+            case "mac10", "mp9", "ump45" -> Material.CARROT_ON_A_STICK;
+            case "nova", "xm1014" -> Material.TRIDENT;
             case "kevlar" -> Material.LEATHER_CHESTPLATE;
             case "hegrenade" -> Material.SNOWBALL;
             case "flashbang" -> Material.EGG;
             case "smoke" -> Material.FIREWORK_STAR;
-            case "molotov" -> Material.FIRE_CHARGE;
+            case "molotov", "incgrenade" -> Material.FIRE_CHARGE;
             case "decoy" -> Material.PAPER;
             case "defuse_kit" -> Material.SHEARS;
             default -> null;

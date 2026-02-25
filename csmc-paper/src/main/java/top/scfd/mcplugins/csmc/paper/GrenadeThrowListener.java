@@ -92,7 +92,7 @@ public final class GrenadeThrowListener implements Listener {
             case "hegrenade" -> explodeHE(location, ownerId);
             case "flashbang" -> flash(location, ownerId);
             case "smoke" -> smoke(location);
-            case "molotov" -> molotov(location, ownerId);
+            case "molotov", "incgrenade" -> molotov(location, ownerId);
             case "decoy" -> decoy(location);
             default -> {
             }
@@ -103,7 +103,7 @@ public final class GrenadeThrowListener implements Listener {
         return switch (key) {
             case "hegrenade", "smoke", "decoy" -> player.launchProjectile(Snowball.class);
             case "flashbang" -> player.launchProjectile(Egg.class);
-            case "molotov" -> player.launchProjectile(SmallFireball.class);
+            case "molotov", "incgrenade" -> player.launchProjectile(SmallFireball.class);
             default -> null;
         };
     }

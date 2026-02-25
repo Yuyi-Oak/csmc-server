@@ -414,6 +414,7 @@ public final class SessionCommand implements CommandExecutor {
             case UNKNOWN_ITEM -> player.sendMessage("Unknown item.");
             case NOT_IN_SESSION -> player.sendMessage("You are not in a session.");
             case INVENTORY_FULL -> player.sendMessage("Inventory full.");
+            case SIDE_RESTRICTED -> player.sendMessage("Your side cannot buy this item.");
         }
         return true;
     }

@@ -53,6 +53,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Weapon firing now uses per-weapon/fallback recoil patterns and applies recoil offsets together with spread.
 - Weapon inaccuracy now penalizes sprinting/airborne states and rewards sneaking stability.
 - `/csmc weapon list` shows available weapon keys; `/csmc weapon <key> [recoilPreviewLimit]` shows live profile + spread profile + recoil preview.
+- Default shop catalog now includes expanded CS-style weapon pool and side-restricted purchases (`sides: [t|ct|both]` in `shop.yml`).
 - Match history is persisted to `plugins/CSMC/data/match-history.yml` and queryable via `/csmc history`.
 - Stats persistence is now buffered and flushed asynchronously in batches for smoother tick performance.
 - Per-match live scoreboard is available via `/csmc scoreboard`.

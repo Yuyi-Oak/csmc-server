@@ -1,9 +1,14 @@
 package top.scfd.mcplugins.csmc.config;
 
 import java.io.File;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import top.scfd.mcplugins.csmc.api.TeamSide;
 import top.scfd.mcplugins.csmc.core.shop.ShopCatalog;
 import top.scfd.mcplugins.csmc.core.shop.ShopCategory;
 import top.scfd.mcplugins.csmc.core.shop.ShopItem;
@@ -31,13 +36,43 @@ public final class PaperShopCatalogLoader {
                 String name = items.getString(key + ".name", key);
                 int price = items.getInt(key + ".price", 0);
                 ShopCategory category = ShopCategory.fromConfig(items.getString(key + ".category"));
+                Set<TeamSide> sides = parseSides(items, key);
                 if (price <= 0) {
                     continue;
                 }
-                catalog.register(new ShopItem(key, name, price, category));
+                catalog.register(new ShopItem(key, name, price, category, sides));
             }
         }
         return catalog;
+    }
+
+    private Set<TeamSide> parseSides(ConfigurationSection items, String key) {
+        EnumSet<TeamSide> sides = EnumSet.noneOf(TeamSide.class);
+        List<String> configured = items.getStringList(key + ".sides");
+        if (configured.isEmpty()) {
+            configured = List.of(items.getString(key + ".side", "both"));
+        }
+        for (String side : configured) {
+            if (side == null) {
+                continue;
+            }
+            String normalized = side.toLowerCase(Locale.ROOT);
+            switch (normalized) {
+                case "t", "terrorist", "terrorists" -> sides.add(TeamSide.TERRORIST);
+                case "ct", "counter_terrorist", "counter-terrorist", "counterterrorist", "counter_terrorists" ->
+                    sides.add(TeamSide.COUNTER_TERRORIST);
+                case "both", "all", "*" -> {
+                    sides.add(TeamSide.TERRORIST);
+                    sides.add(TeamSide.COUNTER_TERRORIST);
+                }
+                default -> {
+                }
+            }
+        }
+        if (sides.isEmpty()) {
+            return Set.of(TeamSide.TERRORIST, TeamSide.COUNTER_TERRORIST);
+        }
+        return Set.copyOf(sides);
     }
 
     private void ensureTemplates() {
