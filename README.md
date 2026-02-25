@@ -21,6 +21,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - With Redis cluster sync enabled, `/csmc queue list` shows `local/global` queue totals per mode.
 - `/csmc queue global detail [limit]` shows remote source ages, per-mode counts, and per-source totals.
 - `/csmc queue clear [mode]` clears queued players (permission: `csmc.queue.manage`).
+- Queue clear operations now publish cluster queue snapshots immediately for faster cross-server convergence.
 - Queue map preference insight command: `/csmc queue votes [mode]`.
 - Queue vote output includes per-map share percentages.
 - Queue join/status output now includes your selected map's current vote share.
