@@ -8,7 +8,7 @@ load: POSTWORLD
 commands:
   csmc:
     description: CSMC session command
-    usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc weapon <key> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top [limit] | /csmc queue <join|leave|status|list|votes|global|clear> [mode|detail [limit]] [mapId] | /csmc ac <status|reset|top|reasons|reasonsreset> [player|limit]
+    usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc weapon <list|key> [recoilPreviewLimit] | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top [limit] | /csmc queue <join|leave|status|list|votes|global|clear> [mode|detail [limit]] [mapId] | /csmc ac <status|reset|top|reasons|reasonsreset> [player|limit]
   csmcmap:
     description: CSMC map editor command
     usage: /csmcmap list | /csmcmap create/clone/info <id> | /csmcmap listpoints <id> | /csmcmap addspawn/removespawn | /csmcmap addbuy/removebuy | /csmcmap validate <id> | /csmcmap save <id> [force] | /csmcmap saveall [force]

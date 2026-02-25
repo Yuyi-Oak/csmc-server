@@ -85,7 +85,7 @@ public final class SessionCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 0) {
-            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc weapon <key> | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top [limit] | /csmc queue <join|leave|status|list|votes|global|clear> [mode|detail [limit]] [mapId] | /csmc ac <status|reset|top|reasons|reasonsreset> [player|limit]");
+            sender.sendMessage("Usage: /csmc create <mode> [mapId] | /csmc maps | /csmc sessions | /csmc rules [mode] | /csmc info | /csmc scoreboard [limit] | /csmc join <id> | /csmc leave | /csmc start | /csmc buy <item> | /csmc view <free|next|prev|player> | /csmc weapon <list|key> [recoilPreviewLimit] | /csmc stats [player] | /csmc history [player|uuid] [limit] | /csmc top [limit] | /csmc queue <join|leave|status|list|votes|global|clear> [mode|detail [limit]] [mapId] | /csmc ac <status|reset|top|reasons|reasonsreset> [player|limit]");
             return true;
         }
         return switch (args[0].toLowerCase()) {
@@ -549,8 +549,21 @@ public final class SessionCommand implements CommandExecutor {
 
     private boolean handleWeapon(Player player, String[] args) {
         if (args.length < 2) {
-            player.sendMessage("Usage: /csmc weapon <key>");
+            player.sendMessage("Usage: /csmc weapon <list|key> [recoilPreviewLimit]");
             return true;
+        }
+        if ("list".equalsIgnoreCase(args[1])) {
+            player.sendMessage("Known weapons: " + String.join(", ", DEFAULT_WEAPON_REGISTRY.all().keySet()));
+            return true;
+        }
+        int recoilPreviewLimit = 5;
+        if (args.length >= 3) {
+            Integer parsed = parsePositiveInt(args[2]);
+            if (parsed == null) {
+                player.sendMessage("Invalid recoil preview limit. Use a positive integer.");
+                return true;
+            }
+            recoilPreviewLimit = Math.min(20, parsed);
         }
         String key = args[1].toLowerCase(Locale.ROOT);
         WeaponSpec spec = null;
@@ -563,7 +576,7 @@ public final class SessionCommand implements CommandExecutor {
         }
         if (spec == null) {
             player.sendMessage("Unknown weapon: " + key);
-            player.sendMessage("Known keys: " + String.join(", ", DEFAULT_WEAPON_REGISTRY.all().keySet()));
+            player.sendMessage("Use /csmc weapon list for available keys.");
             return true;
         }
         RecoilPattern pattern = WeaponRecoilPatterns.forWeapon(spec);
@@ -573,6 +586,21 @@ public final class SessionCommand implements CommandExecutor {
         player.sendMessage("Damage=" + spec.damage() + " | range=" + spec.range() + " | armorPen=" + spec.armorPenetration());
         player.sendMessage("Magazine=" + spec.magazineSize() + " | reload=" + spec.reloadTime() + "s");
         player.sendMessage("Spread base=" + String.format(Locale.ROOT, "%.3f", baseSpread) + " | recoilPatternLen=" + pattern.length());
+        if (pattern.length() > 0) {
+            int shown = Math.max(1, Math.min(recoilPreviewLimit, pattern.length()));
+            StringBuilder builder = new StringBuilder("Recoil preview (first ").append(shown).append("): ");
+            for (int i = 0; i < shown; i++) {
+                if (i > 0) {
+                    builder.append(" | ");
+                }
+                builder.append(i + 1)
+                    .append(":p")
+                    .append(String.format(Locale.ROOT, "%.2f", pattern.pitch()[i]))
+                    .append(",y")
+                    .append(String.format(Locale.ROOT, "%.2f", pattern.yaw()[i]));
+            }
+            player.sendMessage(builder.toString());
+        }
         return true;
     }
 

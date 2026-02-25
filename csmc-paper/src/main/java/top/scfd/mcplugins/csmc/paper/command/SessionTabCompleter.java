@@ -141,7 +141,12 @@ public final class SessionTabCompleter implements TabCompleter {
 
     private List<String> completeWeapon(String[] args) {
         if (args.length == 2) {
-            return match(args[1], new ArrayList<>(WEAPON_REGISTRY.all().keySet()));
+            List<String> options = new ArrayList<>(WEAPON_REGISTRY.all().keySet());
+            options.add("list");
+            return match(args[1], options);
+        }
+        if (args.length == 3 && !"list".equalsIgnoreCase(args[1])) {
+            return match(args[2], List.of("3", "5", "10", "15", "20"));
         }
         return List.of();
     }
