@@ -3,6 +3,7 @@ package top.scfd.mcplugins.csmc.paper;
 import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.World;
@@ -35,11 +36,15 @@ public final class GrenadeThrowListener implements Listener {
     private final SessionRegistry sessions;
     private final GrenadeItemService grenades;
     private final Plugin plugin;
+    private final NamespacedKey ownerKey;
+    private final NamespacedKey sessionKey;
 
     public GrenadeThrowListener(SessionRegistry sessions, GrenadeItemService grenades, Plugin plugin) {
         this.sessions = sessions;
         this.grenades = grenades;
         this.plugin = plugin;
+        this.ownerKey = new NamespacedKey(plugin, "csmc_grenade_owner");
+        this.sessionKey = new NamespacedKey(plugin, "csmc_grenade_session");
     }
 
     @EventHandler
@@ -70,7 +75,8 @@ public final class GrenadeThrowListener implements Listener {
         }
         PersistentDataContainer container = projectile.getPersistentDataContainer();
         container.set(grenades.grenadeKey(), PersistentDataType.STRING, key.toLowerCase());
-        container.set(new org.bukkit.NamespacedKey(plugin, "csmc_grenade_owner"), PersistentDataType.STRING, player.getUniqueId().toString());
+        container.set(ownerKey, PersistentDataType.STRING, player.getUniqueId().toString());
+        container.set(sessionKey, PersistentDataType.STRING, session.id().toString());
     }
 
     @EventHandler
@@ -82,19 +88,14 @@ public final class GrenadeThrowListener implements Listener {
             return;
         }
         Location location = projectile.getLocation();
-        UUID ownerId = null;
-        String ownerValue = container.get(new org.bukkit.NamespacedKey(plugin, "csmc_grenade_owner"), PersistentDataType.STRING);
-        if (ownerValue != null) {
-            try {
-                ownerId = UUID.fromString(ownerValue);
-            } catch (IllegalArgumentException ignored) {
-            }
-        }
+        UUID ownerId = parseUuid(container.get(ownerKey, PersistentDataType.STRING));
+        UUID sessionId = parseUuid(container.get(sessionKey, PersistentDataType.STRING));
+        GameSession ownerSession = resolveGrenadeSession(ownerId, sessionId);
         switch (key) {
-            case "hegrenade" -> explodeHE(location, ownerId);
-            case "flashbang" -> flash(projectile, location, ownerId);
-            case "smoke" -> smoke(location, ownerId);
-            case "molotov", "incgrenade" -> molotov(location, ownerId);
+            case "hegrenade" -> explodeHE(location, ownerSession, ownerId);
+            case "flashbang" -> flash(projectile, location, ownerSession);
+            case "smoke" -> smoke(location, ownerSession);
+            case "molotov", "incgrenade" -> molotov(location, ownerSession, ownerId);
             case "decoy" -> decoy(location);
             default -> {
             }
@@ -126,14 +127,13 @@ public final class GrenadeThrowListener implements Listener {
         }
     }
 
-    private void explodeHE(Location location, UUID ownerId) {
+    private void explodeHE(Location location, GameSession ownerSession, UUID ownerId) {
         World world = location.getWorld();
         if (world == null) {
             return;
         }
         world.spawnParticle(Particle.EXPLOSION, location, 1);
         world.playSound(location, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
-        GameSession ownerSession = ownerId == null ? null : sessions.getSessionForPlayer(ownerId);
         Player owner = ownerId == null ? null : Bukkit.getPlayer(ownerId);
         for (Player target : world.getPlayers()) {
             if (!isDamageablePlayer(target)) {
@@ -162,7 +162,7 @@ public final class GrenadeThrowListener implements Listener {
         }
     }
 
-    private void flash(Projectile projectile, Location location, UUID ownerId) {
+    private void flash(Projectile projectile, Location location, GameSession ownerSession) {
         World world = location.getWorld();
         if (world == null) {
             return;
@@ -170,7 +170,6 @@ public final class GrenadeThrowListener implements Listener {
         double maxRange = 12.0;
         double maxRangeSquared = maxRange * maxRange;
         world.playSound(location, Sound.ENTITY_GENERIC_EXPLODE, 0.6f, 1.8f);
-        GameSession ownerSession = ownerId == null ? null : sessions.getSessionForPlayer(ownerId);
         for (Player target : world.getPlayers()) {
             if (!isDamageablePlayer(target)) {
                 continue;
@@ -204,7 +203,7 @@ public final class GrenadeThrowListener implements Listener {
         }
     }
 
-    private void smoke(Location location, UUID ownerId) {
+    private void smoke(Location location, GameSession ownerSession) {
         World world = location.getWorld();
         if (world == null) {
             return;
@@ -214,13 +213,17 @@ public final class GrenadeThrowListener implements Listener {
         cloud.setRadius(4.0f);
         cloud.setParticle(Particle.CLOUD);
         world.playSound(location, Sound.BLOCK_FIRE_EXTINGUISH, 0.6f, 1.0f);
-        GameSession ownerSession = ownerId == null ? null : sessions.getSessionForPlayer(ownerId);
         new BukkitRunnable() {
             int ticks = 0;
 
             @Override
             public void run() {
                 if (ticks >= 200 || !cloud.isValid()) {
+                    cancel();
+                    return;
+                }
+                if (!isActiveGrenadeSession(ownerSession)) {
+                    cloud.remove();
                     cancel();
                     return;
                 }
@@ -246,7 +249,7 @@ public final class GrenadeThrowListener implements Listener {
         }.runTaskTimer(plugin, 0L, 4L);
     }
 
-    private void molotov(Location location, UUID ownerId) {
+    private void molotov(Location location, GameSession ownerSession, UUID ownerId) {
         World world = location.getWorld();
         if (world == null) {
             return;
@@ -256,7 +259,6 @@ public final class GrenadeThrowListener implements Listener {
         cloud.setRadius(3.0f);
         cloud.setParticle(Particle.FLAME);
         world.playSound(location, Sound.ITEM_FIRECHARGE_USE, 0.8f, 1.1f);
-        GameSession ownerSession = ownerId == null ? null : sessions.getSessionForPlayer(ownerId);
         Player owner = ownerId == null ? null : Bukkit.getPlayer(ownerId);
         new BukkitRunnable() {
             int ticks = 0;
@@ -264,6 +266,11 @@ public final class GrenadeThrowListener implements Listener {
             @Override
             public void run() {
                 if (ticks >= 120 || !cloud.isValid()) {
+                    cancel();
+                    return;
+                }
+                if (!isActiveGrenadeSession(ownerSession)) {
+                    cloud.remove();
                     cancel();
                     return;
                 }
@@ -333,6 +340,37 @@ public final class GrenadeThrowListener implements Listener {
             return false;
         }
         return player.getGameMode() != org.bukkit.GameMode.SPECTATOR && !player.isDead() && player.getHealth() > 0.0;
+    }
+
+    private GameSession resolveGrenadeSession(UUID ownerId, UUID sessionId) {
+        if (sessionId != null) {
+            GameSession bySession = sessions.getSession(sessionId);
+            if (bySession != null) {
+                return bySession;
+            }
+        }
+        return ownerId == null ? null : sessions.getSessionForPlayer(ownerId);
+    }
+
+    private UUID parseUuid(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(value);
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
+    }
+
+    private boolean isActiveGrenadeSession(GameSession session) {
+        if (session == null || session.state() != SessionState.LIVE) {
+            return false;
+        }
+        var phase = session.roundEngine().phase();
+        return phase == top.scfd.mcplugins.csmc.core.match.RoundPhase.BUY
+            || phase == top.scfd.mcplugins.csmc.core.match.RoundPhase.LIVE
+            || phase == top.scfd.mcplugins.csmc.core.match.RoundPhase.BOMB_PLANTED;
     }
 
     private double clamp01(double value) {
