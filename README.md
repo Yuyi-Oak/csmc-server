@@ -16,7 +16,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Configuration templates and language files are under `csmc-paper/src/main/resources/`.
 - Asset handoff checklist is in `docs/ASSET_CHECKLIST.md`.
 - Storage backends currently available: YAML, SQLite, MySQL, PostgreSQL, MongoDB, Redis.
-- Command highlights: `/csmc create <mode> [mapId]`, `/csmc maps`, `/csmc sessions`, `/csmc rules [mode]`, `/csmc scoreboard [limit]`, `/csmc view <free|next|prev|player>`, `/csmc queue join [mode] [mapId]`, `/csmc queue status`, `/csmc queue votes [mode]`, `/csmc queue global [mode|detail [limit]]`, `/csmc queue clear [mode]`, `/csmc stats [player]`, `/csmc history [player|uuid] [limit]`, `/csmc top [limit]`, `/csmc ac <status|reset> [player]`, `/csmc ac top [limit]`, `/csmc ac reasons [limit]`, `/csmc ac reasonsreset`.
+- Command highlights: `/csmc create <mode> [mapId]`, `/csmc maps`, `/csmc sessions`, `/csmc rules [mode]`, `/csmc scoreboard [limit]`, `/csmc view <free|next|prev|player>`, `/csmc weapon <key>`, `/csmc queue join [mode] [mapId]`, `/csmc queue status`, `/csmc queue votes [mode]`, `/csmc queue global [mode|detail [limit]]`, `/csmc queue clear [mode]`, `/csmc stats [player]`, `/csmc history [player|uuid] [limit]`, `/csmc top [limit]`, `/csmc ac <status|reset> [player]`, `/csmc ac top [limit]`, `/csmc ac reasons [limit]`, `/csmc ac reasonsreset`.
 - Queue monitoring command: `/csmc queue list` (all mode queue sizes + needed players).
 - With Redis cluster sync enabled, `/csmc queue list` shows `local/global` queue totals per mode.
 - `/csmc queue global detail [limit]` shows remote source ages, per-mode counts, and per-source totals.
@@ -52,6 +52,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - `/csmc ac reasons [limit]` shows top anti-cheat trigger reasons; `/csmc ac reasonsreset` clears reason counters.
 - Weapon firing now uses per-weapon/fallback recoil patterns and applies recoil offsets together with spread.
 - Weapon inaccuracy now penalizes sprinting/airborne states and rewards sneaking stability.
+- `/csmc weapon <key>` shows live weapon profile values (damage, range, fire rate, base spread, recoil length).
 - Match history is persisted to `plugins/CSMC/data/match-history.yml` and queryable via `/csmc history`.
 - Stats persistence is now buffered and flushed asynchronously in batches for smoother tick performance.
 - Per-match live scoreboard is available via `/csmc scoreboard`.
