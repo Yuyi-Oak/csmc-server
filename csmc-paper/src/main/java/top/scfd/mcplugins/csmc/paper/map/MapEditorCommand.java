@@ -1,7 +1,9 @@
 package top.scfd.mcplugins.csmc.paper.map;
 
 import java.util.Locale;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -119,8 +121,9 @@ public final class MapEditorCommand implements CommandExecutor {
             return true;
         }
         MapSpawn spawn = list.get(index - 1);
+        World world = resolveTeleportWorld(map, player);
         player.teleport(new Location(
-            player.getWorld(),
+            world,
             spawn.x(),
             spawn.y(),
             spawn.z(),
@@ -152,8 +155,9 @@ public final class MapEditorCommand implements CommandExecutor {
             return true;
         }
         BuyZone zone = list.get(index - 1);
+        World world = resolveTeleportWorld(map, player);
         player.teleport(new Location(
-            player.getWorld(),
+            world,
             zone.x(),
             zone.y(),
             zone.z(),
@@ -171,8 +175,9 @@ public final class MapEditorCommand implements CommandExecutor {
             player.sendMessage("Bomb site " + siteId + " not found.");
             return true;
         }
+        World world = resolveTeleportWorld(map, player);
         player.teleport(new Location(
-            player.getWorld(),
+            world,
             site.x(),
             site.y(),
             site.z(),
@@ -181,6 +186,16 @@ public final class MapEditorCommand implements CommandExecutor {
         ));
         player.sendMessage("Teleported to bomb site " + siteId + ".");
         return true;
+    }
+
+    private World resolveTeleportWorld(EditableMap map, Player player) {
+        if (map != null && map.world() != null && !map.world().isBlank()) {
+            World world = Bukkit.getWorld(map.world());
+            if (world != null) {
+                return world;
+            }
+        }
+        return player.getWorld();
     }
 
     private boolean handleCreate(CommandSender sender, String[] args) {
