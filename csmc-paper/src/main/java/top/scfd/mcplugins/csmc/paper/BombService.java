@@ -14,6 +14,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -26,11 +27,13 @@ import top.scfd.mcplugins.csmc.core.session.GameSession;
 
 public final class BombService {
     private final NamespacedKey bombItemKey;
+    private final NamespacedKey bombSessionKey;
     private final Map<UUID, BombState> bombs = new ConcurrentHashMap<>();
     private final Map<UUID, PlantState> plants = new ConcurrentHashMap<>();
 
     public BombService(Plugin plugin) {
         this.bombItemKey = new NamespacedKey(plugin, "csmc_bomb");
+        this.bombSessionKey = new NamespacedKey(plugin, "csmc_bomb_session");
     }
 
     public BombState state(GameSession session) {
@@ -180,7 +183,7 @@ public final class BombService {
             planter.sendActionBar(Component.text("Planting C4... " + remaining + "s").color(NamedTextColor.RED));
             return;
         }
-        if (!consumeBombItem(planter)) {
+        if (!consumeBombItem(planter, session)) {
             cancelPlant(session, state.planterId());
             return;
         }
@@ -197,6 +200,7 @@ public final class BombService {
             return;
         }
         plants.remove(session.id());
+        clearDroppedBombItems(session);
         BombState state = bombs.remove(session.id());
         if (state == null) {
             return;
@@ -230,6 +234,7 @@ public final class BombService {
             return;
         }
         stripBombItems(session);
+        clearDroppedBombItems(session);
         List<Player> terrorists = new ArrayList<>();
         for (UUID playerId : session.players()) {
             if (session.getSide(playerId) == TeamSide.TERRORIST) {
@@ -247,7 +252,7 @@ public final class BombService {
             return;
         }
         Player player = terrorists.get(ThreadLocalRandom.current().nextInt(terrorists.size()));
-        ItemStack bomb = createBombItem();
+        ItemStack bomb = createBombItem(session);
         player.getInventory().addItem(bomb);
     }
 
@@ -258,17 +263,28 @@ public final class BombService {
         if (isBombPlanted(session)) {
             return false;
         }
-        var dropped = location.getWorld().dropItemNaturally(location, createBombItem());
+        clearDroppedBombItems(session);
+        var dropped = location.getWorld().dropItemNaturally(location, createBombItem(session));
         dropped.setPickupDelay(10);
         return true;
     }
 
     public boolean hasBombItem(Player player) {
+        return hasBombItem(player, null);
+    }
+
+    public boolean hasBombItem(Player player, GameSession session) {
         if (player == null) {
             return false;
         }
         for (ItemStack item : player.getInventory().getContents()) {
-            if (isBombItem(item)) {
+            if (session == null) {
+                if (isBombItem(item)) {
+                    return true;
+                }
+                continue;
+            }
+            if (isBombItemForSession(item, session)) {
                 return true;
             }
         }
@@ -293,6 +309,33 @@ public final class BombService {
         return "C4".equalsIgnoreCase(plainName.trim());
     }
 
+    public UUID resolveBombSessionId(ItemStack item) {
+        if (!isBombItem(item)) {
+            return null;
+        }
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) {
+            return null;
+        }
+        String raw = meta.getPersistentDataContainer().get(bombSessionKey, PersistentDataType.STRING);
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(raw);
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
+    }
+
+    public boolean isBombItemForSession(ItemStack item, GameSession session) {
+        if (session == null || !isBombItem(item)) {
+            return false;
+        }
+        UUID taggedSession = resolveBombSessionId(item);
+        return taggedSession != null && session.id().equals(taggedSession);
+    }
+
     public ItemStack createBombItem() {
         ItemStack stack = new ItemStack(Material.TNT, 1);
         ItemMeta meta = stack.getItemMeta();
@@ -302,6 +345,51 @@ public final class BombService {
             stack.setItemMeta(meta);
         }
         return stack;
+    }
+
+    public ItemStack createBombItem(GameSession session) {
+        ItemStack stack = createBombItem();
+        if (session == null) {
+            return stack;
+        }
+        ItemMeta meta = stack.getItemMeta();
+        if (meta == null) {
+            return stack;
+        }
+        meta.getPersistentDataContainer().set(bombSessionKey, PersistentDataType.STRING, session.id().toString());
+        stack.setItemMeta(meta);
+        return stack;
+    }
+
+    public Player findBombCarrier(GameSession session) {
+        if (session == null) {
+            return null;
+        }
+        for (UUID playerId : session.players()) {
+            Player player = Bukkit.getPlayer(playerId);
+            if (player == null || !player.isOnline()) {
+                continue;
+            }
+            if (hasBombItem(player, session)) {
+                return player;
+            }
+        }
+        return null;
+    }
+
+    public int droppedBombCount(GameSession session) {
+        if (session == null) {
+            return 0;
+        }
+        int count = 0;
+        for (World world : Bukkit.getWorlds()) {
+            for (Item item : world.getEntitiesByClass(Item.class)) {
+                if (isBombItemForSession(item.getItemStack(), session)) {
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 
     private boolean hasDefuseKit(GameSession session, UUID playerId) {
@@ -322,7 +410,7 @@ public final class BombService {
         if (!player.isSneaking()) {
             return false;
         }
-        if (!hasBombItem(player)) {
+        if (!hasBombItem(player, session)) {
             return false;
         }
         var phase = session.roundEngine().phase();
@@ -342,14 +430,18 @@ public final class BombService {
         return plantLocation.getBlock().getType() == Material.AIR;
     }
 
-    private boolean consumeBombItem(Player player) {
+    private boolean consumeBombItem(Player player, GameSession session) {
         if (player == null) {
             return false;
         }
         ItemStack[] contents = player.getInventory().getContents();
         for (int slot = 0; slot < contents.length; slot++) {
             ItemStack item = contents[slot];
-            if (!isBombItem(item)) {
+            if (session != null) {
+                if (!isBombItemForSession(item, session)) {
+                    continue;
+                }
+            } else if (!isBombItem(item)) {
                 continue;
             }
             int amount = item.getAmount();
@@ -386,6 +478,25 @@ public final class BombService {
                 continue;
             }
             stripBombItems(player);
+        }
+    }
+
+    private void clearDroppedBombItems(GameSession session) {
+        if (session == null) {
+            return;
+        }
+        for (World world : Bukkit.getWorlds()) {
+            for (Item item : world.getEntitiesByClass(Item.class)) {
+                ItemStack stack = item.getItemStack();
+                if (!isBombItem(stack)) {
+                    continue;
+                }
+                UUID taggedSession = resolveBombSessionId(stack);
+                if (taggedSession != null && !taggedSession.equals(session.id())) {
+                    continue;
+                }
+                item.remove();
+            }
         }
     }
 

@@ -37,7 +37,7 @@ public final class PlayerRoundStateService implements Listener {
         if (session == null || !isCombatPhase(session.roundEngine().phase())) {
             return;
         }
-        boolean hadBomb = bombs != null && bombs.hasBombItem(player);
+        boolean hadBomb = bombs != null && bombs.hasBombItem(player, session);
         roundDeaths.computeIfAbsent(session.id(), ignored -> ConcurrentHashMap.newKeySet()).add(player.getUniqueId());
         event.setDroppedExp(0);
         event.getDrops().clear();

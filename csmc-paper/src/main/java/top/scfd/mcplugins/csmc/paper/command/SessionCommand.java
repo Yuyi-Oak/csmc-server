@@ -36,6 +36,7 @@ import top.scfd.mcplugins.csmc.paper.MatchCombatTrackerService;
 import top.scfd.mcplugins.csmc.paper.MatchQueueService;
 import top.scfd.mcplugins.csmc.paper.PaperShopService;
 import top.scfd.mcplugins.csmc.paper.PlayerCombatSnapshot;
+import top.scfd.mcplugins.csmc.paper.BombState;
 import top.scfd.mcplugins.csmc.paper.BombService;
 import top.scfd.mcplugins.csmc.paper.RemoteQueueSourceStatus;
 import top.scfd.mcplugins.csmc.paper.SessionRegistry;
@@ -286,6 +287,14 @@ public final class SessionCommand implements CommandExecutor {
             + " | phase=" + round.phase()
             + " | score T/CT=" + score.terrorist() + "/" + score.counterTerrorist()
             + " | players T/CT=" + t + "/" + ct);
+        if (bombs != null) {
+            Player carrier = bombs.findBombCarrier(session);
+            BombState bombState = bombs.state(session);
+            String carrierName = carrier == null ? "none" : carrier.getName();
+            player.sendMessage("Bomb | planted=" + (bombState != null)
+                + " | carrier=" + carrierName
+                + " | dropped=" + bombs.droppedBombCount(session));
+        }
         if (session.state() == SessionState.WAITING) {
             player.sendMessage("Countdown next round: " + formatSeconds(session.nextRoundCountdownSeconds()));
         } else if (session.state() == SessionState.LIVE) {

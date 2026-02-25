@@ -46,6 +46,9 @@ public final class BombInteractListener implements Listener {
         }
         ItemStack item = event.getItem();
         if (item != null && bombs.isBombItem(item)) {
+            if (!bombs.isBombItemForSession(item, session)) {
+                return;
+            }
             if (session.getSide(player.getUniqueId()) != TeamSide.TERRORIST) {
                 return;
             }
@@ -145,9 +148,28 @@ public final class BombInteractListener implements Listener {
             event.getItem().remove();
             return;
         }
+        UUID taggedSession = bombs.resolveBombSessionId(stack);
+        if (taggedSession == null) {
+            event.setCancelled(true);
+            event.getItem().remove();
+            return;
+        }
+        if (!taggedSession.equals(session.id())) {
+            GameSession owner = sessions.getSession(taggedSession);
+            event.setCancelled(true);
+            if (owner == null || owner.state() == SessionState.FINISHED) {
+                event.getItem().remove();
+            }
+            return;
+        }
         if (session.state() == SessionState.FINISHED) {
             event.setCancelled(true);
             event.getItem().remove();
+            return;
+        }
+        RoundPhase phase = session.roundEngine().phase();
+        if (phase != RoundPhase.LIVE && phase != RoundPhase.BUY && phase != RoundPhase.BOMB_PLANTED) {
+            event.setCancelled(true);
             return;
         }
         TeamSide side = session.getSide(player.getUniqueId());
@@ -155,7 +177,7 @@ public final class BombInteractListener implements Listener {
             event.setCancelled(true);
             return;
         }
-        if (bombs.hasBombItem(player)) {
+        if (bombs.hasBombItem(player, session)) {
             event.setCancelled(true);
         }
     }

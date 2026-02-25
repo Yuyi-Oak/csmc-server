@@ -34,6 +34,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Loss-bonus economy now correctly caps round-loss reward at configured maximum (default sequence: 1400/1900/2400/2900/3400...).
 - Session diagnostic command: `/csmc info` (mode/map/state/phase/score/player split).
 - `/csmc info` now includes live timers (round/buy/bomb/defuse) and waiting countdown/winner context.
+- `/csmc info` now includes bomb status (planted/carrier/dropped count) for faster match-state diagnosis.
 - `/csmc rules` now also prints computed round-loss bonus sequence for quick economy verification.
 - Queue map preference supports `auto` (default) or explicit map IDs from `/csmc maps`.
 - Queued players now get real-time action-bar status (mode/map/position).
@@ -43,6 +44,8 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - C4 item is now tagged via persistent metadata to avoid accidental recognition of ordinary TNT as bomb item.
 - If current bomb carrier dies before planting, C4 is dropped at death location (fallback: reassigned if drop fails).
 - Only terrorists can pick up dropped C4 during active sessions; leaked C4 items outside sessions are cleaned on pickup.
+- C4 items are now tagged with session metadata to block cross-session pickup/use during concurrent matches.
+- Bomb assignment/round reset now proactively removes stale dropped C4 entities to prevent duplicate-bomb edge cases.
 - Defuse ownership is now strict: active defuser cannot be overwritten mid-defuse by another player interaction.
 - Map editor tool: `/csmcmap create`, `/csmcmap addspawn`, `/csmcmap setbomb`, `/csmcmap addbuy`, `/csmcmap save`, `/csmcmap reload`.
 - Map editor now supports indexed point removal and inspection: `/csmcmap listpoints`, `/csmcmap removespawn`, `/csmcmap removebuy`.
