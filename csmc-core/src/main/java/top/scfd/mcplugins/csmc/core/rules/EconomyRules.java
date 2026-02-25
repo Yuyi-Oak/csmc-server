@@ -21,7 +21,16 @@ public record EconomyRules(
             case PLANT -> plantReward;
             case DEFUSE -> defuseReward;
             case ROUND_WIN -> roundWinReward;
-            case ROUND_LOSS -> roundLossBase + Math.min(lossBonusMax, lossStreak * lossBonusIncrement);
+            case ROUND_LOSS -> roundLossReward(lossStreak);
         };
+    }
+
+    private int roundLossReward(int lossStreak) {
+        int streak = Math.max(0, lossStreak);
+        int increment = Math.max(0, lossBonusIncrement);
+        int maxReward = Math.max(roundLossBase, lossBonusMax);
+        int bonusCap = Math.max(0, maxReward - roundLossBase);
+        int bonus = Math.min(bonusCap, streak * increment);
+        return roundLossBase + bonus;
     }
 }

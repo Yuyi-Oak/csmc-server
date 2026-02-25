@@ -30,6 +30,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Queue list/actionbar now also surfaces top-voted map share for quicker matchmaking visibility.
 - Queue status/actionbar now includes `need N` (players still needed before next match assignment).
 - Matchmaking now prioritizes filling existing waiting sessions before creating new sessions.
+- Loss-bonus economy now correctly caps round-loss reward at configured maximum (default sequence: 1400/1900/2400/2900/3400...).
 - Session diagnostic command: `/csmc info` (mode/map/state/phase/score/player split).
 - `/csmc info` now includes live timers (round/buy/bomb/defuse) and waiting countdown/winner context.
 - Queue map preference supports `auto` (default) or explicit map IDs from `/csmc maps`.
