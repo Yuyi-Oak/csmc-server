@@ -1170,7 +1170,8 @@ public final class SessionCommand implements CommandExecutor {
                 sender.sendMessage("No anti-cheat reason data recorded.");
                 return true;
             }
-            sender.sendMessage("Top anti-cheat reasons (top " + limit + "):");
+            int total = reasons.values().stream().mapToInt(Integer::intValue).sum();
+            sender.sendMessage("Top anti-cheat reasons (top " + limit + ", total " + total + "):");
             reasons.entrySet().stream()
                 .sorted((left, right) -> {
                     int byCount = Integer.compare(right.getValue(), left.getValue());
@@ -1180,7 +1181,13 @@ public final class SessionCommand implements CommandExecutor {
                     return left.getKey().compareToIgnoreCase(right.getKey());
                 })
                 .limit(limit)
-                .forEach(entry -> sender.sendMessage(" - " + entry.getKey() + ": " + entry.getValue()));
+                .forEach(entry -> {
+                    double ratio = total == 0 ? 0.0 : (entry.getValue() * 100.0) / total;
+                    sender.sendMessage(
+                        " - " + entry.getKey() + ": " + entry.getValue()
+                            + " (" + String.format(Locale.ROOT, "%.1f", ratio) + "%)"
+                    );
+                });
             return true;
         }
         if ("reasonsreset".equals(action)) {
