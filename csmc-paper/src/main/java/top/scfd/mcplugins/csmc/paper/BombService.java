@@ -79,9 +79,21 @@ public final class BombService {
         if (state == null || player == null) {
             return false;
         }
-        state.setDefuserId(player.getUniqueId());
-        boolean hasKit = hasDefuseKit(session, player.getUniqueId());
-        session.startDefuse(player.getUniqueId(), hasKit);
+        UUID playerId = player.getUniqueId();
+        UUID activeDefuser = state.defuserId();
+        if (activeDefuser != null && !activeDefuser.equals(playerId)) {
+            return false;
+        }
+        if (session.roundEngine().defuseRemainingSeconds() > 0) {
+            return activeDefuser != null && activeDefuser.equals(playerId);
+        }
+        state.setDefuserId(playerId);
+        boolean hasKit = hasDefuseKit(session, playerId);
+        session.startDefuse(playerId, hasKit);
+        if (session.roundEngine().defuseRemainingSeconds() <= 0) {
+            state.setDefuserId(null);
+            return false;
+        }
         return true;
     }
 
