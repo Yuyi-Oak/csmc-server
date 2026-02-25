@@ -14,6 +14,7 @@ import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 import top.scfd.mcplugins.csmc.api.SessionState;
 import top.scfd.mcplugins.csmc.api.TeamSide;
+import top.scfd.mcplugins.csmc.core.match.RoundPhase;
 import top.scfd.mcplugins.csmc.core.player.ArmorState;
 import top.scfd.mcplugins.csmc.core.player.PlayerLoadout;
 import top.scfd.mcplugins.csmc.core.player.WeaponInstance;
@@ -57,6 +58,10 @@ public final class WeaponFireListener implements Listener {
         Player player = event.getPlayer();
         var session = sessions.findSession(player);
         if (session == null || session.state() != SessionState.LIVE) {
+            return;
+        }
+        RoundPhase phase = session.roundEngine().phase();
+        if (phase == RoundPhase.FREEZE || phase == RoundPhase.END) {
             return;
         }
         PlayerLoadout loadout = session.loadout(player.getUniqueId());

@@ -29,6 +29,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 import top.scfd.mcplugins.csmc.api.SessionState;
 import top.scfd.mcplugins.csmc.api.TeamSide;
+import top.scfd.mcplugins.csmc.core.match.RoundPhase;
 import top.scfd.mcplugins.csmc.core.player.PlayerLoadout;
 import top.scfd.mcplugins.csmc.core.session.GameSession;
 
@@ -56,6 +57,10 @@ public final class GrenadeThrowListener implements Listener {
         Player player = event.getPlayer();
         GameSession session = sessions.findSession(player);
         if (session == null || session.state() != SessionState.LIVE) {
+            return;
+        }
+        RoundPhase phase = session.roundEngine().phase();
+        if (phase == RoundPhase.FREEZE || phase == RoundPhase.END) {
             return;
         }
         ItemStack item = event.getItem();
