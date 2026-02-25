@@ -248,6 +248,9 @@ public final class SessionRegistry {
         List<GameSession> snapshot = new ArrayList<>(sessionManager.allSessions());
         for (GameSession session : snapshot) {
             session.tickRound();
+            if (bombs != null) {
+                bombs.tick(session);
+            }
             handleFinishedLifecycle(session);
         }
     }

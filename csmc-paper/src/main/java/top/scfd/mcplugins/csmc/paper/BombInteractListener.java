@@ -55,18 +55,24 @@ public final class BombInteractListener implements Listener {
             if (map == null || !isInBombSite(clicked.getLocation(), map)) {
                 return;
             }
+            if (!player.isSneaking()) {
+                return;
+            }
             Location plantLocation = clicked.getLocation().add(0, 1, 0);
             if (plantLocation.getBlock().getType() != Material.AIR) {
                 return;
             }
-            if (bombs.plant(session, player, plantLocation)) {
-                item.setAmount(item.getAmount() - 1);
+            int plantTime = session.rules().durations().plantTimeSeconds();
+            if (bombs.startPlant(session, player, plantLocation, plantTime)) {
                 event.setCancelled(true);
             }
             return;
         }
         if (bombs.isBombBlock(session, clicked.getLocation())) {
             if (session.getSide(player.getUniqueId()) != TeamSide.COUNTER_TERRORIST) {
+                return;
+            }
+            if (!player.isSneaking()) {
                 return;
             }
             if (bombs.startDefuse(session, player)) {
@@ -82,24 +88,24 @@ public final class BombInteractListener implements Listener {
         if (session == null) {
             return;
         }
+        UUID playerId = player.getUniqueId();
+        if (bombs.isPlantingBy(session, playerId) && !player.isSneaking()) {
+            bombs.cancelPlant(session, playerId);
+        }
         BombState state = bombs.state(session);
         if (state == null || state.defuserId() == null) {
             return;
         }
-        if (!state.defuserId().equals(player.getUniqueId())) {
+        if (!state.defuserId().equals(playerId)) {
             return;
         }
         Location bomb = state.location();
         if (bomb == null || bomb.getWorld() == null || player.getWorld() != bomb.getWorld()) {
-            bombs.cancelDefuse(session, player.getUniqueId());
-            return;
-        }
-        if (!player.isSneaking()) {
-            bombs.cancelDefuse(session, player.getUniqueId());
-            return;
-        }
-        if (player.getLocation().distanceSquared(bomb) > 9.0) {
-            bombs.cancelDefuse(session, player.getUniqueId());
+            bombs.cancelDefuse(session, playerId);
+        } else if (!player.isSneaking()) {
+            bombs.cancelDefuse(session, playerId);
+        } else if (player.getLocation().distanceSquared(bomb) > 9.0) {
+            bombs.cancelDefuse(session, playerId);
         }
     }
 
@@ -108,6 +114,7 @@ public final class BombInteractListener implements Listener {
         Player player = event.getPlayer();
         GameSession session = sessions.findSession(player);
         if (session != null) {
+            bombs.cancelPlant(session, player.getUniqueId());
             bombs.cancelDefuse(session, player.getUniqueId());
         }
     }
@@ -117,6 +124,7 @@ public final class BombInteractListener implements Listener {
         Player player = event.getEntity();
         GameSession session = sessions.findSession(player);
         if (session != null) {
+            bombs.cancelPlant(session, player.getUniqueId());
             bombs.cancelDefuse(session, player.getUniqueId());
         }
     }

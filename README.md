@@ -33,6 +33,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Session diagnostic command: `/csmc info` (mode/map/state/phase/score/player split).
 - Queue map preference supports `auto` (default) or explicit map IDs from `/csmc maps`.
 - Queued players now get real-time action-bar status (mode/map/position).
+- C4 planting now follows rules-driven plant time (`plantTimeSeconds`) and can be cancelled by movement/sneak release before completion.
 - Map editor tool: `/csmcmap create`, `/csmcmap addspawn`, `/csmcmap setbomb`, `/csmcmap addbuy`, `/csmcmap save`, `/csmcmap reload`.
 - Map editor now supports indexed point removal and inspection: `/csmcmap listpoints`, `/csmcmap removespawn`, `/csmcmap removebuy`.
 - Map editor now supports draft cloning: `/csmcmap clone <sourceId> <targetId> [name]`.
