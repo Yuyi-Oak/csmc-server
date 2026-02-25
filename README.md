@@ -74,6 +74,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Movement anti-cheat now adapts to speed/jump potion effects and high-mobility surfaces (ice/slime/honey/bed bounce) to reduce false positives.
 - Anti-cheat now escalates severe repeated violations into automatic kicks (bypass permission: `csmc.anticheat.bypass`).
 - Ops can inspect/reset anti-cheat VL using `/csmc ac` (`csmc.anticheat.manage`).
+- `/csmc ac status [player]` now includes per-player top trigger reasons summary.
 - `/csmc ac top` shows highest current violation levels across tracked players.
 - `/csmc ac reasons [limit]` shows top anti-cheat trigger reasons with share percentages; `/csmc ac reasonsreset` clears reason counters.
 - Weapon firing now uses per-weapon/fallback recoil patterns and applies recoil offsets together with spread.

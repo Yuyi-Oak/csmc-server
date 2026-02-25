@@ -19,6 +19,7 @@ public final class AntiCheatService {
     private final JavaPlugin plugin;
     private final Map<UUID, Integer> violationLevels = new ConcurrentHashMap<>();
     private final Map<String, Integer> reasonCounts = new ConcurrentHashMap<>();
+    private final Map<UUID, Map<String, Integer>> playerReasonCounts = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastAlertAt = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastKickAt = new ConcurrentHashMap<>();
 
@@ -33,6 +34,8 @@ public final class AntiCheatService {
         UUID playerId = player.getUniqueId();
         String normalizedReason = normalizeReason(reason);
         reasonCounts.merge(normalizedReason, 1, Integer::sum);
+        playerReasonCounts.computeIfAbsent(playerId, ignored -> new ConcurrentHashMap<>())
+            .merge(normalizedReason, 1, Integer::sum);
         int level = violationLevels.merge(playerId, points, Integer::sum);
         if (level >= KICK_THRESHOLD) {
             maybeKick(player, normalizedReason, level);
@@ -56,6 +59,7 @@ public final class AntiCheatService {
                 violationLevels.remove(entry.getKey(), entry.getValue());
                 lastAlertAt.remove(entry.getKey());
                 lastKickAt.remove(entry.getKey());
+                playerReasonCounts.remove(entry.getKey());
             } else {
                 violationLevels.put(entry.getKey(), reduced);
             }
@@ -74,6 +78,7 @@ public final class AntiCheatService {
             return;
         }
         violationLevels.remove(playerId);
+        playerReasonCounts.remove(playerId);
         lastAlertAt.remove(playerId);
         lastKickAt.remove(playerId);
     }
@@ -84,6 +89,17 @@ public final class AntiCheatService {
 
     public Map<String, Integer> reasonSnapshot() {
         return Map.copyOf(reasonCounts);
+    }
+
+    public Map<String, Integer> playerReasonSnapshot(UUID playerId) {
+        if (playerId == null) {
+            return Map.of();
+        }
+        Map<String, Integer> reasons = playerReasonCounts.get(playerId);
+        if (reasons == null || reasons.isEmpty()) {
+            return Map.of();
+        }
+        return Map.copyOf(reasons);
     }
 
     public void clearReasonStats() {

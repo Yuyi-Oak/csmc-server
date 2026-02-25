@@ -8,6 +8,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -1204,6 +1205,26 @@ public final class SessionCommand implements CommandExecutor {
             case "status" -> {
                 int vl = antiCheat.violationLevel(target.getUniqueId());
                 sender.sendMessage("Anti-cheat VL for " + target.getName() + ": " + vl);
+                var reasons = antiCheat.playerReasonSnapshot(target.getUniqueId());
+                if (!reasons.isEmpty()) {
+                    int total = reasons.values().stream().mapToInt(Integer::intValue).sum();
+                    StringJoiner joiner = new StringJoiner(", ");
+                    reasons.entrySet().stream()
+                        .sorted((left, right) -> {
+                            int byCount = Integer.compare(right.getValue(), left.getValue());
+                            if (byCount != 0) {
+                                return byCount;
+                            }
+                            return left.getKey().compareToIgnoreCase(right.getKey());
+                        })
+                        .limit(3)
+                        .forEach(entry -> {
+                            double ratio = total == 0 ? 0.0 : (entry.getValue() * 100.0) / total;
+                            joiner.add(entry.getKey() + " " + entry.getValue()
+                                + " (" + String.format(Locale.ROOT, "%.1f", ratio) + "%)");
+                        });
+                    sender.sendMessage("Top reasons: " + joiner);
+                }
                 yield true;
             }
             case "reset" -> {
