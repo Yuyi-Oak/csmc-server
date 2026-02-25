@@ -32,6 +32,7 @@ public final class ShopCatalog {
         register(new ShopItem("nova", "Nova", 1050, ShopCategory.PRIMARY));
         register(new ShopItem("xm1014", "XM1014", 2000, ShopCategory.PRIMARY));
         register(new ShopItem("kevlar", "Kevlar", 650, ShopCategory.ARMOR));
+        register(new ShopItem("kevlar_helmet", "Kevlar + Helmet", 1000, ShopCategory.ARMOR));
         register(new ShopItem("hegrenade", "HE Grenade", 300, ShopCategory.GRENADE));
         register(new ShopItem("flashbang", "Flashbang", 200, ShopCategory.GRENADE));
         register(new ShopItem("smoke", "Smoke Grenade", 300, ShopCategory.GRENADE));

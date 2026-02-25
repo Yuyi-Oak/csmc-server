@@ -1,5 +1,7 @@
 package top.scfd.mcplugins.csmc.core.player;
 
+import top.scfd.mcplugins.csmc.core.weapon.Hitbox;
+
 public final class ArmorState {
     private int armor;
     private boolean helmet;
@@ -25,8 +27,23 @@ public final class ArmorState {
         helmet = true;
     }
 
+    public void grantKevlarHelmet() {
+        grantKevlar();
+        grantHelmet();
+    }
+
     public void grantDefuseKit() {
         defuseKit = true;
+    }
+
+    public boolean protects(Hitbox hitbox) {
+        if (armor <= 0) {
+            return false;
+        }
+        if (hitbox == Hitbox.HEAD) {
+            return helmet;
+        }
+        return true;
     }
 
     public int applyArmorDamage(double damage) {

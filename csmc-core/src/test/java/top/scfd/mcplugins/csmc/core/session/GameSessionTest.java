@@ -122,6 +122,22 @@ final class GameSessionTest {
         assertEquals(BuyResult.SUCCESS, session.buy(counterTerrorist, "defuse_kit"));
     }
 
+    @Test
+    void kevlarHelmetPurchaseGrantsHelmet() {
+        GameSession session = new GameSession(UUID.randomUUID(), GameMode.COMPETITIVE, 10, rulesWithBuyTime(13, 24), new ShopCatalog());
+        UUID terrorist = UUID.randomUUID();
+        UUID counterTerrorist = UUID.randomUUID();
+        session.joinPlayer(terrorist);
+        session.joinPlayer(counterTerrorist);
+
+        session.startRound();
+        session.onKill(counterTerrorist);
+
+        assertEquals(BuyResult.SUCCESS, session.buy(counterTerrorist, "kevlar_helmet"));
+        assertEquals(100, session.loadout(counterTerrorist).armor().armor());
+        assertTrue(session.loadout(counterTerrorist).armor().helmet());
+    }
+
     private ModeRules rules(int roundsToWin, int maxRounds) {
         return new ModeRules(
             GameMode.COMPETITIVE,

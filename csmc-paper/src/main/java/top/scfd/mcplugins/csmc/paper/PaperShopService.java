@@ -31,6 +31,7 @@ public final class PaperShopService {
             case "mac10", "mp9", "ump45" -> Material.CARROT_ON_A_STICK;
             case "nova", "xm1014" -> Material.TRIDENT;
             case "kevlar" -> Material.LEATHER_CHESTPLATE;
+            case "kevlar_helmet" -> Material.IRON_HELMET;
             case "hegrenade" -> Material.SNOWBALL;
             case "flashbang" -> Material.EGG;
             case "smoke" -> Material.FIREWORK_STAR;

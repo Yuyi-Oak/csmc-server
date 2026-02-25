@@ -395,7 +395,7 @@ public final class GameSession {
             case GRENADE -> loadout.canAddGrenade(item.key(), grenadeMaxTotal(), grenadeMaxPerType(item.key()))
                 ? BuyResult.SUCCESS
                 : BuyResult.INVENTORY_FULL;
-            case ARMOR -> loadout.armor().armor() >= 100 ? BuyResult.INVENTORY_FULL : BuyResult.SUCCESS;
+            case ARMOR -> validateArmorPurchase(item.key(), loadout);
             case UTILITY -> {
                 if (isDefuseKit(item.key())) {
                     yield loadout.armor().defuseKit() ? BuyResult.INVENTORY_FULL : BuyResult.SUCCESS;
@@ -419,7 +419,7 @@ public final class GameSession {
             case MELEE -> weaponRegistry.find(item.key())
                 .ifPresent(spec -> loadout.setMelee(WeaponInstance.full(spec)));
             case GRENADE -> loadout.addGrenade(item.key(), grenadeMaxTotal(), grenadeMaxPerType(item.key()));
-            case ARMOR -> loadout.armor().grantKevlar();
+            case ARMOR -> grantArmorPurchase(item.key(), loadout);
             case UTILITY -> {
                 if (isDefuseKit(item.key())) {
                     loadout.armor().grantDefuseKit();
@@ -443,6 +443,36 @@ public final class GameSession {
 
     private boolean isDefuseKit(String key) {
         return key != null && "defuse_kit".equalsIgnoreCase(key);
+    }
+
+    private BuyResult validateArmorPurchase(String key, PlayerLoadout loadout) {
+        if (isKevlarHelmet(key)) {
+            return loadout.armor().armor() >= 100 && loadout.armor().helmet()
+                ? BuyResult.INVENTORY_FULL
+                : BuyResult.SUCCESS;
+        }
+        if (isKevlar(key)) {
+            return loadout.armor().armor() >= 100 ? BuyResult.INVENTORY_FULL : BuyResult.SUCCESS;
+        }
+        return BuyResult.UNKNOWN_ITEM;
+    }
+
+    private void grantArmorPurchase(String key, PlayerLoadout loadout) {
+        if (isKevlarHelmet(key)) {
+            loadout.armor().grantKevlarHelmet();
+            return;
+        }
+        if (isKevlar(key)) {
+            loadout.armor().grantKevlar();
+        }
+    }
+
+    private boolean isKevlar(String key) {
+        return key != null && "kevlar".equalsIgnoreCase(key);
+    }
+
+    private boolean isKevlarHelmet(String key) {
+        return key != null && "kevlar_helmet".equalsIgnoreCase(key);
     }
 
     private Map<UUID, TeamSide> playersSnapshot() {

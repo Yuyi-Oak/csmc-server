@@ -16,6 +16,7 @@ final class ShopCatalogTest {
         ShopItem molotov = catalog.find("molotov").orElseThrow();
         ShopItem incgrenade = catalog.find("incgrenade").orElseThrow();
         ShopItem defuseKit = catalog.find("defuse_kit").orElseThrow();
+        ShopItem kevlarHelmet = catalog.find("kevlar_helmet").orElseThrow();
 
         assertTrue(deagle.isAllowedFor(TeamSide.TERRORIST));
         assertTrue(deagle.isAllowedFor(TeamSide.COUNTER_TERRORIST));
@@ -27,5 +28,7 @@ final class ShopCatalogTest {
         assertFalse(incgrenade.isAllowedFor(TeamSide.TERRORIST));
         assertTrue(defuseKit.isAllowedFor(TeamSide.COUNTER_TERRORIST));
         assertFalse(defuseKit.isAllowedFor(TeamSide.TERRORIST));
+        assertTrue(kevlarHelmet.isAllowedFor(TeamSide.TERRORIST));
+        assertTrue(kevlarHelmet.isAllowedFor(TeamSide.COUNTER_TERRORIST));
     }
 }

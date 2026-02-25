@@ -94,6 +94,11 @@ shop:
       price: 650
       category: armor
       sides: [both]
+    kevlar_helmet:
+      name: "Kevlar + Helmet"
+      price: 1000
+      category: armor
+      sides: [both]
     hegrenade:
       name: "HE Grenade"
       price: 300

@@ -120,9 +120,9 @@ public final class WeaponFireListener implements Listener {
         if (!session.rules().friendlyFireEnabled() && attackerSide == victimSide && attackerSide != TeamSide.SPECTATOR) {
             return;
         }
-        PlayerLoadout victimLoadout = session.loadout(victim.getUniqueId());
-        boolean armored = victimLoadout != null && victimLoadout.armor().armor() > 0;
         Hitbox hitbox = resolveHitbox(victim, result.getHitPosition().toLocation(world));
+        PlayerLoadout victimLoadout = session.loadout(victim.getUniqueId());
+        boolean armored = victimLoadout != null && victimLoadout.armor().protects(hitbox);
         double distance = eye.distance(result.getHitPosition().toLocation(world));
         DamageResult damage = simulator.simulateHit(spec, distance, armored, hitbox);
         if (victimLoadout != null) {
