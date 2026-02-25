@@ -55,6 +55,8 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Finished sessions auto-close after 15 seconds to free match slots for queueing.
 - Baseline anti-cheat now flags repeated rapid-fire abuse and alerts ops (`csmc.anticheat.alert`).
 - Weapon-system headshot kills are now tracked into persistent player stats.
+- Flashbang effect now scales by distance, facing angle, and line-of-sight for more realistic exposure.
+- Grenade/molotov friendly-fire now follows mode rules (`friendlyFireEnabled`) instead of being always blocked.
 - Baseline anti-cheat also flags abnormal movement bursts (`speed`/`fly`) during combat phases.
 - Movement anti-cheat now ignores large single-step teleports (>=8 blocks/event) to reduce false positives from plugin-driven teleports.
 - Movement anti-cheat thresholds now scale with player ping to reduce lag-induced false positives.

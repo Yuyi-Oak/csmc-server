@@ -24,6 +24,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
 import top.scfd.mcplugins.csmc.api.SessionState;
 import top.scfd.mcplugins.csmc.api.TeamSide;
 import top.scfd.mcplugins.csmc.core.player.PlayerLoadout;
@@ -90,7 +91,7 @@ public final class GrenadeThrowListener implements Listener {
         }
         switch (key) {
             case "hegrenade" -> explodeHE(location, ownerId);
-            case "flashbang" -> flash(location, ownerId);
+            case "flashbang" -> flash(projectile, location, ownerId);
             case "smoke" -> smoke(location);
             case "molotov", "incgrenade" -> molotov(location, ownerId);
             case "decoy" -> decoy(location);
@@ -141,9 +142,7 @@ public final class GrenadeThrowListener implements Listener {
                 continue;
             }
             if (ownerSession != null && ownerId != null) {
-                TeamSide attackerSide = ownerSession.getSide(ownerId);
-                TeamSide targetSide = ownerSession.getSide(target.getUniqueId());
-                if (attackerSide == targetSide && attackerSide != TeamSide.SPECTATOR) {
+                if (shouldBlockFriendlyDamage(ownerSession, ownerId, target.getUniqueId())) {
                     continue;
                 }
             }
@@ -159,21 +158,42 @@ public final class GrenadeThrowListener implements Listener {
         }
     }
 
-    private void flash(Location location, UUID ownerId) {
+    private void flash(Projectile projectile, Location location, UUID ownerId) {
         World world = location.getWorld();
         if (world == null) {
             return;
         }
+        double maxRange = 12.0;
+        double maxRangeSquared = maxRange * maxRange;
         world.playSound(location, Sound.ENTITY_GENERIC_EXPLODE, 0.6f, 1.8f);
         GameSession ownerSession = ownerId == null ? null : sessions.getSessionForPlayer(ownerId);
         for (Player target : world.getPlayers()) {
-            if (target.getLocation().distanceSquared(location) > 36.0) {
+            if (target.getLocation().distanceSquared(location) > maxRangeSquared) {
                 continue;
             }
             if (ownerSession != null && sessions.findSession(target) != ownerSession) {
                 continue;
             }
-            target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 80, 1, true, false));
+            Location eye = target.getEyeLocation();
+            Vector toFlash = location.toVector().subtract(eye.toVector());
+            double distance = toFlash.length();
+            if (distance <= 0.001) {
+                distance = 0.001;
+            }
+            toFlash.multiply(1.0 / distance);
+            double facing = eye.getDirection().normalize().dot(toFlash);
+            double facingFactor = clamp01((facing + 1.0) * 0.5);
+            double distanceFactor = clamp01(1.0 - distance / maxRange);
+            double intensity = distanceFactor * (0.25 + 0.75 * facingFactor);
+            if (projectile != null && !target.hasLineOfSight(projectile)) {
+                intensity *= 0.35;
+            }
+            if (intensity < 0.08) {
+                continue;
+            }
+            int durationTicks = clampInt((int) Math.round(20 + intensity * 120), 20, 140);
+            int amplifier = intensity >= 0.75 ? 1 : 0;
+            target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, durationTicks, amplifier, true, false));
         }
     }
 
@@ -208,9 +228,7 @@ public final class GrenadeThrowListener implements Listener {
                 continue;
             }
             if (ownerSession != null && ownerId != null) {
-                TeamSide attackerSide = ownerSession.getSide(ownerId);
-                TeamSide targetSide = ownerSession.getSide(target.getUniqueId());
-                if (attackerSide == targetSide && attackerSide != TeamSide.SPECTATOR) {
+                if (shouldBlockFriendlyDamage(ownerSession, ownerId, target.getUniqueId())) {
                     continue;
                 }
             }
@@ -238,5 +256,24 @@ public final class GrenadeThrowListener implements Listener {
                 ticks += 20;
             }
         }.runTaskTimer(plugin, 0L, 20L);
+    }
+
+    private boolean shouldBlockFriendlyDamage(GameSession ownerSession, UUID ownerId, UUID targetId) {
+        if (ownerSession == null || ownerId == null || targetId == null) {
+            return false;
+        }
+        TeamSide attackerSide = ownerSession.getSide(ownerId);
+        TeamSide targetSide = ownerSession.getSide(targetId);
+        return attackerSide == targetSide
+            && attackerSide != TeamSide.SPECTATOR
+            && !ownerSession.rules().friendlyFireEnabled();
+    }
+
+    private double clamp01(double value) {
+        return Math.max(0.0, Math.min(1.0, value));
+    }
+
+    private int clampInt(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
     }
 }
