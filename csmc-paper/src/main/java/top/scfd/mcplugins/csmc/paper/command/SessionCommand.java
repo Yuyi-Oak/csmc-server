@@ -22,6 +22,7 @@ import top.scfd.mcplugins.csmc.core.shop.BuyResult;
 import top.scfd.mcplugins.csmc.core.shop.ShopCategory;
 import top.scfd.mcplugins.csmc.core.shop.ShopItem;
 import top.scfd.mcplugins.csmc.core.weapon.RecoilPattern;
+import top.scfd.mcplugins.csmc.core.weapon.WeaponInaccuracyModel;
 import top.scfd.mcplugins.csmc.core.weapon.WeaponRegistry;
 import top.scfd.mcplugins.csmc.core.weapon.WeaponRecoilPatterns;
 import top.scfd.mcplugins.csmc.core.weapon.WeaponSimulator;
@@ -57,6 +58,7 @@ public final class SessionCommand implements CommandExecutor {
     private final MatchHistoryService history;
     private final AntiCheatService antiCheat;
     private final WeaponSimulator weaponSimulator = new WeaponSimulator();
+    private final WeaponInaccuracyModel inaccuracyModel = new WeaponInaccuracyModel();
 
     public SessionCommand(
         SessionRegistry sessions,
@@ -581,11 +583,24 @@ public final class SessionCommand implements CommandExecutor {
         }
         RecoilPattern pattern = WeaponRecoilPatterns.forWeapon(spec);
         double baseSpread = weaponSimulator.baseSpread(spec);
+        double walkSpread = weaponSimulator.spreadRadius(spec, inaccuracyModel.movementFactor(0.12, false, false), 0.0);
+        double sprintSpread = weaponSimulator.spreadRadius(spec, inaccuracyModel.movementFactor(0.16, true, false), 0.0);
+        double jumpSpread = weaponSimulator.spreadRadius(spec, 0.0, inaccuracyModel.jumpFactor(false, 0.42, 0.0f));
         player.sendMessage("Weapon " + spec.key() + " (" + spec.displayName() + ")");
         player.sendMessage("Type=" + spec.type() + " | price=" + spec.price() + " | fireRate=" + spec.fireRate());
         player.sendMessage("Damage=" + spec.damage() + " | range=" + spec.range() + " | armorPen=" + spec.armorPenetration());
         player.sendMessage("Magazine=" + spec.magazineSize() + " | reload=" + spec.reloadTime() + "s");
         player.sendMessage("Spread base=" + String.format(Locale.ROOT, "%.3f", baseSpread) + " | recoilPatternLen=" + pattern.length());
+        player.sendMessage(
+            "Spread profile stand/walk/sprint/jump="
+                + String.format(Locale.ROOT, "%.3f", weaponSimulator.spreadRadius(spec, 0.0, 0.0))
+                + "/"
+                + String.format(Locale.ROOT, "%.3f", walkSpread)
+                + "/"
+                + String.format(Locale.ROOT, "%.3f", sprintSpread)
+                + "/"
+                + String.format(Locale.ROOT, "%.3f", jumpSpread)
+        );
         if (pattern.length() > 0) {
             int shown = Math.max(1, Math.min(recoilPreviewLimit, pattern.length()));
             StringBuilder builder = new StringBuilder("Recoil preview (first ").append(shown).append("): ");
