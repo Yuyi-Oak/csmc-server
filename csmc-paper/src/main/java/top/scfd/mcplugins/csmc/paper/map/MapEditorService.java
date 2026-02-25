@@ -8,6 +8,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import org.bukkit.Bukkit;
 import top.scfd.mcplugins.csmc.core.map.BombSite;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -188,6 +189,8 @@ public final class MapEditorService {
         }
         if (map.world() == null || map.world().isBlank()) {
             errors.add("World is empty.");
+        } else if (Bukkit.getWorld(map.world()) == null) {
+            warnings.add("World '" + map.world() + "' is not currently loaded.");
         }
         if (map.terroristSpawns().isEmpty()) {
             errors.add("No T spawns.");
