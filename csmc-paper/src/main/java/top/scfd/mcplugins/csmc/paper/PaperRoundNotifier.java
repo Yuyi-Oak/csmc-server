@@ -11,14 +11,15 @@ import top.scfd.mcplugins.csmc.core.i18n.MessageService;
 import top.scfd.mcplugins.csmc.core.match.RoundEndReason;
 import top.scfd.mcplugins.csmc.core.match.RoundEventListener;
 import top.scfd.mcplugins.csmc.core.match.RoundPhase;
+import top.scfd.mcplugins.csmc.core.session.GameSession;
 
 public final class PaperRoundNotifier implements RoundEventListener {
     private final MessageService messages;
-    private final SessionRegistry sessions;
+    private final GameSession session;
 
-    public PaperRoundNotifier(MessageService messages, SessionRegistry sessions) {
+    public PaperRoundNotifier(MessageService messages, GameSession session) {
         this.messages = messages;
-        this.sessions = sessions;
+        this.session = session;
     }
 
     @Override
@@ -70,8 +71,9 @@ public final class PaperRoundNotifier implements RoundEventListener {
 
     private void broadcast(String text, NamedTextColor color) {
         Component component = Component.text(text).color(color);
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            if (sessions.findSession(player) != null) {
+        for (UUID playerId : session.players()) {
+            Player player = Bukkit.getPlayer(playerId);
+            if (player != null && player.isOnline()) {
                 player.sendActionBar(component);
             }
         }

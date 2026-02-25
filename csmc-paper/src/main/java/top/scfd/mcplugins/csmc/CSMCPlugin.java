@@ -107,10 +107,9 @@ public final class CSMCPlugin extends JavaPlugin {
         PlayerRoundStateService roundStateService = new PlayerRoundStateService(this, sessionRegistry, bombService);
         sessionRegistry.setPlayerRoundState(roundStateService);
 
-        PaperRoundNotifier roundNotifier = new PaperRoundNotifier(messages, sessionRegistry);
         PaperEconomyNotifier economyNotifier = new PaperEconomyNotifier(sessionRegistry);
 
-        sessionRegistry.addRoundListener(roundNotifier);
+        sessionRegistry.addRoundListenerFactory(session -> new PaperRoundNotifier(messages, session));
         sessionRegistry.addEconomyListener(economyNotifier);
 
         ticker = new PaperSessionTicker(sessionRegistry);

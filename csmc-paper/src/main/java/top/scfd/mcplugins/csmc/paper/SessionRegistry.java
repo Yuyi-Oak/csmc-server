@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Function;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -40,7 +41,7 @@ public final class SessionRegistry {
     private final Map<UUID, UUID> playerSessions = new ConcurrentHashMap<>();
     private final Map<UUID, MapDefinition> sessionMaps = new ConcurrentHashMap<>();
     private final Map<UUID, Integer> finishedSessionTtl = new ConcurrentHashMap<>();
-    private final List<RoundEventListener> roundListeners = new CopyOnWriteArrayList<>();
+    private final List<Function<GameSession, RoundEventListener>> roundListenerFactories = new CopyOnWriteArrayList<>();
     private final List<EconomyEventListener> economyListeners = new CopyOnWriteArrayList<>();
 
     public SessionRegistry(
@@ -69,7 +70,12 @@ public final class SessionRegistry {
 
     public GameSession createSession(GameMode mode, String mapId) {
         GameSession session = sessionManager.createSession(mode, 0, catalog);
-        roundListeners.forEach(session::addRoundListener);
+        for (Function<GameSession, RoundEventListener> factory : roundListenerFactories) {
+            RoundEventListener listener = factory.apply(session);
+            if (listener != null) {
+                session.addRoundListener(listener);
+            }
+        }
         economyListeners.forEach(session::addEconomyListener);
         if (statsService != null) {
             session.addRoundListener(new StatsRoundListener(session, statsService));
@@ -257,7 +263,13 @@ public final class SessionRegistry {
 
     public void addRoundListener(RoundEventListener listener) {
         if (listener != null) {
-            roundListeners.add(listener);
+            roundListenerFactories.add(session -> listener);
+        }
+    }
+
+    public void addRoundListenerFactory(Function<GameSession, RoundEventListener> factory) {
+        if (factory != null) {
+            roundListenerFactories.add(factory);
         }
     }
 
