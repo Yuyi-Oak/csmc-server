@@ -71,6 +71,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Baseline anti-cheat also flags abnormal movement bursts (`speed`/`fly`) during combat phases.
 - Movement anti-cheat now ignores large single-step teleports (>=8 blocks/event) to reduce false positives from plugin-driven teleports.
 - Movement anti-cheat thresholds now scale with player ping to reduce lag-induced false positives.
+- Movement anti-cheat now adapts to speed/jump potion effects and high-mobility surfaces (ice/slime/honey/bed bounce) to reduce false positives.
 - Anti-cheat now escalates severe repeated violations into automatic kicks (bypass permission: `csmc.anticheat.bypass`).
 - Ops can inspect/reset anti-cheat VL using `/csmc ac` (`csmc.anticheat.manage`).
 - `/csmc ac top` shows highest current violation levels across tracked players.
