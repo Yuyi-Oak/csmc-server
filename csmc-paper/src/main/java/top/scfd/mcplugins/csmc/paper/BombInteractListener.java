@@ -100,7 +100,7 @@ public final class BombInteractListener implements Listener {
             return;
         }
         Location bomb = state.location();
-        if (bomb == null || bomb.getWorld() == null || player.getWorld() != bomb.getWorld()) {
+        if (bomb == null || bomb.getWorld() == null || !bomb.getWorld().equals(player.getWorld())) {
             bombs.cancelDefuse(session, playerId);
         } else if (!player.isSneaking()) {
             bombs.cancelDefuse(session, playerId);

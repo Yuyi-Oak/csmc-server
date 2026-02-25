@@ -36,7 +36,7 @@ public final class MovementAntiCheatListener implements Listener {
         }
         Location from = event.getFrom();
         Location to = event.getTo();
-        if (to == null || from.getWorld() != to.getWorld()) {
+        if (to == null || !from.getWorld().equals(to.getWorld())) {
             return;
         }
         if (isInFluid(from) || isInFluid(to)) {
