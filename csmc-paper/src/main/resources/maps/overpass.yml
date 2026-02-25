@@ -1,0 +1,60 @@
+# Classic-inspired map preset
+map:
+  id: "overpass"
+  name: "Overpass"
+  world: "csmc_overpass"
+  spawns:
+    terrorist:
+      - x: 34.0
+        y: 71.0
+        z: 18.0
+        yaw: 180.0
+        pitch: 0.0
+      - x: 30.0
+        y: 71.0
+        z: 16.0
+        yaw: 178.0
+        pitch: 0.0
+      - x: 37.0
+        y: 71.0
+        z: 14.0
+        yaw: 182.0
+        pitch: 0.0
+    counter_terrorist:
+      - x: -32.0
+        y: 70.0
+        z: -19.0
+        yaw: 0.0
+        pitch: 0.0
+      - x: -29.0
+        y: 70.0
+        z: -15.0
+        yaw: -2.0
+        pitch: 0.0
+      - x: -35.0
+        y: 70.0
+        z: -16.0
+        yaw: 3.0
+        pitch: 0.0
+  bomb_sites:
+    A:
+      x: -6.0
+      y: 72.0
+      z: -28.0
+      radius: 6.5
+    B:
+      x: 12.0
+      y: 66.0
+      z: 27.0
+      radius: 6.0
+  buy_zones:
+    terrorist:
+      - x: 33.0
+        y: 71.0
+        z: 16.0
+        radius: 8.0
+    counter_terrorist:
+      - x: -32.0
+        y: 70.0
+        z: -17.0
+        radius: 8.0

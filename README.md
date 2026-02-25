@@ -42,7 +42,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Map save commands now enforce validation by default; append `force` to override (`/csmcmap save <id> force`, `/csmcmap saveall force`).
 - Cross-server stats cache invalidation is enabled automatically when `storage.type` is `REDIS`.
 - Redis storage now maintains a kills leaderboard sorted-set index to speed up `/csmc top` queries.
-- Bundled starter maps: `dust2`, `mirage`, `inferno`, `nuke`, `anubis`, `ancient`, `vertigo`, `summit` (original).
+- Bundled starter maps: `dust2`, `mirage`, `inferno`, `nuke`, `anubis`, `ancient`, `vertigo`, `overpass`, `train`, `cache`, `cobblestone`, `tuscan`, `summit` (original).
 - Finished sessions auto-close after 15 seconds to free match slots for queueing.
 - Baseline anti-cheat now flags repeated rapid-fire abuse and alerts ops (`csmc.anticheat.alert`).
 - Weapon-system headshot kills are now tracked into persistent player stats.

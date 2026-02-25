@@ -114,6 +114,11 @@ public final class PaperMapLoader {
         saveTemplate("maps/anubis.yml");
         saveTemplate("maps/ancient.yml");
         saveTemplate("maps/vertigo.yml");
+        saveTemplate("maps/overpass.yml");
+        saveTemplate("maps/train.yml");
+        saveTemplate("maps/cache.yml");
+        saveTemplate("maps/cobblestone.yml");
+        saveTemplate("maps/tuscan.yml");
         saveTemplate("maps/summit.yml");
     }
 

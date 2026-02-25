@@ -1,0 +1,60 @@
+# Classic-inspired map preset
+map:
+  id: "cobblestone"
+  name: "Cobblestone"
+  world: "csmc_cobblestone"
+  spawns:
+    terrorist:
+      - x: 52.0
+        y: 74.0
+        z: 10.0
+        yaw: 180.0
+        pitch: 0.0
+      - x: 48.0
+        y: 74.0
+        z: 8.0
+        yaw: 178.0
+        pitch: 0.0
+      - x: 55.0
+        y: 74.0
+        z: 6.0
+        yaw: 182.0
+        pitch: 0.0
+    counter_terrorist:
+      - x: -49.0
+        y: 74.0
+        z: -11.0
+        yaw: 0.0
+        pitch: 0.0
+      - x: -45.0
+        y: 74.0
+        z: -9.0
+        yaw: -3.0
+        pitch: 0.0
+      - x: -52.0
+        y: 74.0
+        z: -7.0
+        yaw: 2.0
+        pitch: 0.0
+  bomb_sites:
+    A:
+      x: -14.0
+      y: 76.0
+      z: -24.0
+      radius: 6.5
+    B:
+      x: 15.0
+      y: 72.0
+      z: 27.0
+      radius: 6.0
+  buy_zones:
+    terrorist:
+      - x: 51.0
+        y: 74.0
+        z: 8.0
+        radius: 8.0
+    counter_terrorist:
+      - x: -48.0
+        y: 74.0
+        z: -9.0
+        radius: 8.0

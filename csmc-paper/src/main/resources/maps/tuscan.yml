@@ -1,0 +1,60 @@
+# Classic-inspired map preset
+map:
+  id: "tuscan"
+  name: "Tuscan"
+  world: "csmc_tuscan"
+  spawns:
+    terrorist:
+      - x: 36.0
+        y: 67.0
+        z: 28.0
+        yaw: 180.0
+        pitch: 0.0
+      - x: 33.0
+        y: 67.0
+        z: 24.0
+        yaw: 176.0
+        pitch: 0.0
+      - x: 39.0
+        y: 67.0
+        z: 23.0
+        yaw: 184.0
+        pitch: 0.0
+    counter_terrorist:
+      - x: -34.0
+        y: 67.0
+        z: -26.0
+        yaw: 0.0
+        pitch: 0.0
+      - x: -30.0
+        y: 67.0
+        z: -22.0
+        yaw: -3.0
+        pitch: 0.0
+      - x: -37.0
+        y: 67.0
+        z: -21.0
+        yaw: 2.0
+        pitch: 0.0
+  bomb_sites:
+    A:
+      x: -6.0
+      y: 68.0
+      z: -24.0
+      radius: 6.0
+    B:
+      x: 9.0
+      y: 68.0
+      z: 25.0
+      radius: 6.0
+  buy_zones:
+    terrorist:
+      - x: 35.0
+        y: 67.0
+        z: 25.0
+        radius: 8.0
+    counter_terrorist:
+      - x: -33.0
+        y: 67.0
+        z: -23.0
+        radius: 8.0
