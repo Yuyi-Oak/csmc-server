@@ -19,6 +19,7 @@ import top.scfd.mcplugins.csmc.core.player.PlayerLoadout;
 import top.scfd.mcplugins.csmc.core.player.WeaponInstance;
 import top.scfd.mcplugins.csmc.core.weapon.DamageResult;
 import top.scfd.mcplugins.csmc.core.weapon.Hitbox;
+import top.scfd.mcplugins.csmc.core.weapon.WeaponInaccuracyModel;
 import top.scfd.mcplugins.csmc.core.weapon.RecoilPattern;
 import top.scfd.mcplugins.csmc.core.weapon.WeaponSimulator;
 import top.scfd.mcplugins.csmc.core.weapon.WeaponSpec;
@@ -28,6 +29,7 @@ import top.scfd.mcplugins.csmc.paper.security.AntiCheatService;
 public final class WeaponFireListener implements Listener {
     private final SessionRegistry sessions;
     private final WeaponSimulator simulator = new WeaponSimulator();
+    private final WeaponInaccuracyModel inaccuracyModel = new WeaponInaccuracyModel();
     private final WeaponItemService weaponItems;
     private final LoadoutInventoryService loadoutInventory;
     private final AntiCheatService antiCheat;
@@ -138,11 +140,11 @@ public final class WeaponFireListener implements Listener {
     private double movementFactor(Player player) {
         Vector velocity = player.getVelocity().clone();
         velocity.setY(0);
-        return velocity.length() * 0.08;
+        return inaccuracyModel.movementFactor(velocity.length(), player.isSprinting(), player.isSneaking());
     }
 
     private double jumpFactor(Player player) {
-        return isGrounded(player) ? 0.0 : 0.15;
+        return inaccuracyModel.jumpFactor(isGrounded(player), player.getVelocity().getY(), player.getFallDistance());
     }
 
     private boolean isGrounded(Player player) {
