@@ -21,11 +21,13 @@ import top.scfd.mcplugins.csmc.core.session.GameSession;
 public final class PlayerRoundStateService implements Listener {
     private final Plugin plugin;
     private final SessionRegistry sessions;
+    private final BombService bombs;
     private final ConcurrentHashMap<UUID, Set<UUID>> roundDeaths = new ConcurrentHashMap<>();
 
-    public PlayerRoundStateService(Plugin plugin, SessionRegistry sessions) {
+    public PlayerRoundStateService(Plugin plugin, SessionRegistry sessions, BombService bombs) {
         this.plugin = plugin;
         this.sessions = sessions;
+        this.bombs = bombs;
     }
 
     @EventHandler
@@ -35,9 +37,13 @@ public final class PlayerRoundStateService implements Listener {
         if (session == null || !isCombatPhase(session.roundEngine().phase())) {
             return;
         }
+        boolean hadBomb = bombs != null && bombs.hasBombItem(player);
         roundDeaths.computeIfAbsent(session.id(), ignored -> ConcurrentHashMap.newKeySet()).add(player.getUniqueId());
         event.setDroppedExp(0);
         event.getDrops().clear();
+        if (hadBomb && bombs != null) {
+            Bukkit.getScheduler().runTask(plugin, () -> bombs.assignBomb(session));
+        }
     }
 
     @EventHandler

@@ -40,6 +40,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Plant cancel validation is now event-driven on movement for faster interruption feedback (not only 1s tick checks).
 - Round start now normalizes bomb ownership first, then assigns exactly one fresh C4 holder on T side.
 - C4 item is now tagged via persistent metadata to avoid accidental recognition of ordinary TNT as bomb item.
+- If current bomb carrier dies before planting, C4 is automatically reassigned to another alive terrorist.
 - Defuse ownership is now strict: active defuser cannot be overwritten mid-defuse by another player interaction.
 - Map editor tool: `/csmcmap create`, `/csmcmap addspawn`, `/csmcmap setbomb`, `/csmcmap addbuy`, `/csmcmap save`, `/csmcmap reload`.
 - Map editor now supports indexed point removal and inspection: `/csmcmap listpoints`, `/csmcmap removespawn`, `/csmcmap removebuy`.

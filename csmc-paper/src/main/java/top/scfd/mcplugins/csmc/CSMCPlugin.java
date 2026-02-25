@@ -104,7 +104,7 @@ public final class CSMCPlugin extends JavaPlugin {
             combatTracker
         );
         queueService = new MatchQueueService(sessionRegistry, config.server().maxSessions(), clusterSync);
-        PlayerRoundStateService roundStateService = new PlayerRoundStateService(this, sessionRegistry);
+        PlayerRoundStateService roundStateService = new PlayerRoundStateService(this, sessionRegistry, bombService);
         sessionRegistry.setPlayerRoundState(roundStateService);
 
         PaperRoundNotifier roundNotifier = new PaperRoundNotifier(messages, sessionRegistry);

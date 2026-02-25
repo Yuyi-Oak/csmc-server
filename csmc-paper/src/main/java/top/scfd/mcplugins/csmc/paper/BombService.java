@@ -234,7 +234,11 @@ public final class BombService {
         for (UUID playerId : session.players()) {
             if (session.getSide(playerId) == TeamSide.TERRORIST) {
                 Player player = Bukkit.getPlayer(playerId);
-                if (player != null && player.isOnline()) {
+                if (player != null
+                    && player.isOnline()
+                    && !player.isDead()
+                    && player.getGameMode() != org.bukkit.GameMode.SPECTATOR
+                    && player.getHealth() > 0.0) {
                     terrorists.add(player);
                 }
             }
