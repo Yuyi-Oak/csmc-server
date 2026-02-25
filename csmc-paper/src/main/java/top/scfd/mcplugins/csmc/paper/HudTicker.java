@@ -45,6 +45,7 @@ public final class HudTicker extends BukkitRunnable {
                 text.append("MATCH END");
                 round.matchState().winner().ifPresent(winner -> text.append(" ").append(shortSide(winner)));
             } else {
+                text.append("P:").append(shortPhase(round.phase())).append(" ");
                 text.append("R:").append(format(roundTime));
                 if (round.phase() == RoundPhase.BOMB_PLANTED) {
                     text.append(" C4:").append(format(bombTime));
@@ -58,7 +59,7 @@ public final class HudTicker extends BukkitRunnable {
             text.append(" CT:").append(score.counterTerrorist());
             text.append(" $").append(money);
             text.append(" A:").append(armor);
-            text.append(" ").append(side.name());
+            text.append(" ").append(shortSide(side));
             if (weapon != null) {
                 text.append(" ").append(weapon.magazine()).append("/").append(weapon.reserve());
             }
@@ -83,6 +84,20 @@ public final class HudTicker extends BukkitRunnable {
     }
 
     private String shortSide(TeamSide side) {
-        return side == TeamSide.TERRORIST ? "T" : "CT";
+        return switch (side) {
+            case TERRORIST -> "T";
+            case COUNTER_TERRORIST -> "CT";
+            case SPECTATOR -> "SPEC";
+        };
+    }
+
+    private String shortPhase(RoundPhase phase) {
+        return switch (phase) {
+            case FREEZE -> "FRZ";
+            case BUY -> "BUY";
+            case LIVE -> "LIVE";
+            case BOMB_PLANTED -> "PLANT";
+            case END -> "END";
+        };
     }
 }
