@@ -424,21 +424,31 @@ public final class MatchQueueService {
 
     private String pickMapPreference(GameMode mode) {
         Map<String, Integer> votes = new HashMap<>();
+        Map<String, Integer> firstSeen = new HashMap<>();
+        int order = 0;
         for (UUID playerId : queues.get(mode)) {
             String map = queuedMaps.get(playerId);
             if (map == null || map.isBlank()) {
+                order++;
                 continue;
             }
             votes.merge(map, 1, Integer::sum);
+            firstSeen.putIfAbsent(map, order);
+            order++;
         }
         String best = null;
         int bestVotes = 0;
+        int bestSeen = Integer.MAX_VALUE;
         for (Map.Entry<String, Integer> entry : votes.entrySet()) {
             String map = entry.getKey();
             int value = entry.getValue();
-            if (value > bestVotes || (value == bestVotes && best != null && map.compareToIgnoreCase(best) < 0)) {
+            int seen = firstSeen.getOrDefault(map, Integer.MAX_VALUE);
+            if (value > bestVotes
+                || (value == bestVotes && seen < bestSeen)
+                || (value == bestVotes && seen == bestSeen && best != null && map.compareToIgnoreCase(best) < 0)) {
                 best = map;
                 bestVotes = value;
+                bestSeen = seen;
             }
         }
         return best;

@@ -24,6 +24,7 @@ Paper plugin (Java 21) that recreates CS:GO gameplay in Minecraft 1.21+.
 - Queue clear operations now publish cluster queue snapshots immediately for faster cross-server convergence.
 - Queue map preference insight command: `/csmc queue votes [mode]`.
 - Queue vote output includes per-map share percentages.
+- Matchmaking map pick tie-break now prefers earliest queued vote among tied top maps (then lexical fallback).
 - Queue join/status output now includes your selected map's current vote share.
 - With Redis cluster sync enabled, queue join/status also shows global queued players for the mode.
 - On server shutdown, queue snapshot is pushed as zero so global queue display converges quickly.
