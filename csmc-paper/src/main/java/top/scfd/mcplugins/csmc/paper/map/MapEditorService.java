@@ -196,7 +196,7 @@ public final class MapEditorService {
             errors.add("No CT spawns.");
         }
         if (map.bombSites().isEmpty()) {
-            warnings.add("No bomb sites.");
+            errors.add("No bomb sites.");
         } else {
             validateBombSite("A", map.bombSites().get("A"), warnings);
             validateBombSite("B", map.bombSites().get("B"), warnings);
